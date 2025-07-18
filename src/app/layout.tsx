@@ -1,11 +1,15 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import './globals.css';
+import "./globals.css";
 import setupLocatorUI from "@locator/runtime";
+import ReduxProvider from "./reduxProvider";
+import { ToastContainer } from "react-toastify"; // ✅ Add this
 
 if (process.env.NODE_ENV === "development") {
   setupLocatorUI();
 }
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -28,10 +32,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex`}>
+        <ReduxProvider>
+          <main className="flex-1 min-h-screen bg-gray-50 dark:bg-black">
+            {children}
+          </main>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+          />
+        </ReduxProvider>
       </body>
     </html>
   );

@@ -29,7 +29,7 @@ const BoxedSignIn = () => {
 
                 {/* Login Card */}
                 <div className="relative w-full max-w-[870px] rounded-md bg-[linear-gradient(45deg,#fff9f9_0%,rgba(255,255,255,0)_25%,rgba(255,255,255,0)_75%,_#fff9f9_100%)] p-2 dark:bg-[linear-gradient(52.22deg,#0E1726_0%,rgba(14,23,38,0)_18.66%,rgba(14,23,38,0)_51.04%,rgba(14,23,38,0)_80.07%,#0E1726_100%)]">
-                    <div className="relative flex flex-col justify-center rounded-md bg-white/60 px-6 py-20 backdrop-blur-lg dark:bg-black/50 lg:min-h-[758px]">
+                    <div className="relative flex flex-col justify-center rounded-md bg-white/60 px-6 py-20 backdrop-blur-lg dark:bg-black/50 lg:min-h-[500px]">
                         <div className="absolute end-6 top-6">
                             {/* <LanguageDropdown /> */}
                         </div>
@@ -46,12 +46,12 @@ const BoxedSignIn = () => {
 
                             <ComponentsAuthLoginForm />
 
-                            <div className="relative my-7 text-center md:mb-9">
+                            {/* <div className="relative my-7 text-center md:mb-9">
                                 <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
                                 <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">or</span>
-                            </div>
+                            </div> */}
 
-                            <div className="mb-10 md:mb-[60px]">
+                            {/* <div className="mb-10 md:mb-[60px]">
                                 <ul className="flex justify-center gap-3.5 text-white">
                                     {['Instagram', 'Facebook', 'Twitter', 'Google'].map((platform, i) => (
                                         <li key={i}>
@@ -63,22 +63,11 @@ const BoxedSignIn = () => {
                                                         'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)',
                                                 }}
                                             >
-                                                {/* Replace with <IconPlatform /> if available */}
                                             </Link>
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
-
-                            <div className="text-center dark:text-white">
-                                Don&apos;t have an account ?&nbsp;
-                                <Link
-                                    href="/auth/boxed-signup"
-                                    className="uppercase text-primary underline transition hover:text-black dark:hover:text-white"
-                                >
-                                    SIGN UP
-                                </Link>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>
