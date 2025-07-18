@@ -3,18 +3,30 @@
 import Link from 'next/link';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import AnimateHeight from 'react-animate-height';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown } from 'lucide-react';
 
-const Sidebar = () => {
-    const pathname = usePathname();
-    const [currentMenu, setCurrentMenu] = useState<string>('');
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Default open for large screens
+// Create Sidebar Context
+interface SidebarContextType {
+    sidebarOpen: boolean;
+    setSidebarOpen: (open: boolean) => void;
+    toggleSidebar: () => void;
+}
 
-    const toggleMenu = (value: string) => {
-        setCurrentMenu((oldValue) => (oldValue === value ? '' : value));
-    };
+const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+
+export const useSidebar = () => {
+    const context = useContext(SidebarContext);
+    if (!context) {
+        throw new Error('useSidebar must be used within a SidebarProvider');
+    }
+    return context;
+};
+
+// Sidebar Provider Component
+export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
     const toggleSidebar = () => {
         setSidebarOpen((prev) => !prev);
@@ -38,6 +50,22 @@ const Sidebar = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    return (
+        <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen, toggleSidebar }}>
+            {children}
+        </SidebarContext.Provider>
+    );
+};
+
+const Sidebar = () => {
+    const pathname = usePathname();
+    const [currentMenu, setCurrentMenu] = useState<string>('');
+    const { sidebarOpen, setSidebarOpen, toggleSidebar } = useSidebar();
+
+    const toggleMenu = (value: string) => {
+        setCurrentMenu((oldValue) => (oldValue === value ? '' : value));
+    };
+
     // Close sidebar when clicking outside (mobile only)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -55,7 +83,7 @@ const Sidebar = () => {
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [setSidebarOpen]);
 
     // Handle route changes
     useEffect(() => {
@@ -63,7 +91,7 @@ const Sidebar = () => {
             setSidebarOpen(false);
         }
         setActiveRoute();
-    }, [pathname]);
+    }, [pathname, setSidebarOpen]);
 
     const setActiveRoute = () => {
         const allLinks = document.querySelectorAll('.sidebar ul a.active');
@@ -82,14 +110,6 @@ const Sidebar = () => {
 
     return (
         <div>
-            {/* Toggle button */}
-            <button
-                onClick={toggleSidebar}
-                className="sidebar-toggle fixed top-4 left-4 z-50 rounded-md bg-white p-2 shadow-md"
-            >
-                <Menu className="w-6 h-6 text-black" />
-            </button>
-
             {/* Overlay (mobile only) */}
             {sidebarOpen && window.innerWidth < 1024 && (
                 <div

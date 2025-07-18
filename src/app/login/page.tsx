@@ -1,13 +1,26 @@
-import { Metadata } from 'next';
+'use client';
+
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ComponentsAuthLoginForm from '../components/forms/ComponentsAuthLoginForm';
 
-export const metadata: Metadata = {
-    title: 'Login',
-};
-
 const BoxedSignIn = () => {
+    const router = useRouter();
+    const [authChecked, setAuthChecked] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            router.replace('/');
+        } else {
+            setAuthChecked(true);
+        }
+    }, [router]);
+
+
+    if (!authChecked) return null; // Prevent flash
+
     return (
         <div className="relative min-h-screen">
             {/* Background Image Layer */}
@@ -45,29 +58,6 @@ const BoxedSignIn = () => {
                             </div>
 
                             <ComponentsAuthLoginForm />
-
-                            {/* <div className="relative my-7 text-center md:mb-9">
-                                <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
-                                <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">or</span>
-                            </div> */}
-
-                            {/* <div className="mb-10 md:mb-[60px]">
-                                <ul className="flex justify-center gap-3.5 text-white">
-                                    {['Instagram', 'Facebook', 'Twitter', 'Google'].map((platform, i) => (
-                                        <li key={i}>
-                                            <Link
-                                                href="#"
-                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                                style={{
-                                                    background:
-                                                        'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)',
-                                                }}
-                                            >
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div> */}
                         </div>
                     </div>
                 </div>

@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import setupLocatorUI from "@locator/runtime";
 import ReduxProvider from "./reduxProvider";
-import { ToastContainer } from "react-toastify"; // ✅ Add this
+import { ToastContainer } from "react-toastify";
 
 if (process.env.NODE_ENV === "development") {
   setupLocatorUI();

@@ -1,17 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { loginUser } from '../../../../store/authSlice';
 import { toast } from 'react-toastify';
+import { Eye, EyeOff } from 'lucide-react';
+
 
 const ComponentsAuthLoginForm = () => {
     const router = useRouter();
     const dispatch = useDispatch<any>();
     const { loading, error } = useSelector((state: RootState) => state.auth);
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         register,
@@ -34,7 +37,7 @@ const ComponentsAuthLoginForm = () => {
                 router.push('/');
             } else {
                 toast.update(toastId, {
-                    render: result.payload?.message || 'Login failed',
+                    render: error,
                     type: 'error',
                     isLoading: false,
                     autoClose: 3000,
@@ -85,9 +88,9 @@ const ComponentsAuthLoginForm = () => {
                 <div className="relative text-white-dark">
                     <input
                         id="Password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         placeholder="Enter Password"
-                        className={`form-input w-full ps-10 placeholder:text-white-dark ${errors.password ? 'border-red-500' : ''}`}
+                        className={`form-input w-full ps-10 pe-10 placeholder:text-white-dark ${errors.password ? 'border-red-500' : ''}`}
                         {...register('password', {
                             required: 'Password is required',
                             minLength: {
@@ -96,13 +99,19 @@ const ComponentsAuthLoginForm = () => {
                             },
                         })}
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white-dark hover:text-black transition"
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                 </div>
                 {typeof errors.password?.message === 'string' && (
                     <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
                 )}
             </div>
 
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
             <button
                 type="submit"

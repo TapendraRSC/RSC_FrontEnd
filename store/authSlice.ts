@@ -7,6 +7,7 @@ interface AuthState {
     token: string | null;
     loading: boolean;
     error: string | null;
+    refreshToken?: string | null;
 }
 
 const initialState: AuthState = {
@@ -45,9 +46,17 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
+                const { accessToken, refreshToken, user } = action.payload;
+                state.user = user;
+                state.token = accessToken;
+                state.refreshToken = refreshToken;
                 state.loading = false;
-                state.user = action.payload.user;
-                state.token = action.payload.token;
+                state.error = null;
+
+                // Save to localStorage
+                localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('user', JSON.stringify(user));
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
