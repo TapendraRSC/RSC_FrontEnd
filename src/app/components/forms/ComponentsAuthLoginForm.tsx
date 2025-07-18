@@ -1,45 +1,124 @@
 'use client';
-// import IconLockDots from '@/components/icon/icon-lock-dots';
-// import IconMail from '@/components/icon/icon-mail';
+
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../../store/store';
+import { loginUser } from '../../../../store/authSlice';
+import { toast } from 'react-toastify';
+import { Eye, EyeOff } from 'lucide-react';
+
 
 const ComponentsAuthLoginForm = () => {
     const router = useRouter();
-    const submitForm = (e: any) => {
-        e.preventDefault();
-        router.push('/');
+    const dispatch = useDispatch<any>();
+    const { loading, error } = useSelector((state: RootState) => state.auth);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm();
+
+    const onSubmit = async (data: any) => {
+        const toastId = toast.loading('Signing in...');
+        try {
+            const result = await dispatch(loginUser(data));
+
+            if (loginUser.fulfilled.match(result)) {
+                toast.update(toastId, {
+                    render: 'Login successful!',
+                    type: 'success',
+                    isLoading: false,
+                    autoClose: 3000,
+                });
+                router.push('/');
+            } else {
+                toast.update(toastId, {
+                    render: error,
+                    type: 'error',
+                    isLoading: false,
+                    autoClose: 3000,
+                });
+            }
+        } catch (err) {
+            toast.update(toastId, {
+                render: 'Something went wrong',
+                type: 'error',
+                isLoading: false,
+                autoClose: 3000,
+            });
+        }
     };
 
     return (
-        <form className="space-y-5 dark:text-white" onSubmit={submitForm}>
+        <form className="space-y-5 dark:text-white" onSubmit={handleSubmit(onSubmit)}>
             <div>
                 <label htmlFor="Email">Email</label>
                 <div className="relative text-white-dark">
-                    <input id="Email" type="email" placeholder="Enter Email" className="form-input w-full ps-10 placeholder:text-white-dark" />
-                    <span className="absolute start-4 top-1/2 -translate-y-1/2">
-                        {/* <IconMail fill={true} /> */}
-                    </span>
+                    <input
+                        id="Email"
+                        type="email"
+                        placeholder="Enter Email"
+                        className={`form-input w-full ps-10 placeholder:text-white-dark ${errors.email ? 'border-red-500' : ''}`}
+                        {...register('email', {
+                            required: 'Email is required',
+                            pattern: {
+                                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                message: 'Invalid email format',
+                            },
+                            validate: (value) => {
+                                if (/\s/.test(value)) {
+                                    return 'Email must not contain spaces';
+                                }
+                                return true;
+                            },
+                        })}
+                    />
                 </div>
+                {typeof errors.email?.message === 'string' && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                )}
             </div>
+
             <div>
                 <label htmlFor="Password">Password</label>
                 <div className="relative text-white-dark">
-                    <input id="Password" type="password" placeholder="Enter Password" className="form-input w-full ps-10 placeholder:text-white-dark" />
-                    <span className="absolute start-4 top-1/2 -translate-y-1/2">
-                        {/* <IconLockDots fill={true} /> */}
-                    </span>
+                    <input
+                        id="Password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter Password"
+                        className={`form-input w-full ps-10 pe-10 placeholder:text-white-dark ${errors.password ? 'border-red-500' : ''}`}
+                        {...register('password', {
+                            required: 'Password is required',
+                            minLength: {
+                                value: 6,
+                                message: 'Password must be at least 6 characters',
+                            },
+                        })}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white-dark hover:text-black transition"
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                 </div>
+                {typeof errors.password?.message === 'string' && (
+                    <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                )}
             </div>
-            <div>
-                <label className="flex cursor-pointer items-center gap-x-[10px]">
-                    <input type="checkbox" className="form-checkbox bg-white dark:bg-black" />
-                    <span className="text-white-dark">Subscribe to weekly newsletter</span>
-                </label>
 
-            </div>
-            <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
-                Sign in
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+            >
+                {loading ? 'Logging in...' : 'Sign in'}
             </button>
         </form>
     );
