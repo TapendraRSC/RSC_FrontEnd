@@ -1,13 +1,14 @@
 "use client"
-
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTable from '../Common/CustomTable';
-import { Plus } from 'lucide-react';
+import { Plus, Edit, Trash2, Pencil } from 'lucide-react';
 import { AppDispatch, RootState } from '../../../../store/store';
-import { exportUsers } from '../../../../store/userSlice';
+import { exportUsers, deleteUser, updateUser, addUser } from '../../../../store/userSlice';
 import { getRoles } from '../../../../store/roleSlice';
 import UsersModal from './UsersModal';
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
+import { toast } from 'react-toastify';
 
 interface User {
     id: number;
@@ -29,21 +30,47 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
+const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+
+    return (...args: any[]) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
 const Users: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { data: users = [], loading } = useSelector((state: RootState) => state.users);
     const { data: roles = [] } = useSelector((state: RootState) => state.roles);
-
     const [searchValue, setSearchValue] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [modalOpen, setModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [editingUser, setEditingUser] = useState<User | any>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        dispatch(exportUsers());
         dispatch(getRoles({ page: 1, limit: 10 }));
     }, [dispatch]);
+
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: value }));
+        }, 1000),
+        [dispatch, currentPage, pageSize]
+    );
+
+    useEffect(() => {
+        if (searchValue.length >= 3) {
+            debouncedSearch(searchValue);
+        } else if (searchValue.length === 0) {
+            dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: '' }));
+        }
+    }, [searchValue, debouncedSearch, currentPage, pageSize, dispatch]);
 
     const roleMap = useMemo(() => {
         const map = new Map();
@@ -95,19 +122,60 @@ const Users: React.FC = () => {
         setPageSize(size);
         setCurrentPage(1);
     };
+
     const handleSearch = (value: string) => {
         setSearchValue(value);
         setCurrentPage(1);
     };
 
     const handleAdd = () => {
-        // TODO: Add modal or routing logic
+        setEditingUser(null);
         setModalOpen(true);
     };
 
-    const handleUserSubmit = (data: any) => {
-        console.log('Form Submitted:', data);
-        // send data to API here
+    const handleEdit = (user: User) => {
+        setEditingUser(user);
+        setModalOpen(true);
+    };
+
+    const handleUserSubmit = async (data: any) => {
+        setIsSubmitting(true);
+        let resultAction: any;
+        if (editingUser) {
+            resultAction = await dispatch(updateUser({ id: editingUser.id, userData: data }));
+        } else {
+            resultAction = await dispatch(addUser(data));
+        }
+        if (
+            (editingUser && updateUser.fulfilled.match(resultAction)) ||
+            (!editingUser && addUser.fulfilled.match(resultAction))
+        ) {
+            const res = resultAction.payload;
+            if (res?.success) {
+                toast.success(res.message);
+                dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
+                setModalOpen(false);
+            } else {
+                toast.error(res?.message || "An error occurred");
+            }
+        } else {
+            const errorPayload: any = resultAction.payload || resultAction.error;
+            toast.error(errorPayload?.message || "An unexpected error occurred");
+        }
+        setIsSubmitting(false);
+    };
+
+    const handleDelete = (user: User) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (userToDelete) {
+            await dispatch(deleteUser(userToDelete.id));
+            await dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
+            setIsDeleteModalOpen(false);
+        }
     };
 
     const columns: any = [
@@ -167,10 +235,39 @@ const Users: React.FC = () => {
                 pageSizeOptions={[10, 25, 50, 100]}
                 showPagination={true}
                 emptyMessage="No users found"
+                actions={(row) => (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => handleEdit(row)}
+                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                            title="Edit"
+                        >
+                            <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => handleDelete(row)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                            title="Delete"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             />
-
-            <UsersModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleUserSubmit} />
-
+            <UsersModal
+                isOpen={modalOpen}
+                onClose={() => !isSubmitting && setModalOpen(false)}
+                onSubmit={handleUserSubmit}
+                user={editingUser}
+            />
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onDelete={confirmDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the user "${userToDelete?.name}"?`}
+                Icon={Trash2}
+            />
         </div>
     );
 };
