@@ -154,29 +154,32 @@ export default function CustomTable<T extends { id: number | string }>({
                                     )}
                                 </tr>
                             ))
-                        ) : data?.length > 0 ? (
+                        ) : data?.length ? (
                             data?.map((row) => (
-                                <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                                    {columns.map((col) => (
-                                        <td key={String(col.accessor)} className="px-4 py-2 text-gray-900 dark:text-gray-100" style={{ maxWidth: '150px' }}>
-                                            <div className="relative group">
-                                                <div className="truncate block max-w-full">
-                                                    {String(row[col.accessor])}
+                                // Check if row and row.id are defined
+                                row && row.id ? (
+                                    <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
+                                        {columns.map((col) => (
+                                            <td key={String(col.accessor)} className="px-4 py-2 text-gray-900 dark:text-gray-100" style={{ maxWidth: '150px' }}>
+                                                <div className="relative group">
+                                                    <div className="truncate block max-w-full">
+                                                        {String(row[col.accessor])}
+                                                    </div>
+                                                    <div className="absolute left-0 bottom-full bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap invisible group-hover:visible z-10">
+                                                        {String(row[col.accessor])}
+                                                    </div>
                                                 </div>
-                                                <div className="absolute left-0 bottom-full bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap invisible group-hover:visible z-10">
-                                                    {String(row[col.accessor])}
+                                            </td>
+                                        ))}
+                                        {actions && (
+                                            <td className="px-4 py-2 text-right">
+                                                <div className="flex justify-end">
+                                                    {typeof actions === 'function' ? actions(row) : actions}
                                                 </div>
-                                            </div>
-                                        </td>
-                                    ))}
-                                    {actions && (
-                                        <td className="px-4 py-2 text-right">
-                                            <div className="flex justify-end">
-                                                {typeof actions === 'function' ? actions(row) : actions}
-                                            </div>
-                                        </td>
-                                    )}
-                                </tr>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ) : null
                             ))
                         ) : (
                             <tr>

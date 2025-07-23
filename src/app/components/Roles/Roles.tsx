@@ -1,18 +1,13 @@
 'use client';
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-
+import { AppDispatch, RootState } from '../../../../store/store';
 import CustomTable from '../Common/CustomTable';
 import RolesModal from './RolesModal';
-import { AppDispatch, RootState } from '../../../../store/store';
-import { getRoles } from '../../../../store/roleSlice';
-
-type SortConfig = {
-    key: keyof Role;
-    direction: 'asc' | 'desc';
-} | null;
+import { getRoles, addRole, updateRole, deleteRole } from '../../../../store/roleSlice';
+import { toast } from 'react-toastify';
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 
 type Role = {
     id: number;
@@ -21,86 +16,117 @@ type Role = {
 
 export default function RolesPage() {
     const dispatch = useDispatch<AppDispatch>();
-    const { data: roles, loading: isLoading } = useSelector((state: RootState) => state.roles);
+    const {
+        roles,
+        total,
+        totalPages,
+        page,
+        limit,
+        loading: isLoading,
+    } = useSelector((state: RootState) => state.roles);
 
     const [searchValue, setSearchValue] = useState('');
-    const [sortConfig, setSortConfig] = useState<any>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Role; direction: 'asc' | 'desc' } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [pageSize, setPageSize] = useState(10);
+    const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+    const [currentRole, setCurrentRole] = useState<Role | null>(null);
 
     useEffect(() => {
-        dispatch(getRoles());
-    }, [dispatch]);
+        dispatch(getRoles({ page: 1, limit: pageSize }));
+    }, [dispatch, pageSize]);
 
-    const filteredData = useMemo(() => {
-        const usersArray = Array.isArray(roles) ? roles : [];
-        if (!searchValue) return usersArray;
+    useEffect(() => {
+        // Dispatch getRoles action whenever searchValue changes
+        const timer = setTimeout(() => {
+            dispatch(getRoles({ page: 1, limit: pageSize, searchValue }));
+        }, 500); // Debounce the search input to avoid excessive API calls
 
-        return usersArray.filter((role: any) =>
-            Object.values(role).some((val) =>
-                String(val).toLowerCase().includes(searchValue.toLowerCase())
-            )
-        );
-    }, [searchValue, roles]);
+        return () => clearTimeout(timer);
+    }, [searchValue, dispatch, pageSize]);
 
-    const sortedData = useMemo(() => {
-        const dataArray = Array.isArray(filteredData) ? filteredData : [];
-        if (!sortConfig) return dataArray;
+    const handlePageChange = (newPage: number) => {
+        dispatch(getRoles({ page: newPage, limit: pageSize, searchValue }));
+    };
 
-        return [...dataArray].sort((a: any, b: any) => {
-            const aVal = a[sortConfig.key];
-            const bVal = b[sortConfig.key];
+    const handlePageSizeChange = (newSize: number) => {
+        setPageSize(newSize);
+        dispatch(getRoles({ page: 1, limit: newSize, searchValue }));
+    };
 
-            if (typeof aVal === 'number' && typeof bVal === 'number') {
-                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-            }
-
-            const comparison = String(aVal).localeCompare(String(bVal));
-            return sortConfig.direction === 'asc' ? comparison : -comparison;
-        });
-    }, [filteredData, sortConfig]);
-
-    const paginatedData: any = useMemo(() => {
-        const dataArray = Array.isArray(sortedData) ? sortedData : [];
-        const startIndex = (currentPage - 1) * pageSize;
-        return dataArray.slice(startIndex, startIndex + pageSize);
-    }, [sortedData, currentPage, pageSize]);
-
-    const totalPages = Math.ceil(sortedData.length / pageSize);
-
-    const handleSearch = (value: string) => {
-        setSearchValue(value);
-        setCurrentPage(1);
+    const handleSearch = (val: string) => {
+        setSearchValue(val);
     };
 
     const handleSort = (config: any) => {
         setSortConfig(config);
     };
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(1);
-    };
-
-    const handleEdit = (row: Role) => {
-        console.log('Edit role:', row);
-    };
-
-    const handleDelete = (row: Role) => {
-        console.log('Delete role:', row);
-    };
-
     const handleAdd = () => {
+        setCurrentRole(null);
         setIsModalOpen(true);
     };
 
-    const handleAddRole = (roleType: string) => {
-        console.log('Adding new role:', { roleType });
+    const handleEdit = (row: Role) => {
+        setCurrentRole(row);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = (row: Role) => {
+        setRoleToDelete(row);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!roleToDelete) return;
+        try {
+            const response = await dispatch(deleteRole(roleToDelete.id)).unwrap();
+            if (response?.success) {
+                toast.success(response.message);
+                dispatch(getRoles({ page, limit: pageSize, searchValue }));
+            } else {
+                toast.error(response?.message || 'Failed to delete role.');
+            }
+        } catch (error: any) {
+            toast.error(error?.message || 'Something went wrong while deleting the role.');
+            console.error('Failed to delete role:', error);
+        } finally {
+            setIsDeleteModalOpen(false);
+            setRoleToDelete(null);
+        }
+    };
+
+    const handleSaveRole = async (roleType: string) => {
+        setIsSaving(true);
+        try {
+            if (currentRole) {
+                const res = await dispatch(updateRole({ id: currentRole.id, roleType })).unwrap();
+                if (res?.success) {
+                    toast.success(res.message);
+                    setIsModalOpen(false);
+                    dispatch(getRoles({ page: 1, limit: pageSize, searchValue }));
+                } else {
+                    toast.error(res?.message || 'Failed to update role.');
+                }
+            } else {
+                const res = await dispatch(addRole({ roleType })).unwrap();
+                if (res?.success) {
+                    toast.success(res.message);
+                    setIsModalOpen(false);
+                    dispatch(getRoles({ page: 1, limit: pageSize, searchValue }));
+                } else {
+                    toast.error(res?.message || 'Failed to create role.');
+                }
+            }
+        } catch (error: any) {
+            toast.error(error?.message || 'Something went wrong.');
+            console.error('Failed to save role:', error);
+        } finally {
+            setIsSaving(false);
+            setCurrentRole(null);
+        }
     };
 
     return (
@@ -118,9 +144,8 @@ export default function RolesPage() {
                     Add Role
                 </button>
             </div>
-
             <CustomTable<Role>
-                data={paginatedData}
+                data={roles}
                 isLoading={isLoading}
                 title="System Roles"
                 columns={[
@@ -151,21 +176,33 @@ export default function RolesPage() {
                 showSearch={true}
                 sortConfig={sortConfig}
                 onSortChange={handleSort}
-                currentPage={currentPage}
+                currentPage={page}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalRecords={sortedData.length}
+                totalRecords={total}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 pageSizeOptions={[10, 25, 50, 100]}
                 showPagination={true}
                 emptyMessage="No roles found"
             />
-
             <RolesModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onAddRole={handleAddRole}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setCurrentRole(null);
+                }}
+                onSaveRole={handleSaveRole}
+                isLoading={isSaving}
+                currentRole={currentRole}
+            />
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onDelete={confirmDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the role "${roleToDelete?.roleType}"?`}
+                Icon={Trash2}
             />
         </div>
     );

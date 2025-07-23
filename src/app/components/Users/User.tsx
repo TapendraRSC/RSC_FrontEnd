@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { exportUsers } from '../../../../store/userSlice';
 import { getRoles } from '../../../../store/roleSlice';
+import UsersModal from './UsersModal';
 
 interface User {
     id: number;
@@ -37,10 +38,11 @@ const Users: React.FC = () => {
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
         dispatch(exportUsers());
-        dispatch(getRoles());
+        dispatch(getRoles({ page: 1, limit: 10 }));
     }, [dispatch]);
 
     const roleMap = useMemo(() => {
@@ -100,6 +102,12 @@ const Users: React.FC = () => {
 
     const handleAdd = () => {
         // TODO: Add modal or routing logic
+        setModalOpen(true);
+    };
+
+    const handleUserSubmit = (data: any) => {
+        console.log('Form Submitted:', data);
+        // send data to API here
     };
 
     const columns: any = [
@@ -160,6 +168,9 @@ const Users: React.FC = () => {
                 showPagination={true}
                 emptyMessage="No users found"
             />
+
+            <UsersModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleUserSubmit} />
+
         </div>
     );
 };
