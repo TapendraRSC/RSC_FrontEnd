@@ -166,6 +166,34 @@ const Sidebar = () => {
                                     </ul>
                                 </AnimateHeight>
                             </li>
+                            <li className="menu nav-item">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleMenu('User Permisson')}
+                                    className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition ${currentMenu === 'User Permisson' ? 'bg-gray-100 dark:bg-gray-800' : ''
+                                        }`}
+                                >
+                                    <span className="text-black dark:text-white">User Permisson</span>
+                                    <ChevronDown
+                                        className={`w-5 h-5 text-black dark:text-white transition-transform ${currentMenu === 'User Permisson' ? 'rotate-0' : '-rotate-90'
+                                            }`}
+                                    />
+                                </button>
+                                <AnimateHeight duration={300} height={currentMenu === 'User Permisson' ? 'auto' : 0}>
+                                    <ul className="sub-menu pl-6 py-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                        <li>
+                                            <Link href="/roles" className="hover:text-black dark:hover:text-white">
+                                                Roles
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/users" className="hover:text-black dark:hover:text-white">
+                                                User Management
+                                            </Link>
+                                        </li>
+                                    </ul>
+                                </AnimateHeight>
+                            </li>
                         </ul>
                     </PerfectScrollbar>
                 </div>
