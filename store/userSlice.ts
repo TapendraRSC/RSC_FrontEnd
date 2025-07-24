@@ -18,7 +18,7 @@ export const exportUsers = createAsyncThunk(
     'users/exportUsers',
     async ({ page, limit, searchValue }: { page: number; limit: number; searchValue: string }, thunkAPI) => {
         try {
-            const response = await axiosInstance.get(`users/exportUser?page=${page}&limit=${limit}&search=${searchValue}`);
+            const response = await axiosInstance.get(`users/getAllUser?page=${page}&limit=${limit}&search=${searchValue}`);
             return response.data;
         } catch (error: any) {
             return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to export users');

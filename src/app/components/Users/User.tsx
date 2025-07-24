@@ -1,8 +1,8 @@
-"use client"
+'use client';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTable from '../Common/CustomTable';
-import { Plus, Edit, Trash2, Pencil } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { exportUsers, deleteUser, updateUser, addUser } from '../../../../store/userSlice';
 import { getRoles } from '../../../../store/roleSlice';
@@ -15,6 +15,7 @@ interface User {
     name: string;
     email: string;
     phoneNumber: string;
+    password: string;
     roleId: number;
     status: string;
     profileImage: string;
@@ -32,7 +33,6 @@ type SortConfig = {
 
 const debounce = (func: Function, wait: number) => {
     let timeout: NodeJS.Timeout;
-
     return (...args: any[]) => {
         clearTimeout(timeout);
         timeout = setTimeout(() => func(...args), wait);
@@ -43,6 +43,7 @@ const Users: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { data: users = [], loading } = useSelector((state: RootState) => state.users);
     const { data: roles = [] } = useSelector((state: RootState) => state.roles);
+
     const [searchValue, setSearchValue] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -52,6 +53,7 @@ const Users: React.FC = () => {
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [editingUser, setEditingUser] = useState<User | any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
     useEffect(() => {
         dispatch(getRoles({ page: 1, limit: 10 }));
@@ -85,7 +87,7 @@ const Users: React.FC = () => {
     };
 
     const filteredData = useMemo(() => {
-        const usersArray = Array.isArray(users?.data) ? users.data : [];
+        const usersArray = Array.isArray(users?.data?.data) ? users.data?.data : [];
         if (!searchValue) return usersArray;
         return usersArray.filter((user: any) =>
             Object.values(user).some((val) =>
@@ -127,6 +129,22 @@ const Users: React.FC = () => {
         setSearchValue(value);
         setCurrentPage(1);
     };
+
+    const handleColumnVisibilityChange = (newHiddenColumns: string[]) => {
+        setHiddenColumns(newHiddenColumns);
+        localStorage.setItem('users-hidden-columns', JSON.stringify(newHiddenColumns));
+    };
+
+    useEffect(() => {
+        const savedHiddenColumns = localStorage.getItem('users-hidden-columns');
+        if (savedHiddenColumns) {
+            try {
+                setHiddenColumns(JSON.parse(savedHiddenColumns));
+            } catch (error) {
+                console.error('Error parsing hidden columns from localStorage:', error);
+            }
+        }
+    }, []);
 
     const handleAdd = () => {
         setEditingUser(null);
@@ -179,25 +197,47 @@ const Users: React.FC = () => {
     };
 
     const columns: any = [
-        { label: 'ID', accessor: 'id', sortable: true },
-        { label: 'Name', accessor: 'name', sortable: true },
-        { label: 'Email', accessor: 'email', sortable: true },
-        { label: 'Phone Number', accessor: 'phoneNumber', sortable: true },
+        {
+            label: 'Name',
+            accessor: 'name',
+            sortable: true,
+            width: '150px',
+        },
+        {
+            label: 'Email',
+            accessor: 'email',
+            sortable: true,
+            width: '200px',
+        },
+        {
+            label: 'Password',
+            accessor: 'password',
+            sortable: false,
+            width: '150px',
+            render: (row: User) => row.password?.trim() ? row.password : '-',
+        },
         {
             label: 'Role',
             accessor: 'roleId',
             sortable: true,
-            render: (user: User) => getRoleType(user.roleId),
+            width: '120px',
+            render: (row: User) => getRoleType(row.roleId),
         },
         {
             label: 'Profile Image',
             accessor: 'profileImage',
             sortable: false,
-            render: (user: User) => (
-                <img src={user.profileImage} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
-            ),
-        },
-        { label: 'Status', accessor: 'status', sortable: true },
+            width: '200px',
+            render: (row: User) => {
+                const imageText = row.profileImage?.trim();
+                if (!imageText) return '-';
+                return (
+                    <span title={imageText}>
+                        {imageText.length > 20 ? imageText.slice(0, 20) + '...' : imageText}
+                    </span>
+                );
+            }
+        }
     ];
 
     return (
@@ -215,6 +255,7 @@ const Users: React.FC = () => {
                     Add Users
                 </button>
             </div>
+
             <CustomTable<User>
                 data={paginatedData}
                 columns={columns}
@@ -229,12 +270,15 @@ const Users: React.FC = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalRecords={Array.isArray(sortedData) ? sortedData.length : 0}
+                totalRecords={sortedData.length}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 pageSizeOptions={[10, 25, 50, 100]}
                 showPagination={true}
                 emptyMessage="No users found"
+                showColumnToggle={true}
+                hiddenColumns={hiddenColumns}
+                onColumnVisibilityChange={handleColumnVisibilityChange}
                 actions={(row) => (
                     <div className="flex gap-2">
                         <button
@@ -254,12 +298,14 @@ const Users: React.FC = () => {
                     </div>
                 )}
             />
+
             <UsersModal
                 isOpen={modalOpen}
                 onClose={() => !isSubmitting && setModalOpen(false)}
                 onSubmit={handleUserSubmit}
                 user={editingUser}
             />
+
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
