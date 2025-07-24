@@ -27,6 +27,7 @@ export default function RolesModal({ isOpen, onClose, onSaveRole, isLoading, cur
         handleSubmit,
         reset,
         formState: { errors },
+        clearErrors, // Add this line
     } = useForm<FormData>();
 
     useEffect(() => {
@@ -64,6 +65,7 @@ export default function RolesModal({ isOpen, onClose, onSaveRole, isLoading, cur
                         register={register}
                         errors={errors}
                         required
+                        clearErrors={clearErrors}
                         placeholder="Enter role type"
                     />
                     <div className="flex justify-end space-x-2 pt-2">

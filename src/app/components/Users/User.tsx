@@ -1,19 +1,21 @@
-"use client"
-
-import React, { useState, useMemo, useEffect } from 'react';
+'use client';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTable from '../Common/CustomTable';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { AppDispatch, RootState } from '../../../../store/store';
-import { exportUsers } from '../../../../store/userSlice';
+import { exportUsers, deleteUser, updateUser, addUser } from '../../../../store/userSlice';
 import { getRoles } from '../../../../store/roleSlice';
 import UsersModal from './UsersModal';
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
+import { toast } from 'react-toastify';
 
 interface User {
     id: number;
     name: string;
     email: string;
     phoneNumber: string;
+    password: string;
     roleId: number;
     status: string;
     profileImage: string;
@@ -29,6 +31,14 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
+const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
 const Users: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { data: users = [], loading } = useSelector((state: RootState) => state.users);
@@ -39,11 +49,30 @@ const Users: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [modalOpen, setModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [editingUser, setEditingUser] = useState<User | any>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
     useEffect(() => {
-        dispatch(exportUsers());
         dispatch(getRoles({ page: 1, limit: 10 }));
     }, [dispatch]);
+
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: value }));
+        }, 1000),
+        [dispatch, currentPage, pageSize]
+    );
+
+    useEffect(() => {
+        if (searchValue.length >= 3) {
+            debouncedSearch(searchValue);
+        } else if (searchValue.length === 0) {
+            dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: '' }));
+        }
+    }, [searchValue, debouncedSearch, currentPage, pageSize, dispatch]);
 
     const roleMap = useMemo(() => {
         const map = new Map();
@@ -58,7 +87,7 @@ const Users: React.FC = () => {
     };
 
     const filteredData = useMemo(() => {
-        const usersArray = Array.isArray(users?.data) ? users.data : [];
+        const usersArray = Array.isArray(users?.data?.data) ? users.data?.data : [];
         if (!searchValue) return usersArray;
         return usersArray.filter((user: any) =>
             Object.values(user).some((val) =>
@@ -95,41 +124,120 @@ const Users: React.FC = () => {
         setPageSize(size);
         setCurrentPage(1);
     };
+
     const handleSearch = (value: string) => {
         setSearchValue(value);
         setCurrentPage(1);
     };
 
+    const handleColumnVisibilityChange = (newHiddenColumns: string[]) => {
+        setHiddenColumns(newHiddenColumns);
+        localStorage.setItem('users-hidden-columns', JSON.stringify(newHiddenColumns));
+    };
+
+    useEffect(() => {
+        const savedHiddenColumns = localStorage.getItem('users-hidden-columns');
+        if (savedHiddenColumns) {
+            try {
+                setHiddenColumns(JSON.parse(savedHiddenColumns));
+            } catch (error) {
+                console.error('Error parsing hidden columns from localStorage:', error);
+            }
+        }
+    }, []);
+
     const handleAdd = () => {
-        // TODO: Add modal or routing logic
+        setEditingUser(null);
         setModalOpen(true);
     };
 
-    const handleUserSubmit = (data: any) => {
-        console.log('Form Submitted:', data);
-        // send data to API here
+    const handleEdit = (user: User) => {
+        setEditingUser(user);
+        setModalOpen(true);
+    };
+
+    const handleUserSubmit = async (data: any) => {
+        setIsSubmitting(true);
+        let resultAction: any;
+        if (editingUser) {
+            resultAction = await dispatch(updateUser({ id: editingUser.id, userData: data }));
+        } else {
+            resultAction = await dispatch(addUser(data));
+        }
+        if (
+            (editingUser && updateUser.fulfilled.match(resultAction)) ||
+            (!editingUser && addUser.fulfilled.match(resultAction))
+        ) {
+            const res = resultAction.payload;
+            if (res?.success) {
+                toast.success(res.message);
+                dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
+                setModalOpen(false);
+            } else {
+                toast.error(res?.message || "An error occurred");
+            }
+        } else {
+            const errorPayload: any = resultAction.payload || resultAction.error;
+            toast.error(errorPayload?.message || "An unexpected error occurred");
+        }
+        setIsSubmitting(false);
+    };
+
+    const handleDelete = (user: User) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (userToDelete) {
+            await dispatch(deleteUser(userToDelete.id));
+            await dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
+            setIsDeleteModalOpen(false);
+        }
     };
 
     const columns: any = [
-        { label: 'ID', accessor: 'id', sortable: true },
-        { label: 'Name', accessor: 'name', sortable: true },
-        { label: 'Email', accessor: 'email', sortable: true },
-        { label: 'Phone Number', accessor: 'phoneNumber', sortable: true },
+        {
+            label: 'Name',
+            accessor: 'name',
+            sortable: true,
+            width: '150px',
+        },
+        {
+            label: 'Email',
+            accessor: 'email',
+            sortable: true,
+            width: '200px',
+        },
+        {
+            label: 'Password',
+            accessor: 'password',
+            sortable: false,
+            width: '150px',
+            render: (row: User) => row.password?.trim() ? row.password : '-',
+        },
         {
             label: 'Role',
             accessor: 'roleId',
             sortable: true,
-            render: (user: User) => getRoleType(user.roleId),
+            width: '120px',
+            render: (row: User) => getRoleType(row.roleId),
         },
         {
             label: 'Profile Image',
             accessor: 'profileImage',
             sortable: false,
-            render: (user: User) => (
-                <img src={user.profileImage} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
-            ),
-        },
-        { label: 'Status', accessor: 'status', sortable: true },
+            width: '200px',
+            render: (row: User) => {
+                const imageText = row.profileImage?.trim();
+                if (!imageText) return '-';
+                return (
+                    <span title={imageText}>
+                        {imageText.length > 20 ? imageText.slice(0, 20) + '...' : imageText}
+                    </span>
+                );
+            }
+        }
     ];
 
     return (
@@ -147,6 +255,7 @@ const Users: React.FC = () => {
                     Add Users
                 </button>
             </div>
+
             <CustomTable<User>
                 data={paginatedData}
                 columns={columns}
@@ -161,16 +270,50 @@ const Users: React.FC = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalRecords={Array.isArray(sortedData) ? sortedData.length : 0}
+                totalRecords={sortedData.length}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 pageSizeOptions={[10, 25, 50, 100]}
                 showPagination={true}
                 emptyMessage="No users found"
+                showColumnToggle={true}
+                hiddenColumns={hiddenColumns}
+                onColumnVisibilityChange={handleColumnVisibilityChange}
+                actions={(row) => (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => handleEdit(row)}
+                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                            title="Edit"
+                        >
+                            <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => handleDelete(row)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                            title="Delete"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             />
 
-            <UsersModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleUserSubmit} />
+            <UsersModal
+                isOpen={modalOpen}
+                onClose={() => !isSubmitting && setModalOpen(false)}
+                onSubmit={handleUserSubmit}
+                user={editingUser}
+            />
 
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onDelete={confirmDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the user "${userToDelete?.name}"?`}
+                Icon={Trash2}
+            />
         </div>
     );
 };

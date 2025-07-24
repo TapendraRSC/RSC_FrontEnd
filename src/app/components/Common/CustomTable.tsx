@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight, Settings, Eye, EyeOff } from 'lucide-react';
 
 type SortConfig = {
     key: string;
@@ -11,6 +11,8 @@ type Column<T> = {
     accessor: keyof T;
     sortable?: boolean;
     width?: string;
+    hideable?: boolean; // Controls if column can be hidden (default true)
+    maxLength?: number; // Maximum characters before truncation (default: 25)
 };
 
 type CustomTableProps<T> = {
@@ -34,6 +36,10 @@ type CustomTableProps<T> = {
     showSearch?: boolean;
     showPagination?: boolean;
     emptyMessage?: string;
+    showColumnToggle?: boolean;
+    hiddenColumns?: string[]; // Array of column accessors to hide initially
+    onColumnVisibilityChange?: (hiddenColumns: string[]) => void; // Callback for column visibility changes
+    globalMaxLength?: number; // Global max length for all columns (default: 25)
 };
 
 export default function CustomTable<T extends { id: number | string }>({
@@ -56,13 +62,79 @@ export default function CustomTable<T extends { id: number | string }>({
     onPageSizeChange,
     pageSizeOptions = [10, 25, 50, 100],
     showPagination = true,
-    emptyMessage = "No data found"
+    emptyMessage = "No data found",
+    showColumnToggle = true,
+    hiddenColumns = [],
+    onColumnVisibilityChange,
+    globalMaxLength = 25
 }: CustomTableProps<T>) {
+
+    // State for column visibility
+    const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set(hiddenColumns));
+    const [showColumnMenu, setShowColumnMenu] = useState(false);
+
+    // Filter visible columns
+    const visibleColumns = useMemo(() =>
+        columns.filter(col => !hiddenCols.has(String(col.accessor))),
+        [columns, hiddenCols]
+    );
+
+    // Calculate dynamic width for visible columns
+    const columnWidth = useMemo(() => {
+        const visibleCount = visibleColumns.length;
+        const actionColumnExists = !!actions;
+        const totalColumns = visibleCount + (actionColumnExists ? 1 : 0);
+
+        if (totalColumns === 0) return '100%';
+
+        // Distribute width evenly among visible columns
+        const baseWidth = `${100 / totalColumns}%`;
+        return baseWidth;
+    }, [visibleColumns.length, actions]);
+
+    // Function to truncate text smartly
+    const truncateText = (text: string, maxLength: number = globalMaxLength) => {
+        if (!text) return '';
+        const textStr = String(text);
+
+        // Only truncate if text length exceeds maxLength
+        if (textStr.length <= maxLength) {
+            return textStr;
+        }
+
+        return textStr.slice(0, maxLength) + '...';
+    };
+
+    // Function to check if text should show tooltip
+    const shouldShowTooltip = (text: string, maxLength: number = globalMaxLength) => {
+        if (!text) return false;
+        return String(text).length > maxLength;
+    };
 
     const handleSort = (key: keyof T) => {
         if (!onSortChange) return;
         const newDirection = sortConfig?.key === String(key) && sortConfig.direction === 'asc' ? 'desc' : 'asc';
         onSortChange({ key: String(key), direction: newDirection });
+    };
+
+    const toggleColumnVisibility = (accessor: string) => {
+        const newHiddenCols = new Set(hiddenCols);
+
+        if (newHiddenCols.has(accessor)) {
+            newHiddenCols.delete(accessor);
+        } else {
+            // Don't allow hiding if it would result in no visible columns
+            if (visibleColumns.length > 1) {
+                newHiddenCols.add(accessor);
+            }
+        }
+
+        setHiddenCols(newHiddenCols);
+
+        // Call the callback if provided
+        if (onColumnVisibilityChange) {
+            onColumnVisibilityChange(Array.from(newHiddenCols));
+        }
     };
 
     const getPaginationNumbers = () => {
@@ -91,32 +163,105 @@ export default function CustomTable<T extends { id: number | string }>({
                             {totalRecords > 0 ? `${totalRecords} total records` : 'No records available'}
                         </p>
                     </div>
-                    {/* Search */}
-                    {showSearch && onSearchChange && (
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <input
-                                type="text"
-                                placeholder={searchPlaceholder}
-                                className="pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 w-64"
-                                value={searchValue}
-                                onChange={(e) => onSearchChange(e.target.value)}
-                            />
-                        </div>
-                    )}
+
+                    <div className="flex items-center gap-3">
+                        {/* Search */}
+                        {showSearch && onSearchChange && (
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <input
+                                    type="text"
+                                    placeholder={searchPlaceholder}
+                                    className="pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 w-64"
+                                    value={searchValue}
+                                    onChange={(e) => onSearchChange(e.target.value)}
+                                />
+                            </div>
+                        )}
+
+                        {/* Column Toggle */}
+                        {showColumnToggle && (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowColumnMenu(!showColumnMenu)}
+                                    className="flex items-center gap-2 px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                                >
+                                    <Settings className="w-4 h-4" />
+                                    <span className="text-sm font-medium">Columns</span>
+                                </button>
+
+                                {/* Column Menu Dropdown */}
+                                {showColumnMenu && (
+                                    <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
+                                        <div className="p-3">
+                                            <div className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                                                Show/Hide Columns
+                                            </div>
+                                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                {columns.map((col) => {
+                                                    const isHidden = hiddenCols.has(String(col.accessor));
+                                                    const isOnlyVisible = visibleColumns.length === 1 && !isHidden;
+
+                                                    return (
+                                                        <label
+                                                            key={String(col.accessor)}
+                                                            className={`flex items-center gap-3 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${isOnlyVisible ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        >
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={!isHidden}
+                                                                    onChange={() => !isOnlyVisible && toggleColumnVisibility(String(col.accessor))}
+                                                                    disabled={isOnlyVisible}
+                                                                    className="sr-only"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${!isHidden
+                                                                    ? 'bg-blue-500 border-blue-500'
+                                                                    : 'border-gray-300 dark:border-gray-500'
+                                                                    }`}>
+                                                                    {!isHidden && (
+                                                                        <Eye className="w-3 h-3 text-white" />
+                                                                    )}
+                                                                    {isHidden && (
+                                                                        <EyeOff className="w-3 h-3 text-gray-400" />
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                                                                {col.label}
+                                                            </span>
+                                                            {isOnlyVisible && (
+                                                                <span className="text-xs text-gray-400">
+                                                                    (Required)
+                                                                </span>
+                                                            )}
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
+
             {/* Table Container */}
             <div className="bg-white dark:bg-gray-900 border-x border-gray-200 dark:border-gray-700 overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-sm">
                     <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                         <tr>
-                            {columns?.map((col) => (
+                            {visibleColumns.map((col) => (
                                 <th
                                     key={String(col.accessor)}
-                                    className={`px-4 py-2 text-left font-medium text-gray-900 dark:text-white ${col.sortable !== false && onSortChange ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 select-none' : ''} transition-colors duration-150`}
+                                    className={`px-4 py-3 text-left font-medium text-gray-900 dark:text-white ${col.sortable !== false && onSortChange ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 select-none' : ''} transition-colors duration-150`}
                                     onClick={() => col.sortable !== false && handleSort(col.accessor)}
-                                    style={{ width: col.width || 'auto', minWidth: '150px' }}
+                                    style={{
+                                        width: col.width || columnWidth,
+                                        minWidth: '120px'
+                                    }}
                                 >
                                     <div className="flex items-center justify-between group">
                                         <span className="font-semibold tracking-wide uppercase text-xs">
@@ -132,7 +277,10 @@ export default function CustomTable<T extends { id: number | string }>({
                                 </th>
                             ))}
                             {actions && (
-                                <th className="px-4 py-2 text-right font-semibold tracking-wide uppercase text-xs text-gray-900 dark:text-white" style={{ width: '100px' }}>
+                                <th
+                                    className="px-4 py-3 text-right font-semibold tracking-wide uppercase text-xs text-gray-900 dark:text-white"
+                                    style={{ width: columnWidth, minWidth: '100px' }}
+                                >
                                     Actions
                                 </th>
                             )}
@@ -142,13 +290,13 @@ export default function CustomTable<T extends { id: number | string }>({
                         {isLoading ? (
                             Array.from({ length: pageSize }).map((_, index) => (
                                 <tr key={index} className="animate-pulse">
-                                    {columns.map((_, i) => (
-                                        <td key={i} className="px-4 py-2">
+                                    {visibleColumns.map((_, i) => (
+                                        <td key={i} className="px-4 py-3">
                                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-3/4" />
                                         </td>
                                     ))}
                                     {actions && (
-                                        <td className="px-4 py-2 text-right">
+                                        <td className="px-4 py-3 text-right">
                                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-16 ml-auto" />
                                         </td>
                                     )}
@@ -156,23 +304,34 @@ export default function CustomTable<T extends { id: number | string }>({
                             ))
                         ) : data?.length ? (
                             data?.map((row) => (
-                                // Check if row and row.id are defined
                                 row && row.id ? (
                                     <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                                        {columns.map((col) => (
-                                            <td key={String(col.accessor)} className="px-4 py-2 text-gray-900 dark:text-gray-100" style={{ maxWidth: '150px' }}>
-                                                <div className="relative group">
-                                                    <div className="truncate block max-w-full">
-                                                        {String(row[col.accessor])}
+                                        {visibleColumns.map((col) => {
+                                            const cellValue = String(row[col.accessor]);
+                                            const maxLength = col.maxLength || globalMaxLength;
+                                            const truncatedText = truncateText(cellValue, maxLength);
+                                            const showTooltip = shouldShowTooltip(cellValue, maxLength);
+
+                                            return (
+                                                <td key={String(col.accessor)} className="px-4 py-3 text-gray-900 dark:text-gray-100">
+                                                    <div className="relative group">
+                                                        <div className="block">
+                                                            {truncatedText}
+                                                        </div>
+                                                        {showTooltip && (
+                                                            <div className="absolute left-0 bottom-full mb-2 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded py-2 px-3 whitespace-normal max-w-xs shadow-lg invisible group-hover:visible z-20 transition-opacity duration-200">
+                                                                <div className="break-words">
+                                                                    {cellValue}
+                                                                </div>
+                                                                <div className="absolute top-full left-4 w-2 h-2 bg-gray-800 dark:bg-gray-700 transform rotate-45"></div>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className="absolute left-0 bottom-full bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap invisible group-hover:visible z-10">
-                                                        {String(row[col.accessor])}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        ))}
+                                                </td>
+                                            );
+                                        })}
                                         {actions && (
-                                            <td className="px-4 py-2 text-right">
+                                            <td className="px-4 py-3 text-right">
                                                 <div className="flex justify-end">
                                                     {typeof actions === 'function' ? actions(row) : actions}
                                                 </div>
@@ -183,7 +342,7 @@ export default function CustomTable<T extends { id: number | string }>({
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={columns.length + (actions ? 1 : 0)} className="px-4 py-4 text-center">
+                                <td colSpan={visibleColumns.length + (actions ? 1 : 0)} className="px-4 py-8 text-center">
                                     <div className="text-gray-500 dark:text-gray-400">
                                         <div className="text-lg font-medium mb-2">{emptyMessage}</div>
                                         <div className="text-sm">Try adjusting your search criteria</div>
@@ -194,6 +353,15 @@ export default function CustomTable<T extends { id: number | string }>({
                     </tbody>
                 </table>
             </div>
+
+            {/* Click outside to close column menu */}
+            {showColumnMenu && (
+                <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowColumnMenu(false)}
+                />
+            )}
+
             {/* Footer */}
             {showPagination && (
                 <div className="bg-white dark:bg-gray-900 rounded-b-xl border border-gray-200 dark:border-gray-700 px-6 py-4">

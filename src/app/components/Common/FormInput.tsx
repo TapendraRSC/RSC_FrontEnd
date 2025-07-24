@@ -1,6 +1,11 @@
-// FormInput.tsx
 import React from 'react';
-import { UseFormRegister, FieldErrors, Path } from 'react-hook-form';
+import {
+    UseFormRegister,
+    FieldErrors,
+    Path,
+    RegisterOptions,
+    UseFormClearErrors,
+} from 'react-hook-form';
 
 interface ValidationRule {
     required?: string | boolean;
@@ -18,11 +23,12 @@ interface FormInputProps<T extends Record<string, any>> {
     type?: 'text' | 'email' | 'password' | 'tel' | 'number' | 'file' | 'url';
     placeholder?: string;
     required?: boolean;
-    validation?: ValidationRule;
+    validation?: RegisterOptions<T, Path<T>>;
     register: UseFormRegister<T>;
     errors: FieldErrors<T>;
+    clearErrors: UseFormClearErrors<T>; // Add this prop
     className?: string;
-    accept?: string; // for file inputs
+    accept?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     disabled?: boolean;
 }
@@ -36,48 +42,77 @@ const FormInput = <T extends Record<string, any>>({
     validation = {},
     register,
     errors,
+    clearErrors, // Add this
     className = '',
     accept,
     onChange,
     disabled = false,
 }: FormInputProps<T>) => {
-    // Build validation rules
-    const rules: ValidationRule = {
+    // Combine default rules
+    const rules: RegisterOptions<T, Path<T>> = {
         ...validation,
         ...(required && { required: `${label} is required` }),
     };
 
-    // Add common validation patterns
-    if (type === 'email' && !validation.pattern) {
+    // Add default patterns if not provided
+    if (type === 'email' && !validation?.pattern) {
         rules.pattern = {
-            value: /^\S+@\S+$/i,
-            message: 'Invalid email format'
+            value: /^\S+@\S+\.\S+$/,
+            message: 'Invalid email format',
         };
     }
 
-    if (type === 'tel' && !validation.pattern) {
+    if (type === 'tel' && !validation?.pattern) {
         rules.pattern = {
             value: /^[0-9]{10}$/,
-            message: 'Enter a valid 10-digit number'
+            message: 'Enter a valid 10-digit number',
         };
     }
 
     const error = errors[name];
 
-    const inputProps = {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Clear error when user starts typing
+        if (error) {
+            clearErrors(name);
+        }
+
+        // Call the original onChange from register
+        register(name, rules).onChange(e);
+
+        // Call custom onChange if provided
+        if (onChange) {
+            onChange(e);
+        }
+    };
+
+    const inputProps: React.InputHTMLAttributes<HTMLInputElement> = {
         ...register(name, rules),
         type,
         className: `w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${error ? 'border-red-500 focus:ring-red-500' : ''
             } ${className}`,
         placeholder,
         disabled,
-        ...(accept && { accept }),
-        ...(onChange && {
-            onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                register(name, rules).onChange(e);
-                onChange(e);
-            }
-        }),
+        maxLength: type === 'tel' ? 10 : undefined,
+        inputMode: type === 'tel' ? 'numeric' : undefined,
+        pattern: type === 'tel' ? '[0-9]*' : undefined,
+        accept,
+        onChange: handleInputChange, // Use our custom handler
+        onKeyDown:
+            type === 'tel'
+                ? (e: React.KeyboardEvent<HTMLInputElement>) => {
+                    const allowedKeys = [
+                        'Backspace',
+                        'Delete',
+                        'ArrowLeft',
+                        'ArrowRight',
+                        'Tab',
+                    ];
+                    if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
+                        e.preventDefault();
+                    }
+                }
+                : undefined,
     };
 
     return (
@@ -88,9 +123,7 @@ const FormInput = <T extends Record<string, any>>({
             </label>
             <input {...inputProps} />
             {error && (
-                <p className="text-red-500 text-sm mt-1">
-                    {error.message as string}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{error.message as string}</p>
             )}
         </div>
     );
