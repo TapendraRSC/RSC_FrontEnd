@@ -192,6 +192,16 @@ const Sidebar = () => {
                                                 User Permissions
                                             </Link>
                                         </li>
+                                        <li>
+                                            <Link href="/leadstagemasterpage" className="hover:text-black dark:hover:text-white">
+                                                Lead Stage Master
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/statusmasterview" className="hover:text-black dark:hover:text-white">
+                                                Status Master View
+                                            </Link>
+                                        </li>
                                     </ul>
                                 </AnimateHeight>
                             </li>
@@ -208,23 +218,18 @@ const Sidebar = () => {
                                             }`}
                                     />
                                 </button>
-                                <AnimateHeight duration={300} height={currentMenu === 'Lead Management ' ? 'auto' : 0}>
+                                <AnimateHeight duration={300} height={currentMenu === 'Lead Management' ? 'auto' : 0}>
                                     <ul className="sub-menu pl-6 py-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
                                         <li>
-                                            <Link href="/roles" className="hover:text-black dark:hover:text-white">
+                                            <Link href="/" className="hover:text-black dark:hover:text-white">
                                                 Today Call
                                             </Link>
                                         </li>
                                         <li>
-                                            <Link href="/users" className="hover:text-black dark:hover:text-white">
+                                            <Link href="/" className="hover:text-black dark:hover:text-white">
                                                 Lead
                                             </Link>
                                         </li>
-                                        {/* <li>
-                                            <Link href="/permissions" className="hover:text-black dark:hover:text-white">
-                                                User Permissions
-                                            </Link>
-                                        </li> */}
                                     </ul>
                                 </AnimateHeight>
                             </li>

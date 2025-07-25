@@ -180,7 +180,7 @@ export default function CustomTable<T extends { id: number | string }>({
                         )}
 
                         {/* Column Toggle */}
-                        {showColumnToggle && (
+                        {/* {showColumnToggle && (
                             <div className="relative">
                                 <button
                                     onClick={() => setShowColumnMenu(!showColumnMenu)}
@@ -190,7 +190,6 @@ export default function CustomTable<T extends { id: number | string }>({
                                     <span className="text-sm font-medium">Columns</span>
                                 </button>
 
-                                {/* Column Menu Dropdown */}
                                 {showColumnMenu && (
                                     <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
                                         <div className="p-3">
@@ -243,7 +242,7 @@ export default function CustomTable<T extends { id: number | string }>({
                                     </div>
                                 )}
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
             </div>
@@ -253,7 +252,7 @@ export default function CustomTable<T extends { id: number | string }>({
                 <table className="w-full text-sm">
                     <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                         <tr>
-                            {visibleColumns.map((col) => (
+                            {visibleColumns?.map((col: any) => (
                                 <th
                                     key={String(col.accessor)}
                                     className={`px-4 py-3 text-left font-medium text-gray-900 dark:text-white ${col.sortable !== false && onSortChange ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 select-none' : ''} transition-colors duration-150`}

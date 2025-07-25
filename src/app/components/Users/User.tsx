@@ -55,9 +55,15 @@ const Users: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
+    // Fix 1: Load roles when component mounts and when users data changes
     useEffect(() => {
-        dispatch(getRoles({ page: 1, limit: 10 }));
+        dispatch(getRoles({ page: 1, limit: 100, searchValue: '' })); // Increase limit to get all roles
     }, [dispatch]);
+
+    // Fix 2: Also fetch users initially
+    useEffect(() => {
+        dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: '' }));
+    }, [dispatch, currentPage, pageSize]);
 
     const debouncedSearch = useCallback(
         debounce((value: string) => {
@@ -74,17 +80,45 @@ const Users: React.FC = () => {
         }
     }, [searchValue, debouncedSearch, currentPage, pageSize, dispatch]);
 
+    // Fix 3: Improved getRoleType function with better error handling
+    const getRoleType = useCallback((roleId: number | string): string => {
+        console.log('getRoleType called with roleId:', roleId);
+        console.log('Available roles:', roles);
+
+        if (!roleId || !roles || roles.length === 0) {
+            console.log('No roleId or roles available');
+            return '-';
+        }
+
+        // Handle different data structures
+        const rolesArray = Array.isArray(roles) ? roles :
+            (roles && Array.isArray(roles)) ? roles :
+                (roles && roles && Array.isArray(roles)) ? roles : [];
+
+        console.log('Processed roles array:', rolesArray);
+
+        const matchedRole: any = rolesArray.find((role: any) => {
+            const roleIdMatch = String(role.id) === String(roleId);
+            console.log(`Comparing role.id: ${role.id} with roleId: ${roleId}, match: ${roleIdMatch}`);
+            return roleIdMatch;
+        });
+
+        console.log('Matched role:', matchedRole);
+
+        return matchedRole?.roleType || '-';
+    }, [roles]);
+
     const roleMap = useMemo(() => {
         const map = new Map();
-        roles.forEach((role: any) => {
-            map.set(role.id, role.roleType);
+        const rolesArray = Array.isArray(roles) ? roles :
+            (roles && Array.isArray(roles)) ? roles :
+                (roles && roles && Array.isArray(roles)) ? roles : [];
+
+        rolesArray.forEach((role: any) => {
+            map.set(String(role.id), role.roleType);
         });
         return map;
     }, [roles]);
-
-    const getRoleType = (roleId: number | string): string => {
-        return roleMap.get(roleId) || '-';
-    };
 
     const filteredData = useMemo(() => {
         const usersArray = Array.isArray(users?.data?.data) ? users.data?.data : [];
@@ -221,7 +255,14 @@ const Users: React.FC = () => {
             accessor: 'roleId',
             sortable: true,
             width: '120px',
-            render: (row: User) => getRoleType(row.roleId),
+            render: (row: User) => {
+
+                const roleTypeFromMap = roleMap.get(String(row.roleId)) || roleMap.get(Number(row.roleId));
+
+                const roleType = roleTypeFromMap || getRoleType(row.roleId);
+
+                return roleType || '-';
+            }
         },
         {
             label: 'Profile Image',
@@ -239,6 +280,11 @@ const Users: React.FC = () => {
             }
         }
     ];
+
+
+    if (paginatedData && paginatedData.length > 0) {
+        console.log('First user roleId:', paginatedData[0].roleId, 'type:', typeof paginatedData[0].roleId);
+    }
 
     return (
         <div>

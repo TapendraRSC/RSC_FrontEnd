@@ -11,22 +11,26 @@ const Header = () => {
     const pathname = usePathname();
     const router = useRouter();
     const { sidebarOpen, toggleSidebar } = useSidebar();
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
+        // Retrieve user data from localStorage
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+
         const selector = document.querySelector('ul.horizontal-menu a[href="' + window.location.pathname + '"]');
         if (selector) {
             const all = document.querySelectorAll('ul.horizontal-menu .nav-link.active');
             all.forEach((element) => {
                 element?.classList.remove('active');
             });
-
             const allLinks = document.querySelectorAll('ul.horizontal-menu a.active');
             allLinks.forEach((element) => {
                 element?.classList.remove('active');
             });
-
             selector?.classList.add('active');
-
             const ul: any = selector.closest('ul.sub-menu');
             if (ul) {
                 const ele = ul.closest('li.menu').querySelectorAll('.nav-link');
@@ -39,18 +43,16 @@ const Header = () => {
         }
     }, [pathname]);
 
-    const setLocale = (flag: any) => {
-        if (flag.toLowerCase() === 'ae') {
-            // dispatch(toggleRTL('rtl'));
-        } else {
-            // dispatch(toggleRTL('ltr'));
-        }
-        router.refresh();
-    };
+    // const setLocale = (flag) => {
+    //     if (flag.toLowerCase() === 'ae') {
+    //     } else {
+    //     }
+    //     router.refresh();
+    // };
 
-    function createMarkup(messages: any) {
-        return { __html: messages };
-    }
+    // function createMarkup(messages) {
+    //     return { __html: messages };
+    // }
 
     const handleSignOut = () => {
         // Remove tokens and user from localStorage
@@ -91,9 +93,9 @@ const Header = () => {
         },
     ]);
 
-    const removeMessage = (value: any) => {
-        setMessages(messages.filter((user) => user.id !== value));
-    };
+    // const removeMessage = (value) => {
+    //     setMessages(messages.filter((user) => user.id !== value));
+    // };
 
     const [notifications, setNotifications] = useState([
         {
@@ -116,11 +118,12 @@ const Header = () => {
         },
     ]);
 
-    const removeNotification = (value: any) => {
-        setNotifications(notifications.filter((user) => user.id !== value));
-    };
+    // const removeNotification = (value) => {
+    //     setNotifications(notifications.filter((user) => user.id !== value));
+    // };
 
     const [search, setSearch] = useState(false);
+
     return (
         <header className={`z-40 transition-all duration-300 ${sidebarOpen ? 'lg:ml-[0px]' : 'ml-0'}`}>
             <div className="shadow-sm">
@@ -128,7 +131,7 @@ const Header = () => {
                     <div className="horizontal-logo flex items-center justify-between ltr:mr-2 rtl:ml-2 lg:hidden">
                         <Link href="/" className="main-logo flex shrink-0 items-center">
                             <img className="inline w-8 ltr:-ml-1 rtl:-mr-1" src="/assets/images/logo.svg" alt="logo" />
-                            <span className="hidden align-middle text-2xl font-semibold transition-all duration-300 ltr:ml-1.5 rtl:mr-1.5 dark:text-white-light md:inline">VRISTO</span>
+                            <span className="hidden align-middle text-2xl font-semibold transition-all duration-300 ltr:ml-1.5 rtl:mr-1.5 dark:text-white-light md:inline">RSC</span>
                         </Link>
                         <button
                             type="button"
@@ -138,7 +141,6 @@ const Header = () => {
                             <Menu className="h-5 w-5" />
                         </button>
                     </div>
-
                     {!sidebarOpen && (
                         <button
                             onClick={toggleSidebar}
@@ -147,7 +149,6 @@ const Header = () => {
                             <Menu className="w-5 h-5 text-black dark:text-white" />
                         </button>
                     )}
-
                     <div className="dropdown flex shrink-0">
                         <Dropdown
                             offset={[0, 8]}
@@ -155,7 +156,7 @@ const Header = () => {
                             button={
                                 <img
                                     className="h-9 w-9 rounded-full object-cover saturate-50 group-hover:saturate-100 transition duration-300"
-                                    src="/assets/images/user-profile.jpeg"
+                                    src={user?.profileImage || "/assets/images/user-profile.jpeg"}
                                     alt="userProfile"
                                 />
                             }
@@ -166,23 +167,22 @@ const Header = () => {
                                     <div className="flex items-center px-4 py-4 space-x-4">
                                         <img
                                             className="h-12 w-12 rounded-lg object-cover shadow-sm"
-                                            src="/assets/images/user-profile.jpeg"
+                                            src={user?.profileImage || "/assets/images/user-profile.jpeg"}
                                             alt="userProfile"
                                         />
                                         <div className="flex-1 truncate">
                                             <h4 className="text-base font-medium flex items-center">
-                                                John Doe
+                                                {user?.name || 'John Doe'}
                                                 <span className="ml-2 rounded-full bg-success-light px-2 py-0.5 text-xs text-success">
                                                     Pro
                                                 </span>
                                             </h4>
                                             <p className="text-gray-500 dark:text-gray-400 text-sm truncate">
-                                                johndoe@gmail.com
+                                                {user?.email || 'johndoe@gmail.com'}
                                             </p>
                                         </div>
                                     </div>
                                 </li>
-
                                 {/* Menu Items */}
                                 <li>
                                     <Link
@@ -211,7 +211,6 @@ const Header = () => {
                                         Lock Screen
                                     </Link>
                                 </li>
-
                                 {/* Sign Out */}
                                 <li className="border-t border-gray-100 dark:border-gray-700">
                                     <button
@@ -226,7 +225,6 @@ const Header = () => {
                         </Dropdown>
                     </div>
                 </div>
-
                 {/* horizontal menu */}
                 <ul className="horizontal-menu hidden border-t border-[#ebedf2] bg-white px-6 py-1.5 font-semibold text-black rtl:space-x-reverse dark:border-[#191e3a] dark:bg-black dark:text-white-dark lg:space-x-1.5 xl:space-x-8">
                     <li className="menu nav-item relative">

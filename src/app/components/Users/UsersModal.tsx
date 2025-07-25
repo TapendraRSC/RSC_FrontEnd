@@ -206,36 +206,38 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                         />
                     </div>
 
-                    {/* Role Dropdown */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Role<span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <CommonDropdown
-                            options={roleOptions}
-                            selected={roleOptions.find((r) => r.value === Number(roleId)) || null}
-                            onChange={(value) => setValue('roleId', Number((value as any).value))}
-                            placeholder="Select a role"
-                        />
-                        {errors.roleId && (
-                            <p className="mt-1 text-sm text-red-600">{errors.roleId.message}</p>
-                        )}
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Role Dropdown */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Role<span className="text-red-500 ml-1">*</span>
+                            </label>
+                            <CommonDropdown
+                                options={roleOptions}
+                                selected={roleOptions.find((r) => r.value === Number(roleId)) || null}
+                                onChange={(value) => setValue('roleId', Number((value as any).value))}
+                                placeholder="Select a role"
+                            />
+                            {errors.roleId && (
+                                <p className="mt-1 text-sm text-red-600">{errors.roleId.message}</p>
+                            )}
+                        </div>
 
-                    {/* Status Dropdown */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Status<span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <CommonDropdown
-                            options={statusOptions}
-                            selected={statusOptions.find((s) => s.value === status) || null}
-                            onChange={(value) => setValue('status', (value as any).value)}
-                            placeholder="Select status"
-                        />
-                        {errors.status && (
-                            <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
-                        )}
+                        {/* Status Dropdown */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Status<span className="text-red-500 ml-1">*</span>
+                            </label>
+                            <CommonDropdown
+                                options={statusOptions}
+                                selected={statusOptions.find((s) => s.value === status) || null}
+                                onChange={(value) => setValue('status', (value as any).value)}
+                                placeholder="Select status"
+                            />
+                            {errors.status && (
+                                <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Profile Image */}
