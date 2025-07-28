@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
+import LeadStateModal from './LeadStateModal';
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 
 interface LeadStage {
     id: number;
@@ -21,12 +23,15 @@ const LeadStageMasterPage: React.FC = () => {
     const [pageSize, setPageSize] = useState(10);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-
     const [data, setData] = useState<LeadStage[]>([
         { id: 1, leadStageStatus: 'Cold', status: 1 },
         { id: 2, leadStageStatus: 'Warm', status: 1 },
         { id: 3, leadStageStatus: 'Hot', status: 1 },
     ]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentLeadStage, setCurrentLeadStage] = useState<LeadStage | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [leadStageToDelete, setLeadStageToDelete] = useState<LeadStage | null>(null);
 
     const columns: any = [
         {
@@ -69,7 +74,6 @@ const LeadStageMasterPage: React.FC = () => {
     }, [filteredData, sortConfig]);
 
     const totalPages = Math.ceil(sortedData.length / pageSize);
-
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * pageSize;
         return sortedData.slice(startIndex, startIndex + pageSize);
@@ -98,17 +102,35 @@ const LeadStageMasterPage: React.FC = () => {
     };
 
     const handleEdit = (row: LeadStage) => {
-        console.log('Edit lead stage:', row);
+        setCurrentLeadStage(row);
+        setIsModalOpen(true);
     };
 
     const handleDelete = (row: LeadStage) => {
-        if (window.confirm('Are you sure you want to delete this lead stage?')) {
-            setData(prev => prev.filter(item => item.id !== row.id));
+        setLeadStageToDelete(row);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (leadStageToDelete) {
+            setData(prev => prev.filter(item => item.id !== leadStageToDelete.id));
         }
+        setIsDeleteModalOpen(false);
     };
 
     const handleAdd = () => {
-        console.log('Add new lead stage');
+        setCurrentLeadStage(null);
+        setIsModalOpen(true);
+    };
+
+    const handleSaveLeadStage = (leadStageStatus: string) => {
+        if (currentLeadStage) {
+            setData(prev => prev.map(item => item.id === currentLeadStage.id ? { ...item, leadStageStatus } : item));
+        } else {
+            const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
+            setData(prev => [...prev, { id: newId, leadStageStatus, status: 1 }]);
+        }
+        setIsModalOpen(false);
     };
 
     return (
@@ -172,6 +194,21 @@ const LeadStageMasterPage: React.FC = () => {
                     />
                 </div>
             </div>
+            <LeadStateModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSaveLeadStage={handleSaveLeadStage}
+                isLoading={loading}
+                currentLeadStage={currentLeadStage}
+            />
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onDelete={confirmDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the lead stage "${leadStageToDelete?.leadStageStatus}"?`}
+                Icon={Trash2}
+            />
         </div>
     );
 };
