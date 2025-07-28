@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
+import StatusMasterModal from './StatusMasterModal';
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 
 interface Status {
     id: number;
@@ -21,12 +23,15 @@ const StatusMasterView: React.FC = () => {
     const [pageSize, setPageSize] = useState(10);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-
     const [data, setData] = useState<Status[]>([
         { id: 1, statusName: 'Active', statusCode: 'ACT' },
         { id: 2, statusName: 'Inactive', statusCode: 'INACT' },
         { id: 3, statusName: 'Pending', statusCode: 'PEND' },
     ]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentStatus, setCurrentStatus] = useState<Status | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [statusToDelete, setStatusToDelete] = useState<Status | null>(null);
 
     const columns: any = [
         {
@@ -70,7 +75,6 @@ const StatusMasterView: React.FC = () => {
     }, [filteredData, sortConfig]);
 
     const totalPages = Math.ceil(sortedData.length / pageSize);
-
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * pageSize;
         return sortedData.slice(startIndex, startIndex + pageSize);
@@ -99,19 +103,35 @@ const StatusMasterView: React.FC = () => {
     };
 
     const handleEdit = (row: Status) => {
-        console.log('Edit status:', row);
-        // Implement edit logic here
+        setCurrentStatus(row);
+        setIsModalOpen(true);
     };
 
     const handleDelete = (row: Status) => {
-        if (window.confirm('Are you sure you want to delete this status?')) {
-            setData(prev => prev.filter(item => item.id !== row.id));
+        setStatusToDelete(row);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (statusToDelete) {
+            setData(prev => prev.filter(item => item.id !== statusToDelete.id));
         }
+        setIsDeleteModalOpen(false);
     };
 
     const handleAdd = () => {
-        console.log('Add new status');
-        // Implement add logic here
+        setCurrentStatus(null);
+        setIsModalOpen(true);
+    };
+
+    const handleSaveStatus = ({ statusName, statusCode }: Omit<Status, 'id'>) => {
+        if (currentStatus) {
+            setData(prev => prev.map(item => item.id === currentStatus.id ? { ...item, statusName, statusCode } : item));
+        } else {
+            const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
+            setData(prev => [...prev, { id: newId, statusName, statusCode }]);
+        }
+        setIsModalOpen(false);
     };
 
     return (
@@ -175,6 +195,21 @@ const StatusMasterView: React.FC = () => {
                     />
                 </div>
             </div>
+            <StatusMasterModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSaveStatus={handleSaveStatus}
+                isLoading={loading}
+                currentStatus={currentStatus}
+            />
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onDelete={confirmDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the status "${statusToDelete?.statusName}"?`}
+                Icon={Trash2}
+            />
         </div>
     );
 };
