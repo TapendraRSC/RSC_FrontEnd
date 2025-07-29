@@ -1,12 +1,12 @@
 "use client"
 
 import React from 'react'
-import PermissionsShow from '../components/Permissions/PermissionsShow'
+import PagePermission from '../components/PagePermission/PagePermission'
 
 const page = () => {
     return (
         <div>
-            <PermissionsShow />
+            <PagePermission />
         </div>
     )
 }

@@ -189,6 +189,16 @@ const Sidebar = () => {
                                         </li>
                                         <li>
                                             <Link href="/permissions" className="hover:text-black dark:hover:text-white">
+                                                Permissions
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/pagepermissions" className="hover:text-black dark:hover:text-white">
+                                                Page Permissions
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/rolebasedpermissions" className="hover:text-black dark:hover:text-white">
                                                 User Permissions
                                             </Link>
                                         </li>
