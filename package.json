@@ -24,8 +24,6 @@
     "react-toastify": "^11.0.5"
   },
   "devDependencies": {
-    "@locator/babel-jsx": "^0.4.4",
-    "@locator/runtime": "^0.4.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
