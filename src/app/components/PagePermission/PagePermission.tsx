@@ -38,11 +38,11 @@ const PagePermission: React.FC = () => {
     }, [dispatch, currentPage, pageSize, searchValue]);
 
     const columns: any = [
-        {
-            label: 'ID',
-            accessor: 'id',
-            sortable: true,
-        },
+        // {
+        //     label: 'ID',
+        //     accessor: 'id',
+        //     sortable: true,
+        // },
         {
             label: 'Page Name',
             accessor: 'pageName',
@@ -100,7 +100,6 @@ const PagePermission: React.FC = () => {
         }
     };
 
-
     const handleAdd = () => {
         setCurrentPermission(null);
         setIsModalOpen(true);
@@ -121,7 +120,6 @@ const PagePermission: React.FC = () => {
             toast.error('Failed to save page permission');
         }
     };
-
 
     if (error) {
         return <div>Error: {error}</div>;
