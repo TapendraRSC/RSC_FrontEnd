@@ -25,7 +25,7 @@ export const useSidebar = () => {
 };
 
 export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(false); // Default false for mobile-first approach
 
     const toggleSidebar = () => {
         setSidebarOpen((prev) => !prev);
@@ -34,9 +34,9 @@ export const SidebarProvider = ({ children }: { children: React.ReactNode }) => 
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 1024) { // lg breakpoint
-                setSidebarOpen(true);
+                setSidebarOpen(true); // Always open on desktop
             } else {
-                setSidebarOpen(false);
+                setSidebarOpen(false); // Always closed by default on mobile
             }
         };
 
@@ -77,12 +77,15 @@ const Sidebar = () => {
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
+        if (sidebarOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [setSidebarOpen]);
+    }, [setSidebarOpen, sidebarOpen]);
 
     // Handle route changes
     useEffect(() => {
+        // Close sidebar on route change for mobile only
         if (window.innerWidth < 1024) {
             setSidebarOpen(false);
         }
@@ -101,23 +104,31 @@ const Sidebar = () => {
     useEffect(() => {
         if (typeof window !== 'undefined' && window.innerWidth < 1024) {
             document.body.style.overflow = sidebarOpen ? 'hidden' : '';
+        } else {
+            document.body.style.overflow = ''; // Reset for desktop
         }
+
+        // Cleanup on unmount
+        return () => {
+            document.body.style.overflow = '';
+        };
     }, [sidebarOpen]);
 
     return (
-        <div>
-            {/* Overlay (mobile only) */}
-            {sidebarOpen && window.innerWidth < 1024 && (
+        <>
+            {/* Overlay (mobile and tablet only) */}
+            {sidebarOpen && (
                 <div
                     onClick={toggleSidebar}
-                    className="fixed inset-0 z-40 bg-black bg-opacity-50"
+                    className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
                 />
             )}
 
             {/* Sidebar */}
             <nav
-                className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-transform duration-300
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-transform duration-300 ease-in-out
+                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                    lg:translate-x-0`} // Always visible on large screens
             >
                 <div className="h-full">
                     {/* Header */}
@@ -126,11 +137,11 @@ const Sidebar = () => {
                             <span className="text-2xl font-semibold text-black dark:text-white">RSC Group</span>
                         </Link>
 
-                        {/* Close button */}
+                        {/* Close button - only visible on mobile */}
                         <button
                             type="button"
                             onClick={toggleSidebar}
-                            className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                            className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition lg:hidden"
                         >
                             <X className="w-5 h-5 text-black dark:text-white" />
                         </button>
@@ -247,7 +258,7 @@ const Sidebar = () => {
                     </PerfectScrollbar>
                 </div>
             </nav>
-        </div>
+        </>
     );
 };
 

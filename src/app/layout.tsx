@@ -19,7 +19,6 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 //   setupLocatorUI();
 // }
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -54,7 +53,7 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // ❗️If login page, don’t show sidebar/header
+  // ❗️If login page, don't show sidebar/header
   const isAuthRoute = pathname === "/login";
 
   useEffect(() => {
@@ -75,7 +74,7 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="flex">
+      <div className="min-h-screen bg-gray-50 dark:bg-black">
         <Sidebar />
         <MainContent>{children}</MainContent>
       </div>
@@ -87,9 +86,14 @@ function MainContent({ children }: { children: React.ReactNode }) {
   const { sidebarOpen } = useSidebar();
 
   return (
-    <main className={`flex-1 min-h-screen bg-gray-50 dark:bg-black transition-all duration-300 ${sidebarOpen ? 'ml-[260px]' : 'ml-0'}`}>
+    <main className="lg:ml-[260px]"> {/* Fixed margin only for desktop */}
+      {/* Header */}
       <Header />
-      <div className="p-6">{children}</div>
+
+      {/* Content area */}
+      <div className="p-4 lg:p-6">
+        {children}
+      </div>
     </main>
   );
 }

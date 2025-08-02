@@ -82,11 +82,11 @@ const Users: React.FC = () => {
 
     // Fix 3: Improved getRoleType function with better error handling
     const getRoleType = useCallback((roleId: number | string): string => {
-        console.log('getRoleType called with roleId:', roleId);
-        console.log('Available roles:', roles);
+        // console.log('getRoleType called with roleId:', roleId);
+        // console.log('Available roles:', roles);
 
         if (!roleId || !roles || roles.length === 0) {
-            console.log('No roleId or roles available');
+            // console.log('No roleId or roles available');
             return '-';
         }
 
@@ -95,15 +95,15 @@ const Users: React.FC = () => {
             (roles && Array.isArray(roles)) ? roles :
                 (roles && roles && Array.isArray(roles)) ? roles : [];
 
-        console.log('Processed roles array:', rolesArray);
+        // console.log('Processed roles array:', rolesArray);
 
         const matchedRole: any = rolesArray.find((role: any) => {
             const roleIdMatch = String(role.id) === String(roleId);
-            console.log(`Comparing role.id: ${role.id} with roleId: ${roleId}, match: ${roleIdMatch}`);
+            // console.log(`Comparing role.id: ${role.id} with roleId: ${roleId}, match: ${roleIdMatch}`);
             return roleIdMatch;
         });
 
-        console.log('Matched role:', matchedRole);
+        // console.log('Matched role:', matchedRole);
 
         return matchedRole?.roleType || '-';
     }, [roles]);
@@ -283,7 +283,7 @@ const Users: React.FC = () => {
 
 
     if (paginatedData && paginatedData.length > 0) {
-        console.log('First user roleId:', paginatedData[0].roleId, 'type:', typeof paginatedData[0].roleId);
+        // console.log('First user roleId:', paginatedData[0].roleId, 'type:', typeof paginatedData[0].roleId);
     }
 
     return (
