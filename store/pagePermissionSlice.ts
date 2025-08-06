@@ -15,6 +15,7 @@ interface PagePermissionData {
     permissions: PagePermission[];
     total: number;
     totalPages: number;
+    data: any
 }
 
 // Define the PagePermissionState interface

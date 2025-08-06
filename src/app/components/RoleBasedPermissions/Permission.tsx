@@ -35,11 +35,11 @@ const UserPermissions: React.FC = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        if (Array.isArray(pages?.data?.permissions) && pages.data.permissions.length) {
-            const normalized = pages.data.permissions.map((p: any) => {
+        if (Array.isArray(pages?.data?.data) && pages.data.data.length) {
+            const normalized = pages.data.data.map((p: any) => {
                 const permissionsObj: { [key: string]: boolean } = {};
 
-                if (list?.data?.permissions) {
+                if (list?.data?.data) {
                     list.data.permissions.forEach((permission: any) => {
                         permissionsObj[permission.id.toString()] = false;
                     });
@@ -108,7 +108,7 @@ const UserPermissions: React.FC = () => {
         const rolePermissionData: any = {
             roleId: selectedRole.id,
             permissions: permissions.map(permission => ({
-                pageId: pages?.data.permissions.find((p: any) => p.pageName === permission.pageName)?.id,
+                pageId: pages?.data.data.find((p: any) => p.pageName === permission.pageName)?.id,
                 permissionIds: Object.keys(permission.permissions)
                     .filter(permissionId => permission.permissions[permissionId])
                     .map(permissionId => parseInt(permissionId)),
@@ -129,6 +129,7 @@ const UserPermissions: React.FC = () => {
     };
 
     const headers = list?.data?.permissions || [];
+    // console.log(headers, "headers");
 
     return (
         <div className="w-full bg-white shadow-xl rounded-xl overflow-hidden">
@@ -151,7 +152,7 @@ const UserPermissions: React.FC = () => {
                             {rolesLoading ? (
                                 <div className="p-2 text-center text-gray-500">Loading roles...</div>
                             ) : (
-                                roles.map((role: any) => (
+                                roles?.map((role: any) => (
                                     <button
                                         key={role.id}
                                         onClick={() => handleRoleSelection(role)}
@@ -181,7 +182,7 @@ const UserPermissions: React.FC = () => {
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
                                         <th className="text-left p-4 font-semibold text-gray-700 text-sm min-w-[180px]">Module Name</th>
-                                        {headers.map((h: any) => (
+                                        {headers?.map((h: any) => (
                                             <th key={h.id} className="text-center p-4 font-semibold text-gray-700 text-xs min-w-[80px] capitalize">
                                                 {h.permissionName}
                                             </th>
@@ -200,10 +201,10 @@ const UserPermissions: React.FC = () => {
                                             <td colSpan={headers.length + 1} className="p-6 text-center text-red-500">{error}</td>
                                         </tr>
                                     ) : permissions.length > 0 ? (
-                                        permissions.map((row, ri) => (
+                                        permissions?.map((row, ri) => (
                                             <tr key={ri} className={`border-b ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                                                 <td className="p-4 text-gray-700 font-medium text-sm">{row.pageName}</td>
-                                                {headers.map((h: any) => {
+                                                {headers?.map((h: any) => {
                                                     const permissionId = h.id.toString();
                                                     const val = permissions[ri]?.permissions?.[permissionId] ?? false;
                                                     return (
@@ -248,11 +249,11 @@ const UserPermissions: React.FC = () => {
                                         ))}
                                     </div>
                                 </div>
-                                {permissions.map((row, ri) => (
+                                {permissions?.map((row, ri) => (
                                     <div key={ri} className={`p-4 border-b ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                                         <div className="grid gap-3 items-center" style={{ gridTemplateColumns: `200px repeat(${headers.length}, 80px)` }}>
                                             <div className="text-gray-700 font-medium text-sm">{row.pageName}</div>
-                                            {headers.map((h: any) => {
+                                            {headers?.map((h: any) => {
                                                 const permissionId = h.id.toString();
                                                 const val = permissions[ri]?.permissions?.[permissionId] ?? false;
                                                 return (
@@ -279,11 +280,11 @@ const UserPermissions: React.FC = () => {
                 </div>
                 {/* MOBILE VIEW */}
                 <div className="block md:hidden space-y-4">
-                    {permissions.map((row, ri) => (
+                    {permissions?.map((row, ri) => (
                         <div key={ri} className="border border-gray-200 bg-white p-4 rounded-lg shadow-sm">
                             <h3 className="font-semibold text-gray-800 mb-4 text-base border-b border-gray-100 pb-2">{row.pageName}</h3>
                             <div className="grid grid-cols-2 gap-4">
-                                {headers.map((h: any) => {
+                                {headers?.map((h: any) => {
                                     const permissionId = h.id.toString();
                                     const val = permissions[ri]?.permissions?.[permissionId] ?? false;
                                     return (
