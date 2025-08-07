@@ -9,8 +9,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 import AnimateHeight from 'react-animate-height';
 
 import { AppDispatch, RootState } from '../../../../store/store';
-import { fetchRolePermissions } from '../../../../store/rolePermissionSlice';
-import { fetchPermissions } from '../../../../store/permissionSlice';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 // Sidebar Context Setup
 interface SidebarContextType {
@@ -47,40 +46,24 @@ export const SidebarProvider = ({ children }: { children: React.ReactNode }) => 
     );
 };
 
-// Main Sidebar Component
 const Sidebar = () => {
     const pathname = usePathname();
     const dispatch = useDispatch<AppDispatch>();
     const { sidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
-
     const [currentMenu, setCurrentMenu] = useState<string>('');
 
-    // Redux state
-    const { rolePermissions, loading: rolePermissionsLoading } = useSelector((state: RootState) => state.rolePermissions);
-    console.log(rolePermissions, "rolePermissions")
-    const permissionList = useSelector((state: RootState) => state.permissions.list?.data?.permissions || []);
-    const permissionsLoading = useSelector((state: RootState) => state.permissions.loading);
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } = useSelector((state: RootState) => state.sidebarPermissions);
 
     useEffect(() => {
-        const userData = localStorage.getItem('user');
-        if (!userData) return;
-        const user = JSON.parse(userData);
-        const roleId = user?.roleId;
-        if (roleId) {
-            dispatch(fetchRolePermissions(roleId));
-            // dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: "" }));
-        }
+        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
-
-    // Sidebar structure
     const menuStructure = {
         dashboard: {
             pageName: 'Dashboard',
             title: 'Dashboard',
             href: '/',
-            type: 'single',
-            alwaysShow: true
+            type: 'single'
         },
         allMasters: {
             title: 'All Masters',
@@ -92,21 +75,23 @@ const Sidebar = () => {
                 { pageName: 'Permissions', title: 'Permissions', href: '/permissions' },
                 { pageName: 'Page Permissions', title: 'Page Permissions', href: '/pagepermissions' },
                 { pageName: 'User Permissions', title: 'User Permissions', href: '/rolebasedpermissions' },
-                { pageName: 'Plot Status', title: 'Plot Status', href: '/plotstatus' }
             ]
         },
-        // plot: {
-        //     pageName: 'Plot Status',
-        //     title: 'Plot Status',
-        //     href: '/plotstatus',
-        //     type: 'single',
-        //     alwaysShow: true
-        // },
+        plotStatus: {
+            pageName: 'Plot Status',
+            title: 'Plot Status',
+            href: '/plotstatus',
+            type: 'single'
+        },
+        projectstatus: {
+            pageName: 'Project Status',
+            title: 'Project Status',
+            href: '/projectstatus',
+            type: 'single'
+        },
     };
 
-    const isViewPermissionValid = (ids: number[]) => {
-        return ids.includes(17);
-    };
+    const isViewPermissionValid = (ids: number[]) => ids.includes(17);
 
     const getFilteredMenu = () => {
         if (!rolePermissions?.permissions) return {};
@@ -115,11 +100,6 @@ const Sidebar = () => {
 
         Object.entries(menuStructure).forEach(([key, item]: any) => {
             if (item.type === 'single') {
-                if (item.alwaysShow) {
-                    filtered[key] = item;
-                    return;
-                }
-
                 const permission = rolePermissions.permissions.find(
                     (perm: any) => perm.pageName === item.pageName && isViewPermissionValid(perm.permissionIds)
                 );
@@ -173,8 +153,7 @@ const Sidebar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [sidebarOpen]);
 
-    // If loading
-    if (permissionsLoading || rolePermissionsLoading) {
+    if (rolePermissionsLoading) {
         return (
             <nav className="sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black transition-transform duration-300 ease-in-out lg:translate-x-0">
                 <div className="p-4 space-y-3 animate-pulse">
@@ -190,7 +169,6 @@ const Sidebar = () => {
             {sidebarOpen && <div onClick={toggleSidebar} className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" />}
             <nav className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
                 <div className="h-full">
-                    {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <Link href="/" className="main-logo flex items-center gap-2">
                             <span className="text-2xl font-semibold text-black dark:text-white">RSC Group</span>
@@ -200,10 +178,8 @@ const Sidebar = () => {
                         </button>
                     </div>
 
-                    {/* Menu */}
                     <PerfectScrollbar className="relative h-[calc(100vh-80px)]">
                         <ul className="space-y-0.5 p-4 font-semibold">
-                            {/* Dashboard */}
                             {filteredMenuItems.dashboard && (
                                 <li className="menu nav-item">
                                     <Link href={filteredMenuItems.dashboard.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
@@ -214,7 +190,6 @@ const Sidebar = () => {
                                 </li>
                             )}
 
-                            {/* All Masters Dropdown */}
                             {filteredMenuItems.allMasters && (
                                 <li className="menu nav-item">
                                     <button
@@ -236,6 +211,25 @@ const Sidebar = () => {
                                             ))}
                                         </ul>
                                     </AnimateHeight>
+                                </li>
+                            )}
+
+                            {filteredMenuItems.plotStatus && (
+                                <li className="menu nav-item">
+                                    <Link href={filteredMenuItems.plotStatus.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                        <span className="text-black dark:text-white">
+                                            {filteredMenuItems.plotStatus.title}
+                                        </span>
+                                    </Link>
+                                </li>
+                            )}
+                            {filteredMenuItems.projectstatus && (
+                                <li className="menu nav-item">
+                                    <Link href={filteredMenuItems.projectstatus.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                        <span className="text-black dark:text-white">
+                                            {filteredMenuItems.projectstatus.title}
+                                        </span>
+                                    </Link>
                                 </li>
                             )}
                         </ul>
