@@ -4,7 +4,7 @@ import userReducer from './userSlice';
 import roleReducer from './roleSlice';
 import permissionReducer from "./permissionSlice"
 import pagePermissionReducer from './pagePermissionSlice'; // Adjust the path as necessary
-
+import rolePermissionSlice from "./rolePermissionSlice"
 
 const store = configureStore({
     reducer: {
@@ -12,7 +12,8 @@ const store = configureStore({
         users: userReducer,
         roles: roleReducer,
         permissions: permissionReducer,
-        pages: pagePermissionReducer, // Add the page permission reducer
+        pages: pagePermissionReducer,
+        rolePermissions: rolePermissionSlice
     },
 });
 

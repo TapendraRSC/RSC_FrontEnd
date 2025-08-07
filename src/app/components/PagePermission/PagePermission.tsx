@@ -32,17 +32,16 @@ const PagePermission: React.FC = () => {
 
     const dispatch = useDispatch<AppDispatch>();
     const { list, loading, error } = useSelector((state: RootState) => state.pages);
-
     useEffect(() => {
         dispatch(fetchPages({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
 
     const columns: any = [
-        // {
-        //     label: 'ID',
-        //     accessor: 'id',
-        //     sortable: true,
-        // },
+        {
+            label: 'ID',
+            accessor: 'id',
+            sortable: true,
+        },
         {
             label: 'Page Name',
             accessor: 'pageName',
@@ -50,9 +49,10 @@ const PagePermission: React.FC = () => {
         },
     ];
 
-    const filteredData = list?.data?.permissions?.filter((item: any) =>
-        item.pageName.toLowerCase().includes(searchValue.toLowerCase())
+    const filteredData = list?.data?.data?.filter((item: any) =>
+        item?.pageName.toLowerCase().includes(searchValue.toLowerCase())
     ) || [];
+    console.log(filteredData, "filteredData")
 
     const handleSearch = (value: string) => {
         setSearchValue(value);

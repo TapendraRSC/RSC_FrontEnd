@@ -13,6 +13,7 @@ interface PermissionData {
     permissions: Permission[];
     total: number;
     totalPages: number;
+    data: any
 }
 
 interface PermissionState {
