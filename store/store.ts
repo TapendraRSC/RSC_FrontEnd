@@ -3,9 +3,10 @@ import authReducer from './authSlice';
 import userReducer from './userSlice';
 import roleReducer from './roleSlice';
 import permissionReducer from "./permissionSlice"
-import pagePermissionReducer from './pagePermissionSlice'; // Adjust the path as necessary
+import pagePermissionReducer from './pagePermissionSlice';
 import rolePermissionSlice from "./rolePermissionSlice"
-
+import sidebarPermissionSlice from './sidebarPermissionSlice';
+import projectStatusSlice from './projectSlice'
 const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -13,7 +14,9 @@ const store = configureStore({
         roles: roleReducer,
         permissions: permissionReducer,
         pages: pagePermissionReducer,
-        rolePermissions: rolePermissionSlice
+        rolePermissions: rolePermissionSlice,
+        sidebarPermissions: sidebarPermissionSlice,
+        projectStatus: projectStatusSlice,
     },
 });
 

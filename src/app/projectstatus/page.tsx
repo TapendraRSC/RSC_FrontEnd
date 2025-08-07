@@ -1,12 +1,12 @@
 "use client"
 
 import React from 'react'
-import PlotStatus from '../components/PlotStatus/PlotStatus'
+import ProjectStatus from '../components/ProjectStatus/ProjectStatus'
 
 const page = () => {
     return (
         <div>
-            <PlotStatus />
+            <ProjectStatus />
         </div>
     )
 }
