@@ -39,11 +39,9 @@ export default function RolesPage() {
     }, [dispatch, pageSize]);
 
     useEffect(() => {
-        // Dispatch getRoles action whenever searchValue changes
         const timer = setTimeout(() => {
             dispatch(getRoles({ page: 1, limit: pageSize, searchValue }));
-        }, 500); // Debounce the search input to avoid excessive API calls
-
+        }, 500);
         return () => clearTimeout(timer);
     }, [searchValue, dispatch, pageSize]);
 
@@ -130,62 +128,64 @@ export default function RolesPage() {
     };
 
     return (
-        <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
-            <div className="mb-6 flex justify-between items-center">
+        <div className="space-y-4 p-4 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Roles Management</h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Manage system roles and permissions</p>
                 </div>
                 <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
                 >
                     <Plus className="w-4 h-4" />
                     Add Role
                 </button>
             </div>
-            <CustomTable<Role>
-                data={roles}
-                isLoading={isLoading}
-                title="System Roles"
-                columns={[
-                    { label: 'ID', accessor: 'id', sortable: true },
-                    { label: 'Role Type', accessor: 'roleType', sortable: true },
-                ]}
-                actions={(row) => (
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => handleEdit(row)}
-                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
-                            title="Edit"
-                        >
-                            <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => handleDelete(row)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                            title="Delete"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                )}
-                searchValue={searchValue}
-                onSearchChange={handleSearch}
-                searchPlaceholder="Search roles..."
-                showSearch={true}
-                sortConfig={sortConfig}
-                onSortChange={handleSort}
-                currentPage={page}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                totalRecords={total}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                pageSizeOptions={[10, 25, 50, 100]}
-                showPagination={true}
-                emptyMessage="No roles found"
-            />
+            <div className="overflow-x-auto">
+                <CustomTable<Role>
+                    data={roles}
+                    isLoading={isLoading}
+                    title="System Roles"
+                    columns={[
+                        { label: 'ID', accessor: 'id', sortable: true },
+                        { label: 'Role Type', accessor: 'roleType', sortable: true },
+                    ]}
+                    actions={(row) => (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handleEdit(row)}
+                                className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                                title="Edit"
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(row)}
+                                className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                                title="Delete"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+                    searchValue={searchValue}
+                    onSearchChange={handleSearch}
+                    searchPlaceholder="Search roles..."
+                    showSearch={true}
+                    sortConfig={sortConfig}
+                    onSortChange={handleSort}
+                    currentPage={page}
+                    totalPages={totalPages}
+                    pageSize={pageSize}
+                    totalRecords={total}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    showPagination={true}
+                    emptyMessage="No roles found"
+                />
+            </div>
             <RolesModal
                 isOpen={isModalOpen}
                 onClose={() => {

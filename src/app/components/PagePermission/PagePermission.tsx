@@ -1,4 +1,3 @@
-// components/PagePermission.tsx
 import React, { useEffect, useState } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
@@ -32,6 +31,7 @@ const PagePermission: React.FC = () => {
 
     const dispatch = useDispatch<AppDispatch>();
     const { list, loading, error } = useSelector((state: RootState) => state.pages);
+
     useEffect(() => {
         dispatch(fetchPages({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
@@ -52,7 +52,6 @@ const PagePermission: React.FC = () => {
     const filteredData = list?.data?.data?.filter((item: any) =>
         item?.pageName.toLowerCase().includes(searchValue.toLowerCase())
     ) || [];
-    console.log(filteredData, "filteredData")
 
     const handleSearch = (value: string) => {
         setSearchValue(value);
@@ -126,22 +125,22 @@ const PagePermission: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
-            <div className="mb-6 flex justify-between items-center">
+        <div className="space-y-4 p-4 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Page Permissions</h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Manage page permissions</p>
                 </div>
                 <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
                 >
                     <Plus className="w-4 h-4" />
                     Add Page Permission
                 </button>
             </div>
-            <div className="p-6">
-                <div className="bg-white rounded-lg shadow-sm">
+            <div className="p-0 md:p-6 w-full overflow-x-auto">
+                <div className="bg-white rounded-lg shadow-sm w-full">
                     <CustomTable<PagePermission>
                         data={filteredData}
                         columns={columns}

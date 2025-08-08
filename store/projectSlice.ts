@@ -3,9 +3,12 @@ import axiosInstance from '@/libs/axios';
 
 export interface ProjectStatus {
     id: number;
-    projectStatusName: string;
+    title: string; // replaces projectStatusName
     status: 'active' | 'inactive';
+    projectImage?: string; // optional in case it's missing
+    projectPdf?: string;   // optional in case it's missing
 }
+
 
 interface ProjectStatusData {
     page: number;
@@ -31,11 +34,11 @@ export const fetchProjectStatuses = createAsyncThunk<
     ProjectStatusData,
     { page?: number; limit?: number; searchValue?: string }
 >(
-    'projectStatus/fetchAll',
+    'projects/fetchAll',
     async ({ page = 1, limit = 10, searchValue = '' }, { rejectWithValue }) => {
         try {
             const res = await axiosInstance.get(
-                `/projectStatus/getAllProjectStatus?page=${page}&limit=${limit}&search=${searchValue}`
+                `/projects/getAllProjects?page=${page}&limit=${limit}&search=${searchValue}`
             );
             return res.data.data;
         } catch (err: any) {
@@ -44,11 +47,17 @@ export const fetchProjectStatuses = createAsyncThunk<
     }
 );
 
-export const addStatus = createAsyncThunk<ProjectStatus, { projectStatusName: string }>(
-    'projectStatus/add',
-    async (data, { rejectWithValue }) => {
+export const addStatus = createAsyncThunk<ProjectStatus, FormData>(
+    'projects/add',
+    async (formData, { rejectWithValue }) => {
         try {
-            const res = await axiosInstance.post('/projectStatus/addProjectStatus', data);
+            const res = await axiosInstance.post(
+                '/projects/addProject',
+                formData,
+                {
+                    headers: { "Content-Type": "multipart/form-data" }
+                }
+            );
             return res.data;
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || 'Failed to add');
@@ -56,13 +65,21 @@ export const addStatus = createAsyncThunk<ProjectStatus, { projectStatusName: st
     }
 );
 
-export const updateStatus = createAsyncThunk<ProjectStatus, { id: number; projectStatusName: string }>(
-    'projectStatus/update',
-    async ({ id, projectStatusName }, { rejectWithValue }) => {
+
+export const updateStatus = createAsyncThunk<
+    ProjectStatus,                         // return type
+    { id: number; formData: FormData }     // payload type
+>(
+    'projects/update',
+    async ({ id, formData }, { rejectWithValue }) => {
         try {
-            const res = await axiosInstance.put(`/projectStatus/updateProjectStatus/${id}`, {
-                projectStatusName,
-            });
+            const res = await axiosInstance.put(
+                `/projects/updateProject/${id}`,
+                formData,
+                {
+                    headers: { "Content-Type": "multipart/form-data" }
+                }
+            );
             return res.data;
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || 'Failed to update');
@@ -70,11 +87,12 @@ export const updateStatus = createAsyncThunk<ProjectStatus, { id: number; projec
     }
 );
 
+
 export const deleteStatus = createAsyncThunk<number, number>(
-    'projectStatus/delete',
+    'projects/delete',
     async (id, { rejectWithValue }) => {
         try {
-            await axiosInstance.delete(`/projectStatus/deleteProjectStatus/${id}`);
+            await axiosInstance.delete(`/projects/deleteProject/${id}`);
             return id;
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || 'Failed to delete');
@@ -83,7 +101,7 @@ export const deleteStatus = createAsyncThunk<number, number>(
 );
 
 const projectStatusSlice = createSlice({
-    name: 'projectStatus',
+    name: 'projects',
     initialState,
     reducers: {},
     extraReducers: (builder) => {
