@@ -43,7 +43,6 @@ const Users: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { data: users = [], loading } = useSelector((state: RootState) => state.users);
     const { data: roles = [] } = useSelector((state: RootState) => state.roles);
-
     const [searchValue, setSearchValue] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -55,12 +54,10 @@ const Users: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
-    // Fix 1: Load roles when component mounts and when users data changes
     useEffect(() => {
-        dispatch(getRoles({ page: 1, limit: 100, searchValue: '' })); // Increase limit to get all roles
+        dispatch(getRoles({ page: 1, limit: 100, searchValue: '' }));
     }, [dispatch]);
 
-    // Fix 2: Also fetch users initially
     useEffect(() => {
         dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: '' }));
     }, [dispatch, currentPage, pageSize]);
@@ -80,55 +77,62 @@ const Users: React.FC = () => {
         }
     }, [searchValue, debouncedSearch, currentPage, pageSize, dispatch]);
 
-    // Fix 3: Improved getRoleType function with better error handling
-    const getRoleType = useCallback((roleId: number | string): string => {
-        // console.log('getRoleType called with roleId:', roleId);
-        // console.log('Available roles:', roles);
+    const roleMap = useMemo(() => {
+        const map = new Map<string, string>();
+        const rolesData: any = roles;
+        let rolesArray: any[] = [];
 
-        if (!roleId || !roles || roles.length === 0) {
-            // console.log('No roleId or roles available');
-            return '-';
+        try {
+            if (Array.isArray(rolesData)) {
+                rolesArray = rolesData;
+            } else if (rolesData && typeof rolesData === 'object') {
+                if (rolesData.data) {
+                    if (Array.isArray(rolesData.data)) {
+                        rolesArray = rolesData.data;
+                    } else if (rolesData.data.data && Array.isArray(rolesData.data.data)) {
+                        rolesArray = rolesData.data.data;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error processing roles data:', error);
         }
 
-        // Handle different data structures
-        const rolesArray = Array.isArray(roles) ? roles :
-            (roles && Array.isArray(roles)) ? roles :
-                (roles && roles && Array.isArray(roles)) ? roles : [];
-
-        // console.log('Processed roles array:', rolesArray);
-
-        const matchedRole: any = rolesArray.find((role: any) => {
-            const roleIdMatch = String(role.id) === String(roleId);
-            // console.log(`Comparing role.id: ${role.id} with roleId: ${roleId}, match: ${roleIdMatch}`);
-            return roleIdMatch;
-        });
-
-        // console.log('Matched role:', matchedRole);
-
-        return matchedRole?.roleType || '-';
-    }, [roles]);
-
-    const roleMap = useMemo(() => {
-        const map = new Map();
-        const rolesArray = Array.isArray(roles) ? roles :
-            (roles && Array.isArray(roles)) ? roles :
-                (roles && roles && Array.isArray(roles)) ? roles : [];
-
-        rolesArray.forEach((role: any) => {
-            map.set(String(role.id), role.roleType);
-        });
+        if (rolesArray && rolesArray.length > 0) {
+            rolesArray.forEach((role: any) => {
+                if (role && role.id && role.roleType) {
+                    map.set(String(role.id), role.roleType);
+                } else {
+                    console.error('Invalid role object:', role);
+                }
+            });
+        }
         return map;
     }, [roles]);
 
+    const actualUsersData = useMemo(() => {
+        if (Array.isArray(users)) {
+            return users;
+        }
+        if (users?.data) {
+            if (Array.isArray(users.data)) {
+                return users.data;
+            }
+            if (users.data?.data && Array.isArray(users.data.data)) {
+                return users.data.data;
+            }
+        }
+        return [];
+    }, [users]);
+
     const filteredData = useMemo(() => {
-        const usersArray = Array.isArray(users?.data?.data) ? users.data?.data : [];
-        if (!searchValue) return usersArray;
-        return usersArray.filter((user: any) =>
+        if (!searchValue) return actualUsersData;
+        return actualUsersData.filter((user: any) =>
             Object.values(user).some((val) =>
                 String(val).toLowerCase().includes(searchValue.toLowerCase())
             )
         );
-    }, [searchValue, users]);
+    }, [searchValue, actualUsersData]);
 
     const sortedData = useMemo(() => {
         const dataArray = Array.isArray(filteredData) ? filteredData : [];
@@ -158,7 +162,6 @@ const Users: React.FC = () => {
         setPageSize(size);
         setCurrentPage(1);
     };
-
     const handleSearch = (value: string) => {
         setSearchValue(value);
         setCurrentPage(1);
@@ -256,102 +259,119 @@ const Users: React.FC = () => {
             sortable: true,
             width: '120px',
             render: (row: User) => {
-
-                const roleTypeFromMap = roleMap.get(String(row.roleId)) || roleMap.get(Number(row.roleId));
-
-                const roleType = roleTypeFromMap || getRoleType(row.roleId);
-
-                return roleType || '-';
+                const rolesData: any = roles;
+                if (!rolesData || (!Array.isArray(rolesData) && !rolesData.data)) {
+                    return 'Loading...';
+                }
+                let actualRoles: any[] = [];
+                if (Array.isArray(rolesData)) {
+                    actualRoles = rolesData;
+                } else if (rolesData.data && Array.isArray(rolesData.data)) {
+                    actualRoles = rolesData.data;
+                }
+                const foundRole = actualRoles.find((role: any) => {
+                    return String(role.id) === String(row.roleId) ||
+                        role.id === row.roleId ||
+                        Number(role.id) === Number(row.roleId);
+                });
+                if (foundRole && foundRole.roleType) {
+                    return foundRole.roleType;
+                }
+                return `🔍 ${row.roleId}`;
             }
         },
         {
             label: 'Profile Image',
             accessor: 'profileImage',
-            sortable: false,
-            width: '200px',
-            render: (row: User) => {
-                const imageText = row.profileImage?.trim();
-                if (!imageText) return '-';
-                return (
-                    <span title={imageText}>
-                        {imageText.length > 20 ? imageText.slice(0, 20) + '...' : imageText}
-                    </span>
-                );
-            }
-        }
+            render: (row: User) =>
+                row.profileImage ? (
+                    <img
+                        src={row.profileImage}
+                        alt="Profile"
+                        className="w-20 h-12 object-cover border border-gray-300 rounded-lg"
+                    />
+                ) : (
+                    '-'
+                ),
+        },
     ];
 
-
-    if (paginatedData && paginatedData.length > 0) {
-        // console.log('First user roleId:', paginatedData[0].roleId, 'type:', typeof paginatedData[0].roleId);
-    }
+    useEffect(() => {
+        if (paginatedData && paginatedData.length > 0) {
+            console.log('Sample user roleIds:', paginatedData.slice(0, 3).map(u => ({
+                id: u.id,
+                name: u.name,
+                roleId: u.roleId,
+                roleType: roleMap.get(String(u.roleId))
+            })));
+        }
+    }, [paginatedData, roleMap]);
 
     return (
-        <div>
-            <div className="mb-6 flex justify-between items-center">
-                <div>
+        <div className="p-4">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div className="mb-4 md:mb-0">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users Management</h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Manage system users and permissions</p>
                 </div>
                 <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
                 >
                     <Plus className="w-4 h-4" />
                     Add Users
                 </button>
             </div>
-
-            <CustomTable<User>
-                data={paginatedData}
-                columns={columns}
-                isLoading={loading}
-                title="Users"
-                searchValue={searchValue}
-                onSearchChange={handleSearch}
-                searchPlaceholder="Search users..."
-                showSearch={true}
-                sortConfig={sortConfig}
-                onSortChange={handleSort}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                totalRecords={sortedData.length}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                pageSizeOptions={[10, 25, 50, 100]}
-                showPagination={true}
-                emptyMessage="No users found"
-                showColumnToggle={true}
-                hiddenColumns={hiddenColumns}
-                onColumnVisibilityChange={handleColumnVisibilityChange}
-                actions={(row) => (
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => handleEdit(row)}
-                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
-                            title="Edit"
-                        >
-                            <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => handleDelete(row)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                            title="Delete"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                )}
-            />
-
+            <div className="overflow-x-auto">
+                <CustomTable<User>
+                    data={paginatedData}
+                    columns={columns}
+                    isLoading={loading}
+                    title="Users"
+                    searchValue={searchValue}
+                    onSearchChange={handleSearch}
+                    searchPlaceholder="Search users..."
+                    showSearch={true}
+                    sortConfig={sortConfig}
+                    onSortChange={handleSort}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    pageSize={pageSize}
+                    totalRecords={sortedData.length}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    showPagination={true}
+                    emptyMessage="No users found"
+                    showColumnToggle={true}
+                    hiddenColumns={hiddenColumns}
+                    onColumnVisibilityChange={handleColumnVisibilityChange}
+                    actions={(row) => (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handleEdit(row)}
+                                className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                                title="Edit"
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(row)}
+                                className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                                title="Delete"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+                />
+            </div>
             <UsersModal
                 isOpen={modalOpen}
                 onClose={() => !isSubmitting && setModalOpen(false)}
                 onSubmit={handleUserSubmit}
                 user={editingUser}
             />
-
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}

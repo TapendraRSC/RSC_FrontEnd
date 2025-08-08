@@ -208,25 +208,33 @@ const CustomTable = <T extends { id: number | string }>({
                                     </tr>
                                 ))
                             ) : data?.length ? (
-                                data.map((row) => (
+                                data.map((row: any) => (
                                     row && row.id ? (
                                         <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                                            {visibleColumns.map((col) => {
-                                                const cellValue = String(row[col.accessor]);
+                                            {visibleColumns.map((col: any) => {
+                                                const cellValue: any = String(row[col.accessor]);
                                                 const maxLength = col.maxLength || globalMaxLength;
                                                 const truncatedText = truncateText(cellValue, maxLength);
                                                 const showTooltip = shouldShowTooltip(cellValue, maxLength);
+
                                                 return (
-                                                    <td key={String(col.accessor)} className="px-2 sm:px-4 py-2 sm:py-3 text-gray-900 dark:text-gray-100">
+                                                    <td
+                                                        key={String(col.accessor)}
+                                                        className="px-2 sm:px-4 py-2 sm:py-3 text-gray-900 dark:text-gray-100"
+                                                    >
                                                         <div className="relative group">
                                                             <div className="block min-w-0">
-                                                                <span className="break-words text-xs sm:text-sm">{truncatedText}</span>
+                                                                {typeof (col as any).render === "function" ? (
+                                                                    // custom render function if provided
+                                                                    (col as any).render(row)
+                                                                ) : (
+                                                                    <span className="break-words text-xs sm:text-sm">{truncatedText}</span>
+                                                                )}
                                                             </div>
-                                                            {showTooltip && (
+
+                                                            {showTooltip && !col.render && (
                                                                 <div className="absolute left-0 bottom-full mb-2 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded py-2 px-3 whitespace-normal max-w-xs shadow-lg invisible group-hover:visible z-20 transition-opacity duration-200">
-                                                                    <div className="break-words">
-                                                                        {cellValue}
-                                                                    </div>
+                                                                    <div className="break-words">{cellValue}</div>
                                                                     <div className="absolute top-full left-4 w-2 h-2 bg-gray-800 dark:bg-gray-700 transform rotate-45"></div>
                                                                 </div>
                                                             )}
@@ -234,6 +242,7 @@ const CustomTable = <T extends { id: number | string }>({
                                                     </td>
                                                 );
                                             })}
+
                                             {actions && (
                                                 <td className="px-2 sm:px-4 py-2 sm:py-3 text-right">
                                                     <div className="flex justify-end">

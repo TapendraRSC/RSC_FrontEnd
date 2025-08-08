@@ -51,7 +51,6 @@ const PermissionsShow: React.FC = () => {
     ];
 
     const filteredData = list?.data?.permissions || [];
-
     const totalPages = list?.data?.totalPages || 1;
 
     const handleSearch = (value: string) => {
@@ -122,28 +121,27 @@ const PermissionsShow: React.FC = () => {
         }
     };
 
-
     if (error) {
         return <div>Error: {error}</div>;
     }
 
     return (
-        <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
-            <div className="mb-6 flex justify-between items-center">
+        <div className="space-y-4 p-4 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Permissions</h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Manage permissions</p>
                 </div>
                 <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
                 >
                     <Plus className="w-4 h-4" />
                     Add Permission
                 </button>
             </div>
-            <div className="p-6">
-                <div className="bg-white rounded-lg shadow-sm">
+            <div className="p-0 md:p-6 w-full overflow-x-auto">
+                <div className="bg-white rounded-lg shadow-sm w-full">
                     <CustomTable<Permission>
                         data={filteredData}
                         columns={columns}
