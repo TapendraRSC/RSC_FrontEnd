@@ -11,7 +11,8 @@
   "dependencies": {
     "next": "15.4.1",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "lucide-react": "^0.350.0"
   },
   "devDependencies": {
     "@locator/babel-jsx": "^0.4.4",
