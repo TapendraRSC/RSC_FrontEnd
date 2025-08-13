@@ -20,7 +20,7 @@ interface ValidationRule {
 interface FormInputProps<T extends Record<string, any>> {
     name: Path<T>;
     label: string;
-    type?: 'text' | 'email' | 'password' | 'tel' | 'number' | 'file' | 'url';
+    type?: 'text' | 'email' | 'password' | 'tel' | 'number' | 'file' | 'url' | 'textarea' | 'time' | 'date';
     placeholder?: string;
     required?: boolean;
     validation?: RegisterOptions<T, Path<T>>;

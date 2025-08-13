@@ -7,6 +7,8 @@ import pagePermissionReducer from './pagePermissionSlice';
 import rolePermissionSlice from "./rolePermissionSlice"
 import sidebarPermissionSlice from './sidebarPermissionSlice';
 import projectStatusSlice from './projectSlice'
+import landSlice from "./landSlice"
+
 const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -17,6 +19,7 @@ const store = configureStore({
         rolePermissions: rolePermissionSlice,
         sidebarPermissions: sidebarPermissionSlice,
         projectStatus: projectStatusSlice,
+        lands: landSlice
     },
 });
 

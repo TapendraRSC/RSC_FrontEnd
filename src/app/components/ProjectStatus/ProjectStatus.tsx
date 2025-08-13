@@ -19,10 +19,8 @@ const ProjectStatusComponent: React.FC = () => {
     const [pageSize, setPageSize] = useState(10);
     const [sortConfig, setSortConfig] = useState<any>(null);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
     const [currentStatus, setCurrentStatus] = useState<ProjectStatus | null>(null);
     const [statusToDelete, setStatusToDelete] = useState<ProjectStatus | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -113,7 +111,7 @@ const ProjectStatusComponent: React.FC = () => {
             sortable: true,
             render: (row: ProjectStatus) => (
                 <Link
-                    href={`/projects/${row.id}`}
+                    href={`/projectstatus/${row.id}`}
                     className="text-blue-500 hover:text-blue-700 hover:underline cursor-pointer"
                 >
                     {row.title}
