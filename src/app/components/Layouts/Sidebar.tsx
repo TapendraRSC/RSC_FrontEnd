@@ -89,6 +89,18 @@ const Sidebar = () => {
             href: '/projectstatus',
             type: 'single'
         },
+        Lead: {
+            pageName: 'Lead',
+            title: 'Lead',
+            href: '/lead',
+            type: 'single'
+        },
+        Land: {
+            pageName: 'Land',
+            title: 'Land',
+            href: '/land',
+            type: 'single'
+        },
     };
 
     const isViewPermissionValid = (ids: number[]) => ids.includes(17);
@@ -228,6 +240,24 @@ const Sidebar = () => {
                                     <Link href={filteredMenuItems.projectstatus.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                                         <span className="text-black dark:text-white">
                                             {filteredMenuItems.projectstatus.title}
+                                        </span>
+                                    </Link>
+                                </li>
+                            )}
+                            {filteredMenuItems.Lead && (
+                                <li className="menu nav-item">
+                                    <Link href={filteredMenuItems.Lead.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                        <span className="text-black dark:text-white">
+                                            {filteredMenuItems.Lead.title}
+                                        </span>
+                                    </Link>
+                                </li>
+                            )}
+                            {filteredMenuItems.Land && (
+                                <li className="menu nav-item">
+                                    <Link href={filteredMenuItems.Land.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                        <span className="text-black dark:text-white">
+                                            {filteredMenuItems.Land.title}
                                         </span>
                                     </Link>
                                 </li>
