@@ -31,6 +31,7 @@ interface FormInputProps<T extends Record<string, any>> {
     accept?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     disabled?: boolean;
+    step?: string | number;
 }
 
 const FormInput = <T extends Record<string, any>>({
@@ -47,6 +48,7 @@ const FormInput = <T extends Record<string, any>>({
     accept,
     onChange,
     disabled = false,
+    step,
 }: FormInputProps<T>) => {
     // Combine default rules
     const rules: RegisterOptions<T, Path<T>> = {
@@ -97,6 +99,7 @@ const FormInput = <T extends Record<string, any>>({
         inputMode: type === 'tel' ? 'numeric' : undefined,
         pattern: type === 'tel' ? '[0-9]*' : undefined,
         accept,
+        step,
         onChange: handleInputChange, // Use our custom handler
         onKeyDown:
             type === 'tel'

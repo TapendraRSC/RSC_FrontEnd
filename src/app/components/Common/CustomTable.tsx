@@ -1,3 +1,6 @@
+"use client";
+
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight, Settings, Eye, EyeOff } from 'lucide-react';
 

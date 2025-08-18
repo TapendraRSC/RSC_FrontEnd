@@ -7,7 +7,9 @@ import pagePermissionReducer from './pagePermissionSlice';
 import rolePermissionSlice from "./rolePermissionSlice"
 import sidebarPermissionSlice from './sidebarPermissionSlice';
 import projectStatusSlice from './projectSlice'
-import landSlice from "./landSlice"
+import landSlice from "./landSlice";
+import plotSlice from "./plotSlice";
+
 
 const store = configureStore({
     reducer: {
@@ -19,7 +21,8 @@ const store = configureStore({
         rolePermissions: rolePermissionSlice,
         sidebarPermissions: sidebarPermissionSlice,
         projectStatus: projectStatusSlice,
-        lands: landSlice
+        lands: landSlice,
+        plotSlice: plotSlice
     },
 });
 
