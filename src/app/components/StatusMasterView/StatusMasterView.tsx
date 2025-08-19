@@ -1,14 +1,18 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
-import StatusMasterModal from './StatusMasterModal';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
+import { AppDispatch, RootState } from '../../../../store/store';
+
+import { toast } from 'react-toastify';
+import { createStatus, deleteStatus, fetchStatusById, fetchStatuses, updateStatus } from '../../../../store/statusMasterSlice';
+import StatusMasterModal from './StatusMasterModal';
 
 interface Status {
     id: number;
-    statusName: string;
-    statusCode: string;
+    type: string;
 }
 
 interface SortConfig {
@@ -17,93 +21,64 @@ interface SortConfig {
 }
 
 const StatusMasterView: React.FC = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const { list, loading, page, limit, totalPages, total } = useSelector((state: RootState) => state.statuses);
     const [searchValue, setSearchValue] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<Status[]>([
-        { id: 1, statusName: 'Active', statusCode: 'ACT' },
-        { id: 2, statusName: 'Inactive', statusCode: 'INACT' },
-        { id: 3, statusName: 'Pending', statusCode: 'PEND' },
-    ]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentStatus, setCurrentStatus] = useState<Status | null>(null);
+    const [currentStatus, setCurrentStatus] = useState<Status | any>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [statusToDelete, setStatusToDelete] = useState<Status | null>(null);
 
+    useEffect(() => {
+        dispatch(fetchStatuses({
+            page: currentPage,
+            limit: pageSize,
+            searchValue: searchValue
+        }));
+    }, [dispatch, currentPage, pageSize, searchValue]);
+
     const columns: any = [
-        {
-            label: 'ID',
-            accessor: 'id',
-            sortable: true,
-        },
-        {
-            label: 'Status Name',
-            accessor: 'statusName',
-            sortable: true,
-        },
-        {
-            label: 'Status Code',
-            accessor: 'statusCode',
-            sortable: true,
-        },
+        { label: 'ID', accessor: 'id', sortable: true },
+        { label: 'Lead Status', accessor: 'type', sortable: true }, // changed
     ];
 
-    const filteredData = useMemo(() => {
-        return data.filter(item =>
-            item.statusName.toLowerCase().includes(searchValue.toLowerCase()) ||
-            item.statusCode.toLowerCase().includes(searchValue.toLowerCase())
-        );
-    }, [data, searchValue]);
-
-    const sortedData = useMemo(() => {
-        let sortableData = [...filteredData];
+    const displayData: any = useMemo(() => {
+        if (!list || list.length === 0) return [];
+        let sortableData = [...list];
         if (sortConfig !== null) {
-            sortableData.sort((a, b) => {
-                if (a[sortConfig.key as keyof Status] < b[sortConfig.key as keyof Status]) {
-                    return sortConfig.direction === 'asc' ? -1 : 1;
-                }
-                if (a[sortConfig.key as keyof Status] > b[sortConfig.key as keyof Status]) {
-                    return sortConfig.direction === 'asc' ? 1 : -1;
-                }
+            sortableData.sort((a: any, b: any) => {
+                const aValue = a[sortConfig.key as keyof Status];
+                const bValue = b[sortConfig.key as keyof Status];
+                if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
             });
         }
         return sortableData;
-    }, [filteredData, sortConfig]);
-
-    const totalPages = Math.ceil(sortedData.length / pageSize);
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * pageSize;
-        return sortedData.slice(startIndex, startIndex + pageSize);
-    }, [sortedData, currentPage, pageSize]);
+    }, [list, sortConfig]);
 
     const handleSearch = (value: string) => {
         setSearchValue(value);
         setCurrentPage(1);
     };
 
-    const handleSort = (config: any) => {
-        setSortConfig(config);
-    };
+    const handleSort = (config: any) => setSortConfig(config);
+    const handlePageChange = (newPage: number) => setCurrentPage(newPage);
+    const handlePageSizeChange = (size: number) => { setPageSize(size); setCurrentPage(1); };
+    const handleColumnVisibilityChange = (columns: string[]) => setHiddenColumns(columns);
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(1);
-    };
-
-    const handleColumnVisibilityChange = (columns: string[]) => {
-        setHiddenColumns(columns);
-    };
-
-    const handleEdit = (row: Status) => {
-        setCurrentStatus(row);
+    const handleEdit = async (row: Status) => {
+        try {
+            const result = await dispatch(fetchStatusById(row.id.toString())).unwrap();
+            setCurrentStatus(result);
+        } catch (error) {
+            console.error('Error fetching status by ID:', error);
+            setCurrentStatus(row);
+        }
         setIsModalOpen(true);
     };
 
@@ -112,11 +87,29 @@ const StatusMasterView: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setCurrentStatus(null);
+    };
+
+    const confirmDelete = async () => {
         if (statusToDelete) {
-            setData(prev => prev.filter(item => item.id !== statusToDelete.id));
+            try {
+                await dispatch(deleteStatus(statusToDelete.id.toString())).unwrap();
+                toast.success("Status deleted successfully");
+
+                await dispatch(fetchStatuses({
+                    page: currentPage,
+                    limit: pageSize,
+                    searchValue: searchValue
+                }));
+            } catch (error: any) {
+                console.error("Error deleting status:", error);
+                toast.error(error?.message || "Failed to delete status");
+            }
         }
         setIsDeleteModalOpen(false);
+        setStatusToDelete(null);
     };
 
     const handleAdd = () => {
@@ -124,14 +117,36 @@ const StatusMasterView: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleSaveStatus = ({ statusName, statusCode }: Omit<Status, 'id'>) => {
-        if (currentStatus) {
-            setData(prev => prev.map(item => item.id === currentStatus.id ? { ...item, statusName, statusCode } : item));
-        } else {
-            const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
-            setData(prev => [...prev, { id: newId, statusName, statusCode }]);
+    const handleSaveStatus = async (typeValue: any) => {
+        try {
+            if (currentStatus) {
+                await dispatch(
+                    updateStatus({
+                        id: currentStatus.id.toString(),
+                        payload: { type: typeof typeValue === "string" ? typeValue : typeValue.type },
+                    })
+                ).unwrap();
+
+                toast.success("Status updated successfully");
+            } else {
+                await dispatch(
+                    createStatus({ type: typeof typeValue === "string" ? typeValue : typeValue.type })
+                ).unwrap();
+
+                toast.success("Status created successfully");
+            }
+
+            await dispatch(fetchStatuses({
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchValue
+            }));
+
+            setIsModalOpen(false);
+        } catch (error: any) {
+            console.error("Error saving status:", error);
+            toast.error(error?.message || "Failed to save status");
         }
-        setIsModalOpen(false);
     };
 
     return (
@@ -139,7 +154,7 @@ const StatusMasterView: React.FC = () => {
             <div className="mb-6 flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Status Master</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">Manage statuses and their codes</p>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">Manage lead statuses</p>
                 </div>
                 <button
                     onClick={handleAdd}
@@ -152,7 +167,7 @@ const StatusMasterView: React.FC = () => {
             <div className="p-6">
                 <div className="bg-white rounded-lg shadow-sm">
                     <CustomTable<Status>
-                        data={paginatedData}
+                        data={displayData}
                         columns={columns}
                         isLoading={loading}
                         title="Status Master"
@@ -163,9 +178,9 @@ const StatusMasterView: React.FC = () => {
                         sortConfig={sortConfig}
                         onSortChange={handleSort}
                         currentPage={currentPage}
-                        totalPages={totalPages}
+                        totalPages={totalPages || Math.ceil(total / pageSize)}
                         pageSize={pageSize}
-                        totalRecords={sortedData.length}
+                        totalRecords={total}
                         onPageChange={handlePageChange}
                         onPageSizeChange={handlePageSizeChange}
                         pageSizeOptions={[10, 25, 50, 100]}
@@ -195,19 +210,22 @@ const StatusMasterView: React.FC = () => {
                     />
                 </div>
             </div>
+
             <StatusMasterModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={handleCloseModal}
                 onSaveStatus={handleSaveStatus}
                 isLoading={loading}
                 currentStatus={currentStatus}
             />
+
+
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onDelete={confirmDelete}
                 title="Confirm Deletion"
-                message={`Are you sure you want to delete the status "${statusToDelete?.statusName}"?`}
+                message={`Are you sure you want to delete the status "${statusToDelete?.type}"?`}
                 Icon={Trash2}
             />
         </div>

@@ -183,7 +183,7 @@ const ProjectStatusComponent: React.FC = () => {
 
             {/* Table */}
             <div className="p-3 sm:p-4 md:p-6">
-                {error && <p className="text-red-500 mb-2">{error}</p>}
+                {/* {error && <p className="text-red-500 mb-2">{error}</p>} */}
                 <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
                     <CustomTable<ProjectStatus>
                         data={projectStatusList}

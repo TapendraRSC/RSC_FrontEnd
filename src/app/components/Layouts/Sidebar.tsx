@@ -11,7 +11,6 @@ import AnimateHeight from 'react-animate-height';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
-// Sidebar Context Setup
 interface SidebarContextType {
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
@@ -75,6 +74,8 @@ const Sidebar = () => {
                 { pageName: 'Permissions', title: 'Permissions', href: '/permissions' },
                 { pageName: 'Page Permissions', title: 'Page Permissions', href: '/pagepermissions' },
                 { pageName: 'User Permissions', title: 'User Permissions', href: '/rolebasedpermissions' },
+                { pageName: 'Lead Stage Master View', title: 'Lead Stage Master View', href: '/leadstagemasterpage' },
+                { pageName: 'Status Master View', title: 'Status Master View', href: '/statusmasterview' },
             ]
         },
         plotStatus: {
