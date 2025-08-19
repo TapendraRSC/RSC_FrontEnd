@@ -4,7 +4,7 @@ import axios from "axios";
 // "http://crm.local:8000/",
 
 const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "",
+    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://192.168.29.137:8000/",
     withCredentials: true,
 });
 
