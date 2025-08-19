@@ -24,12 +24,8 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
     const [pageSize, setPageSize] = useState(10);
     const [sortConfig, setSortConfig] = useState<any>(null);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-
-    // Plot modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPlot, setSelectedPlot] = useState<any>(null);
-
-    // Delete modal states
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [plotToDelete, setPlotToDelete] = useState<any>(null);
 
@@ -49,9 +45,11 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
         { label: "Plot Number", accessor: "plotNumber" },
         { label: "City", accessor: "city" },
         { label: "Facing", accessor: "facing" },
+        { label: "Land Type", accessor: "landType" },
+        { label: "Project Title", accessor: "projectTitle" },
         { label: "Sq. Yard", accessor: "sqYard" },
         { label: "Sq. Feet", accessor: "sqFeet" },
-        { label: "Remarks", accessor: "remarks" },
+        { label: "Price", accessor: "price" },
         { label: "Status", accessor: "status" },
     ];
 
@@ -180,7 +178,6 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                 )}
             </div>
 
-            {/* Plot Modal */}
             <PlotModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -189,7 +186,6 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                 currentPlot={selectedPlot}
             />
 
-            {/* Delete Confirmation Modal */}
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}

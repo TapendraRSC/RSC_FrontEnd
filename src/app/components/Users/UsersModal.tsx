@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux';
 import FormInput from '../Common/FormInput';
@@ -27,6 +27,7 @@ interface User {
     roleId: number;
     profileImage: string;
     status: string;
+    password: string;
 }
 
 interface UsersModalProps {
@@ -38,6 +39,7 @@ interface UsersModalProps {
 
 const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user }) => {
     const dispatch = useDispatch<AppDispatch>();
+    const [showPassword, setShowPassword] = useState(false);
     const { data: roles = [] } = useSelector((state: RootState) => state.roles);
 
     const {
@@ -55,19 +57,24 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
     const status = watch('status');
     const [preview, setPreview] = useState<string | null>(null);
 
+    // Load roles when modal opens
     useEffect(() => {
         if (isOpen) {
             dispatch(getRoles({ page: 1, limit: 10, searchValue: '' }));
         }
     }, [isOpen, dispatch]);
 
+    // Reset form whenever user changes or modal opens
     useEffect(() => {
         if (user) {
-            setValue('name', user.name);
-            setValue('email', user.email);
-            setValue('phoneNumber', user.phoneNumber);
-            setValue('roleId', Number(user.roleId));
-            setValue('status', user.status || 'active');
+            reset({
+                name: user.name,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                roleId: Number(user.roleId),
+                password: user.password,
+                status: user.status || 'active',
+            });
             if (user.profileImage) {
                 setPreview(user.profileImage);
             }
@@ -75,7 +82,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
             reset({ status: 'active' });
             setPreview(null);
         }
-    }, [user, setValue, reset]);
+    }, [user, reset]);
 
     useEffect(() => {
         register('roleId', { required: 'Role is required' });
@@ -156,32 +163,46 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                            <FormInput<UserFormData>
-                                name="password"
-                                label="Password"
-                                type="password"
-                                placeholder="Enter password"
-                                required={!user}
-                                register={register}
-                                errors={errors}
-                                clearErrors={clearErrors}
-                                validation={{
-                                    minLength: {
-                                        value: 8,
-                                        message: 'Password must be at least 8 characters',
-                                    },
-                                    maxLength: {
-                                        value: 16,
-                                        message: 'Password must not exceed 16 characters',
-                                    },
-                                    validate: (value: any) => {
-                                        if (!user && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-                                            return 'Password must contain at least one uppercase, lowercase, and number';
-                                        }
-                                        return true;
-                                    },
-                                }}
-                            />
+                            {/* Password Input */}
+                            <div className="relative">
+                                <FormInput<UserFormData>
+                                    name="password"
+                                    label="Password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter password"
+                                    required={!user}
+                                    register={register}
+                                    errors={errors}
+                                    clearErrors={clearErrors}
+                                    validation={{
+                                        minLength: {
+                                            value: 8,
+                                            message: "Password must be at least 8 characters",
+                                        },
+                                        maxLength: {
+                                            value: 16,
+                                            message: "Password must not exceed 16 characters",
+                                        },
+                                        validate: (value: any) => {
+                                            if (!user && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+                                                return "Password must contain at least one uppercase, lowercase, and number";
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                />
+
+                                {/* Eye Toggle Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+
+                            {/* Phone Number Input */}
                             <FormInput<UserFormData>
                                 name="phoneNumber"
                                 label="Phone Number"
@@ -192,10 +213,10 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                 errors={errors}
                                 clearErrors={clearErrors}
                                 validation={{
-                                    required: 'Phone number is required',
+                                    required: "Phone number is required",
                                     pattern: {
                                         value: /^[0-9]{10}$/,
-                                        message: 'Phone number must be exactly 10 digits',
+                                        message: "Phone number must be exactly 10 digits",
                                     },
                                 }}
                             />

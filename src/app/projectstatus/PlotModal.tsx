@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { X, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,11 +12,11 @@ import { fetchLands } from "../../../store/landSlice";
 
 interface Plot {
     id?: number;
-    plotNumber: number;
+    plotNumber: string;
     sqYard: number;
-    // sqFeet?: number;
+    price: number;   // ✅ Added price
     city: string;
-    remarks: string;
+    // remarks: string;
     facing?: string;
     status?: string;
     projectId: number;
@@ -66,7 +66,6 @@ const facingOptions = [
     { id: 4, label: "West", value: "west" },
 ];
 
-// Status options
 const statusOptions = [
     { id: 1, label: "Available", value: "Available" },
     { id: 2, label: "Booked", value: "book" },
@@ -77,8 +76,9 @@ const statusOptions = [
 const defaultValues: Partial<Plot> = {
     plotNumber: undefined,
     sqYard: undefined,
+    price: undefined,   // ✅ Default value for price
     city: "",
-    remarks: "",
+    // remarks: "",
     facing: undefined,
     status: undefined,
     projectId: undefined,
@@ -92,7 +92,6 @@ export default function PlotModal({
     isLoading,
     currentPlot,
 }: PlotModalProps) {
-    // Redux selectors
     const dispatch = useDispatch<AppDispatch>();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -127,6 +126,7 @@ export default function PlotModal({
         watch,
         formState: { errors },
         clearErrors,
+        control
     } = useForm<Plot>({
         defaultValues,
     });
@@ -151,11 +151,11 @@ export default function PlotModal({
     }, [isOpen, currentPlot, reset]);
 
     const onSubmit = async (data: Plot) => {
-
         const payload: Plot = {
             ...data,
-            plotNumber: Number(data.plotNumber),
+            plotNumber: String(data.plotNumber),
             sqYard: Number(data.sqYard),
+            price: Number(data.price),
             projectId: Number(data.projectId),
             landId: data.landId ? Number(data.landId) : null,
             facing: data.facing || undefined,
@@ -191,7 +191,6 @@ export default function PlotModal({
             style={{ margin: "0px" }}
         >
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                     <h2 className="text-xl font-bold text-gray-900">
                         {currentPlot ? "Edit Plot" : "Add New Plot"}
@@ -204,7 +203,6 @@ export default function PlotModal({
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6">
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,11 +225,20 @@ export default function PlotModal({
                             />
                         </div>
 
-                        {/* Row 2: Square Yard */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormInput<Plot>
                                 name="sqYard"
                                 label="Square Yard"
+                                type="number"
+                                register={register}
+                                errors={errors}
+                                required
+                                clearErrors={clearErrors}
+                                step="any"
+                            />
+                            <FormInput<Plot>
+                                name="price"
+                                label="Price"
                                 type="number"
                                 register={register}
                                 errors={errors}
@@ -244,57 +251,79 @@ export default function PlotModal({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Facing
+                                    Facing <span className="text-red-500">*</span>
                                 </label>
-                                <CommonDropdown
-                                    options={facingOptions}
-                                    selected={
-                                        facingOptions.find((f) => f.value === selectedFacing) ||
-                                        null
-                                    }
-                                    onChange={(value: any) => {
-                                        console.log("Facing selected:", value);
-                                        setValue("facing", value?.value);
-                                    }}
-                                    placeholder="Select facing"
+
+                                <Controller
+                                    name="facing"
+                                    control={control}
+                                    rules={{ required: "Facing is required" }}
+                                    render={({ field }) => (
+                                        <CommonDropdown
+                                            options={facingOptions}
+                                            selected={facingOptions.find((f) => f.value === field.value) || null}
+                                            onChange={(value: any) => field.onChange(value?.value || null)}
+                                            placeholder="Select facing"
+                                            error={!!errors.facing}
+                                        />
+                                    )}
                                 />
+
+                                {errors.facing && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {errors.facing.message as string}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Status
+                                    Status <span className="text-red-500">*</span>
                                 </label>
-                                <CommonDropdown
-                                    options={statusOptions}
-                                    selected={
-                                        statusOptions.find((s) => s.value === selectedStatus) ||
-                                        null
-                                    }
-                                    onChange={(value: any) => {
-                                        console.log("Status selected:", value);
-                                        setValue("status", value?.value);
-                                    }}
-                                    placeholder="Select status"
+
+                                <Controller
+                                    name="status"
+                                    control={control}
+                                    rules={{ required: "Status is required" }}
+                                    render={({ field }) => (
+                                        <CommonDropdown
+                                            options={statusOptions}
+                                            selected={statusOptions.find((s) => s.value === field.value) || null}
+                                            onChange={(value: any) => field.onChange(value?.value || null)}
+                                            placeholder="Select status"
+                                            error={!!errors.status}
+                                        />
+                                    )}
                                 />
+
+                                {errors.status && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {errors.status.message as string}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
+                        {/* Project + Land */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Project <span className="text-red-500">*</span>
                                 </label>
-                                <CommonDropdown
-                                    options={projectOptions || []}
-                                    selected={
-                                        projectOptions?.find((p) => p.value === selectedProjectId) ||
-                                        null
-                                    }
-                                    onChange={(value: any) => {
-                                        console.log("Project selected:", value);
-                                        setValue("projectId", value?.value);
-                                        clearErrors("projectId");
-                                    }}
-                                    placeholder="Select project"
+                                <Controller
+                                    name="projectId"
+                                    control={control}
+                                    rules={{ required: "Project is required" }}
+                                    render={({ field }) => (
+                                        <CommonDropdown
+                                            options={projectOptions || []}
+                                            selected={
+                                                projectOptions?.find((p) => p.value === field.value) || null
+                                            }
+                                            onChange={(value: any) => field.onChange(value?.value || null)}
+                                            placeholder="Select project"
+                                            error={!!errors.projectId}
+                                        />
+                                    )}
                                 />
                                 {errors.projectId && (
                                     <p className="mt-1 text-sm text-red-600">
@@ -303,38 +332,30 @@ export default function PlotModal({
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Land
-                                </label>
-                                <CommonDropdown
-                                    options={landOptions || []}
-                                    selected={
-                                        landOptions?.find((l) => l.value === selectedLandId) ||
-                                        null
-                                    }
-                                    onChange={(value: any) => {
-                                        console.log("Land selected:", value);
-                                        setValue("landId", value?.value || null);
-                                        clearErrors("landId");
-                                    }}
-                                    placeholder="Select land"
+                                <Controller
+                                    name="landId"
+                                    control={control}
+                                    rules={{ required: "Land is required" }}
+                                    render={({ field }) => (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Land
+                                            </label>
+                                            <CommonDropdown
+                                                options={landOptions || []}
+                                                selected={landOptions.find((l) => l.value === field.value) || null}
+                                                onChange={(value: any) => field.onChange(value ? value.value : null)}
+                                                placeholder="Select land"
+                                                error={!!errors.landId}
+                                            />
+                                            {errors.landId && (
+                                                <p className="mt-1 text-sm text-red-600">{errors.landId.message}</p>
+                                            )}
+                                        </div>
+                                    )}
                                 />
-                                {errors.landId && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {errors.landId.message}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
 
-                        <div className="w-full">
-                            <FormInput<Plot>
-                                name="remarks"
-                                label="Remarks"
-                                register={register}
-                                errors={errors}
-                                clearErrors={clearErrors}
-                            />
+                            </div>
                         </div>
                     </div>
 

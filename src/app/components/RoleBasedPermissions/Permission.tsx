@@ -29,9 +29,9 @@ const UserPermissions: React.FC = () => {
     const [permissions, setPermissions] = useState<Permission[]>([]);
 
     useEffect(() => {
-        dispatch(fetchPermissions({ page: 1, limit: 10, searchValue: "" }));
-        dispatch(fetchPages({ page: 1, limit: 10, searchValue: "" }));
-        dispatch(getRoles({ page: 1, limit: 10, searchValue: "" }));
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: "" }));
+        dispatch(fetchPages({ page: 1, limit: 100, searchValue: "" }));
+        dispatch(getRoles({ page: 1, limit: 100, searchValue: "" }));
     }, [dispatch]);
 
     useEffect(() => {

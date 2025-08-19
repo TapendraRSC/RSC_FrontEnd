@@ -1,14 +1,12 @@
-// StatusMasterModal.tsx
 'use client';
 import { useForm } from 'react-hook-form';
 import { X, Plus } from 'lucide-react';
-import FormInput from '../Common/FormInput';
 import { useEffect } from 'react';
 
 interface Status {
     id: number;
-    statusName: string;
-    statusCode: string;
+    type: string;
+    status: 'Active' | 'Inactive';
 }
 
 interface StatusMasterModalProps {
@@ -20,8 +18,8 @@ interface StatusMasterModalProps {
 }
 
 interface FormData {
-    statusName: string;
-    statusCode: string;
+    type: string;
+    // status: 'Active' | 'Inactive';
 }
 
 const StatusMasterModal: React.FC<StatusMasterModalProps> = ({
@@ -36,21 +34,20 @@ const StatusMasterModal: React.FC<StatusMasterModalProps> = ({
         handleSubmit,
         reset,
         formState: { errors },
-        clearErrors,
     } = useForm<FormData>();
 
     useEffect(() => {
         if (currentStatus) {
             reset({
-                statusName: currentStatus.statusName,
-                statusCode: currentStatus.statusCode,
+                type: currentStatus.type,
+                // status: currentStatus.status || 'Active',
             });
         } else {
-            reset({ statusName: '', statusCode: '' });
+            reset({ type: '' });
         }
     }, [currentStatus, reset]);
 
-    const onSubmit = (data: FormData) => {
+    const onSubmit = (data: any) => {
         onSaveStatus(data);
     };
 
@@ -62,35 +59,42 @@ const StatusMasterModal: React.FC<StatusMasterModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200" style={{ margin: "0px" }}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ margin: "0px" }}>
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                 <div className="flex justify-between items-center p-4 border-b">
                     <h2 className="text-xl font-bold text-gray-900">
-                        {currentStatus ? 'Edit Status' : 'Add New Status'}
+                        {currentStatus ? 'Edit Lead Status' : 'Add New Lead Status'}
                     </h2>
                     <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
                 <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
-                    <FormInput<FormData>
-                        name="statusName"
-                        label="Status Name"
-                        register={register}
-                        errors={errors}
-                        required
-                        clearErrors={clearErrors}
-                        placeholder="Enter status name"
-                    />
-                    <FormInput<FormData>
-                        name="statusCode"
-                        label="Status Code"
-                        register={register}
-                        errors={errors}
-                        required
-                        clearErrors={clearErrors}
-                        placeholder="Enter status code"
-                    />
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Lead Status</label>
+                        <input
+                            type="text"
+                            {...register('type', { required: 'Lead Status is required' })}
+                            className="w-full border rounded-lg px-3 py-2"
+                            placeholder="Enter lead status"
+                        />
+                        {errors.type && (
+                            <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>
+                        )}
+                    </div>
+
+                    {/* <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                            {...register('status', { required: true })}
+                            className="w-full border rounded-lg px-3 py-2"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div> */}
+
                     <div className="flex justify-end space-x-2 pt-2">
                         <button
                             type="button"
@@ -112,7 +116,7 @@ const StatusMasterModal: React.FC<StatusMasterModalProps> = ({
                             ) : (
                                 <>
                                     <Plus className="w-4 h-4" />
-                                    {currentStatus ? 'Update Status' : 'Add Status'}
+                                    {currentStatus ? 'Update Lead Status' : 'Add Lead Status'}
                                 </>
                             )}
                         </button>
