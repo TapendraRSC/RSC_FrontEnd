@@ -1,8 +1,10 @@
 // libs/axios.ts
 import axios from "axios";
 
+// "http://crm.local:8000/",
+
 const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://crm.local:8000/",
+    baseURL: process.env.NEXT_PUBLIC_API_URL || "",
     withCredentials: true,
 });
 
