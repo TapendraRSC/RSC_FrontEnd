@@ -24,6 +24,7 @@ interface PlotState {
     loading: boolean;
     error: string | null;
     currentPlot: Plot | null;
+    uploadLoading: boolean; // Add separate loading state for upload
 }
 
 const initialState: PlotState = {
@@ -33,6 +34,7 @@ const initialState: PlotState = {
     loading: false,
     error: null,
     currentPlot: null,
+    uploadLoading: false,
 };
 
 // Fetch all plots
@@ -75,6 +77,26 @@ export const addPlot = createAsyncThunk(
     async (plotData: Omit<Plot, "id">, { rejectWithValue }) => {
         try {
             const res = await axiosInstance.post("/plots/addPlot", plotData);
+            return res.data;
+        } catch (err: any) {
+            return rejectWithValue(err.response?.data?.message || err.message);
+        }
+    }
+);
+
+// Bulk upload plots via CSV/Excel
+export const uploadPlotData = createAsyncThunk(
+    "plots/uploadData",
+    async ({ projectId, file }: { projectId: string | number; file: File }, { rejectWithValue }) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await axiosInstance.post(`/plots/upload-data/${projectId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             return res.data;
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || err.message);
@@ -138,8 +160,7 @@ const plotSlice = createSlice({
             })
             .addCase(fetchPlots.fulfilled, (state, action) => {
                 state.loading = false;
-                state.plots = action.payload.plots || []; // <-- yaha sirf array
-
+                state.plots = action.payload.plots || [];
                 state.total = action.payload.total;
                 state.totalPages = action.payload.totalPages;
             })
@@ -158,6 +179,19 @@ const plotSlice = createSlice({
             })
             .addCase(addPlot.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload as string;
+            })
+
+            // uploadPlotData
+            .addCase(uploadPlotData.pending, (state) => {
+                state.uploadLoading = true;
+                state.error = null;
+            })
+            .addCase(uploadPlotData.fulfilled, (state) => {
+                state.uploadLoading = false;
+            })
+            .addCase(uploadPlotData.rejected, (state, action) => {
+                state.uploadLoading = false;
                 state.error = action.payload as string;
             })
 

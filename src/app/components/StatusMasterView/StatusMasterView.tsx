@@ -43,7 +43,7 @@ const StatusMasterView: React.FC = () => {
 
     const columns: any = [
         { label: 'ID', accessor: 'id', sortable: true },
-        { label: 'Lead Status', accessor: 'type', sortable: true }, // changed
+        { label: 'Lead Status', accessor: 'type', sortable: true },
     ];
 
     const displayData: any = useMemo(() => {
@@ -218,7 +218,6 @@ const StatusMasterView: React.FC = () => {
                 isLoading={loading}
                 currentStatus={currentStatus}
             />
-
 
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
