@@ -298,12 +298,12 @@ const Users: React.FC = () => {
 
     useEffect(() => {
         if (paginatedData && paginatedData.length > 0) {
-            console.log('Sample user roleIds:', paginatedData.slice(0, 3).map(u => ({
-                id: u.id,
-                name: u.name,
-                roleId: u.roleId,
-                roleType: roleMap.get(String(u.roleId))
-            })));
+            // console.log('Sample user roleIds:', paginatedData.slice(0, 3).map(u => ({
+            //     id: u.id,
+            //     name: u.name,
+            //     roleId: u.roleId,
+            //     roleType: roleMap.get(String(u.roleId))
+            // })));
         }
     }, [paginatedData, roleMap]);
 

@@ -11,7 +11,6 @@ import AnimateHeight from 'react-animate-height';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
-// Sidebar Context Setup
 interface SidebarContextType {
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
@@ -75,6 +74,8 @@ const Sidebar = () => {
                 { pageName: 'Permissions', title: 'Permissions', href: '/permissions' },
                 { pageName: 'Page Permissions', title: 'Page Permissions', href: '/pagepermissions' },
                 { pageName: 'User Permissions', title: 'User Permissions', href: '/rolebasedpermissions' },
+                { pageName: 'Lead Stage Master View', title: 'Lead Stage Master View', href: '/leadstagemasterpage' },
+                { pageName: 'Status Master View', title: 'Status Master View', href: '/statusmasterview' },
             ]
         },
         plotStatus: {
@@ -101,6 +102,12 @@ const Sidebar = () => {
             href: '/land',
             type: 'single'
         },
+        LeadPlateform: {
+            pageName: 'Lead Plateform',
+            title: 'Lead Plateform',
+            href: '/leadplateform',
+            type: 'single'
+        }
     };
 
     const isViewPermissionValid = (ids: number[]) => ids.includes(17);
@@ -258,6 +265,15 @@ const Sidebar = () => {
                                     <Link href={filteredMenuItems.Land.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                                         <span className="text-black dark:text-white">
                                             {filteredMenuItems.Land.title}
+                                        </span>
+                                    </Link>
+                                </li>
+                            )}
+                            {filteredMenuItems.LeadPlateform && (
+                                <li className="menu nav-item">
+                                    <Link href={filteredMenuItems.LeadPlateform.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                        <span className="text-black dark:text-white">
+                                            {filteredMenuItems.LeadPlateform.title}
                                         </span>
                                     </Link>
                                 </li>

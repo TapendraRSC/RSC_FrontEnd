@@ -16,6 +16,7 @@ interface CommonDropdownProps {
     isMulti?: boolean;
     placeholder?: string;
     className?: string;
+    error?: boolean; // 👈 new prop
 }
 
 export default function CommonDropdown({
@@ -25,6 +26,7 @@ export default function CommonDropdown({
     isMulti = false,
     placeholder = 'Select...',
     className = '',
+    error = false, // 👈 default false
 }: CommonDropdownProps) {
     const [open, setOpen] = useState(false);
 
@@ -54,10 +56,13 @@ export default function CommonDropdown({
         <div className={`relative ${className}`}>
             <button
                 type="button"
-                className="w-full border rounded-xl px-4 py-2 flex justify-between items-center text-sm bg-white shadow-sm hover:shadow transition"
+                className={clsx(
+                    "w-full border rounded-xl px-4 py-2 flex justify-between items-center text-sm bg-white shadow-sm hover:shadow transition",
+                    error ? "border-red-500 focus:ring-red-500" : "border-gray-300"
+                )}
                 onClick={() => setOpen(!open)}
             >
-                <span className="truncate">
+                <span className={clsx("truncate", error && "text-red-500")}>
                     {isMulti && Array.isArray(selected)
                         ? selected.length > 0
                             ? selected.map((s) => s.label).join(', ')

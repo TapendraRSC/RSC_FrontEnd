@@ -1,14 +1,17 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import LeadStateModal from './LeadStateModal';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
+import { AppDispatch, RootState } from '../../../../store/store';
+import { createLeadStage, deleteLeadStage, fetchLeadStageById, fetchLeadStages, updateLeadStage } from '../../../../store/leadStageSlice';
+import { toast } from 'react-toastify';
 
 interface LeadStage {
     id: number;
-    leadStageStatus: string;
-    status: number;
+    type: string;
 }
 
 interface SortConfig {
@@ -17,92 +20,65 @@ interface SortConfig {
 }
 
 const LeadStageMasterPage: React.FC = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const { list, loading, page, limit, totalPages, total } = useSelector((state: RootState) => state.leadStages);
+
     const [searchValue, setSearchValue] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<LeadStage[]>([
-        { id: 1, leadStageStatus: 'Cold', status: 1 },
-        { id: 2, leadStageStatus: 'Warm', status: 1 },
-        { id: 3, leadStageStatus: 'Hot', status: 1 },
-    ]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentLeadStage, setCurrentLeadStage] = useState<LeadStage | null>(null);
+    const [currentLeadStage, setCurrentLeadStage] = useState<LeadStage | any>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [leadStageToDelete, setLeadStageToDelete] = useState<LeadStage | null>(null);
 
+    useEffect(() => {
+        dispatch(fetchLeadStages({
+            page: currentPage,
+            limit: pageSize,
+            searchValue: searchValue
+        }));
+    }, [dispatch, currentPage, pageSize, searchValue]);
+
     const columns: any = [
-        {
-            label: 'ID',
-            accessor: 'id',
-            sortable: true,
-        },
-        {
-            label: 'Lead Stage Status',
-            accessor: 'leadStageStatus',
-            sortable: true,
-        },
-        {
-            label: 'Status',
-            accessor: 'status',
-            sortable: true,
-        },
+        { label: 'ID', accessor: 'id', sortable: true },
+        { label: 'Lead Stage Type', accessor: 'type', sortable: true },
     ];
 
-    const filteredData = useMemo(() => {
-        return data.filter(item =>
-            item.leadStageStatus.toLowerCase().includes(searchValue.toLowerCase())
-        );
-    }, [data, searchValue]);
-
-    const sortedData = useMemo(() => {
-        let sortableData = [...filteredData];
+    const displayData = useMemo(() => {
+        if (!list || list.length === 0) return [];
+        let sortableData = [...list];
         if (sortConfig !== null) {
             sortableData.sort((a, b) => {
-                if (a[sortConfig.key as keyof LeadStage] < b[sortConfig.key as keyof LeadStage]) {
-                    return sortConfig.direction === 'asc' ? -1 : 1;
-                }
-                if (a[sortConfig.key as keyof LeadStage] > b[sortConfig.key as keyof LeadStage]) {
-                    return sortConfig.direction === 'asc' ? 1 : -1;
-                }
+                const aValue = a[sortConfig.key as keyof LeadStage];
+                const bValue = b[sortConfig.key as keyof LeadStage];
+                if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
             });
         }
         return sortableData;
-    }, [filteredData, sortConfig]);
-
-    const totalPages = Math.ceil(sortedData.length / pageSize);
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * pageSize;
-        return sortedData.slice(startIndex, startIndex + pageSize);
-    }, [sortedData, currentPage, pageSize]);
+    }, [list, sortConfig]);
 
     const handleSearch = (value: string) => {
         setSearchValue(value);
         setCurrentPage(1);
     };
 
-    const handleSort = (config: any) => {
-        setSortConfig(config);
-    };
+    const handleSort = (config: any) => setSortConfig(config);
+    const handlePageChange = (newPage: number) => setCurrentPage(newPage);
+    const handlePageSizeChange = (size: number) => { setPageSize(size); setCurrentPage(1); };
+    const handleColumnVisibilityChange = (columns: string[]) => setHiddenColumns(columns);
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(1);
-    };
-
-    const handleColumnVisibilityChange = (columns: string[]) => {
-        setHiddenColumns(columns);
-    };
-
-    const handleEdit = (row: LeadStage) => {
-        setCurrentLeadStage(row);
+    const handleEdit = async (row: LeadStage) => {
+        try {
+            const result = await dispatch(fetchLeadStageById(row.id.toString())).unwrap();
+            setCurrentLeadStage(result);
+        } catch (error) {
+            console.error('Error fetching lead stage:', error);
+            setCurrentLeadStage(row);
+        }
         setIsModalOpen(true);
     };
 
@@ -111,11 +87,24 @@ const LeadStageMasterPage: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (leadStageToDelete) {
-            setData(prev => prev.filter(item => item.id !== leadStageToDelete.id));
+            try {
+                await dispatch(deleteLeadStage(leadStageToDelete.id.toString())).unwrap();
+                toast.success("Lead stage deleted successfully");
+
+                await dispatch(fetchLeadStages({
+                    page: currentPage,
+                    limit: pageSize,
+                    searchValue: searchValue
+                }));
+            } catch (error: any) {
+                console.error("Error deleting lead stage:", error);
+                toast.error(error?.message || "Failed to delete lead stage");
+            }
         }
         setIsDeleteModalOpen(false);
+        setLeadStageToDelete(null);
     };
 
     const handleAdd = () => {
@@ -123,15 +112,34 @@ const LeadStageMasterPage: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleSaveLeadStage = (leadStageStatus: string) => {
-        if (currentLeadStage) {
-            setData(prev => prev.map(item => item.id === currentLeadStage.id ? { ...item, leadStageStatus } : item));
-        } else {
-            const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
-            setData(prev => [...prev, { id: newId, leadStageStatus, status: 1 }]);
+    const handleSaveLeadStage = async (leadStageType: string) => {
+        try {
+            if (currentLeadStage) {
+                await dispatch(
+                    updateLeadStage({
+                        id: currentLeadStage.id.toString(),
+                        payload: { type: leadStageType },
+                    })
+                ).unwrap();
+                toast.success("Lead stage updated successfully ");
+            } else {
+                await dispatch(createLeadStage({ type: leadStageType })).unwrap();
+                toast.success("Lead stage created successfully ");
+            }
+
+            await dispatch(fetchLeadStages({
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchValue
+            }));
+
+            setIsModalOpen(false);
+        } catch (error: any) {
+            console.error("Error saving lead stage:", error);
+            toast.error(error?.message || "Failed to save lead stage ❌");
         }
-        setIsModalOpen(false);
     };
+
 
     return (
         <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
@@ -151,7 +159,7 @@ const LeadStageMasterPage: React.FC = () => {
             <div className="p-6">
                 <div className="bg-white rounded-lg shadow-sm">
                     <CustomTable<LeadStage>
-                        data={paginatedData}
+                        data={displayData}
                         columns={columns}
                         isLoading={loading}
                         title="Lead Stage Master"
@@ -162,9 +170,9 @@ const LeadStageMasterPage: React.FC = () => {
                         sortConfig={sortConfig}
                         onSortChange={handleSort}
                         currentPage={currentPage}
-                        totalPages={totalPages}
+                        totalPages={totalPages || Math.ceil(total / pageSize)}
                         pageSize={pageSize}
-                        totalRecords={sortedData.length}
+                        totalRecords={total}
                         onPageChange={handlePageChange}
                         onPageSizeChange={handlePageSizeChange}
                         pageSizeOptions={[10, 25, 50, 100]}
@@ -206,7 +214,7 @@ const LeadStageMasterPage: React.FC = () => {
                 onClose={() => setIsDeleteModalOpen(false)}
                 onDelete={confirmDelete}
                 title="Confirm Deletion"
-                message={`Are you sure you want to delete the lead stage "${leadStageToDelete?.leadStageStatus}"?`}
+                message={`Are you sure you want to delete the lead stage "${leadStageToDelete?.type}"?`}
                 Icon={Trash2}
             />
         </div>
