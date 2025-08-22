@@ -60,13 +60,21 @@ export const createLeadPlatform = createAsyncThunk(
     }
 );
 
-// ✅ Update lead platform
 export const updateLeadPlatform = createAsyncThunk(
     "leadPlatforms/update",
-    async ({ id, data }: { id: number; data: Omit<LeadPlatform, "id"> }, { rejectWithValue }) => {
+    async (
+        { id, data }: { id: number; data: Omit<LeadPlatform, "id"> },
+        { rejectWithValue }
+    ) => {
         try {
             const res = await axiosInstance.put(`/leadPlatforms/updateLeadPlatform/${id}`, data);
-            return res.data?.data as LeadPlatform;
+
+            // Agar API response ke andar data nahi hai, to manually id + data return karo
+            if (res.data?.data) {
+                return res.data.data as LeadPlatform;
+            } else {
+                return { id, ...data } as LeadPlatform;
+            }
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || err.message);
         }
@@ -136,6 +144,8 @@ const leadPlatformSlice = createSlice({
             })
             .addCase(updateLeadPlatform.fulfilled, (state, action) => {
                 state.loading = false;
+                if (!action.payload?.id) return; // ✅ guard added
+
                 state.leadPlatforms = state.leadPlatforms.map((lp) =>
                     lp.id === action.payload.id ? action.payload : lp
                 );
