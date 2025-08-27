@@ -1,20 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
-import LeadModal from './LeadModal'; // 👈 New modal import
+import ComprehensiveLeadModal from './LeadModal';
+import FollowUpLeadModal from './FollowUpLeadModal';
+import TimelineLeadModal from './TimelineLeadModal';
 import { toast } from 'react-toastify';
+import { useDispatch, useSelector } from 'react-redux';
+import { createLead, deleteLead, fetchLeads, updateLead } from '../../../../store/leadSlice';
 
 const LeadComponent: React.FC = () => {
-    const staticLeads = [
-        { id: 1, name: 'John Doe', email: 'john@example.com', phone: '9876543210', status: 'New' },
-        { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '9876543211', status: 'In Progress' },
-        { id: 3, name: 'Michael Lee', email: 'michael@example.com', phone: '9876543212', status: 'Converted' },
-    ];
+    const dispatch = useDispatch<any>();
 
-    const [leadList, setLeadList] = useState(staticLeads);
+    const { list: leadList, loading, page, totalPages, total } = useSelector(
+        (state: any) => state.leads
+    );
+
     const [searchValue, setSearchValue] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -25,10 +28,14 @@ const LeadComponent: React.FC = () => {
     const [currentLead, setCurrentLead] = useState<any | null>(null);
     const [leadToDelete, setLeadToDelete] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
+    const [currentFollowUpLead, setCurrentFollowUpLead] = useState<any | null>(null);
+    const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
+    const [currentTimelineLead, setCurrentTimelineLead] = useState<any | null>(null);
 
-    const totalRecords = leadList.length;
-    const totalPages = Math.ceil(totalRecords / pageSize);
-    const loading = false;
+    useEffect(() => {
+        dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+    }, [dispatch, currentPage, pageSize, searchValue]);
 
     const handleAdd = () => {
         setCurrentLead(null);
@@ -47,40 +54,150 @@ const LeadComponent: React.FC = () => {
 
     const confirmDelete = () => {
         if (leadToDelete) {
-            setLeadList((prev) => prev.filter((l) => l.id !== leadToDelete.id));
-            toast.success('Lead deleted successfully');
+            dispatch(deleteLead(leadToDelete.id))
+                .unwrap()
+                .then(() => {
+                    toast.success('Lead deleted successfully');
+                })
+                .catch(() => toast.error('Failed to delete lead'));
             setIsDeleteModalOpen(false);
         }
     };
 
-    const handleSaveLead = (data: any) => {
-        setIsSaving(true);
-        setTimeout(() => {
-            if (currentLead) {
-                // Edit case
-                setLeadList((prev) =>
-                    prev.map((lead) =>
-                        lead.id === currentLead.id ? { ...lead, ...data } : lead
-                    )
-                );
-                toast.success('Lead updated successfully');
-            } else {
-                // Add case
-                const newLead = { ...data, id: Date.now() };
-                setLeadList((prev) => [...prev, newLead]);
-                toast.success('Lead added successfully');
-            }
-            setIsSaving(false);
-            setIsModalOpen(false);
-        }, 500);
+    const handleFollowUp = (lead: any) => {
+        setCurrentFollowUpLead(lead);
+        setIsFollowUpModalOpen(true);
     };
 
+    const handleTimeline = (lead: any) => {
+        setCurrentTimelineLead(lead);
+        setIsTimelineModalOpen(true);
+    };
+
+    const handleSaveLead = async (data: any) => {
+        setIsSaving(true);
+
+        if (currentLead) {
+            await dispatch(updateLead({ id: currentLead.id, payload: data }))
+                .unwrap()
+                .then(() => {
+                    toast.success('Lead updated successfully');
+                    setIsModalOpen(false);
+                    dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+                })
+                .catch(() => toast.error('Failed to update lead'))
+                .finally(() => setIsSaving(false));
+        } else {
+            await dispatch(createLead(data))
+                .unwrap()
+                .then(() => {
+                    toast.success('Lead added successfully');
+                    setIsModalOpen(false);
+                    dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+                })
+                .catch(() => toast.error('Failed to add lead'))
+                .finally(() => setIsSaving(false));
+        }
+    };
+
+    /** ✅ Normalize Leads */
+    const normalizedLeads = useMemo(() => {
+        return (leadList || []).map((lead: any, index: number) => ({
+            ...lead,
+            sr: index + 1 + (currentPage - 1) * pageSize,
+            leadStatus: lead?.leadStatus || "N/A",
+            platformType: lead?.platformType || "N/A",
+            plotNumber: lead?.plotNumber || "N/A",
+            plotPrice: lead?.plotPrice || "N/A",
+        }));
+    }, [leadList, currentPage, pageSize]);
+
+    const stringToColor = (str: string) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 10) - hash);
+        }
+
+        const baseHue = Math.abs(hash) % 360;
+
+        let hue = baseHue;
+        if (hue >= 40 && hue <= 60) hue = (hue + 80) % 360; // Skip brown range
+        if (hue >= 200 && hue <= 220) hue = (hue + 60) % 360; // Skip muddy blue range
+
+        return `hsl(${hue}, 65%, 92%)`;
+    };
+
+    const stringToTextColor = (str: string) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 10) - hash);
+        }
+
+        const baseHue = Math.abs(hash) % 360;
+
+        let hue = baseHue;
+        if (hue >= 40 && hue <= 60) hue = (hue + 80) % 360;
+        if (hue >= 200 && hue <= 220) hue = (hue + 60) % 360;
+
+        return `hsl(${hue}, 75%, 25%)`;
+    };
+
+    const renderBadge = (value: string) => {
+        if (!value) return null;
+
+        const bgColor = stringToColor(value);
+        const textColor = stringToTextColor(value);
+
+        return (
+            <span
+                className="px-2 py-1 rounded-full text-xs font-medium"
+                style={{ backgroundColor: bgColor, color: textColor }}
+            >
+                {value}
+            </span>
+        );
+    };
+
+
     const columns: any = [
-        { label: 'Sr', accessor: 'id', sortable: true },
+        { label: 'Sr', accessor: 'sr', sortable: true },
         { label: 'Name', accessor: 'name', sortable: true },
         { label: 'Email', accessor: 'email', sortable: true },
+        {
+            label: 'Lead Status',
+            accessor: 'leadStatus',
+            sortable: true,
+            render: (row: any) => renderBadge(row.leadStatus),
+        },
+        {
+            label: 'Platform Type',
+            accessor: 'platformType',
+            sortable: true,
+            render: (row: any) => renderBadge(row.platformType),
+        },
+        {
+            label: 'Assigned Person',
+            accessor: 'assignedUserName',
+            sortable: true,
+            render: (row: any) => renderBadge(row.assignedUserName),
+        },
+        {
+            label: 'Plot Number',
+            accessor: 'plotNumber',
+            sortable: true,
+            render: (row: any) => renderBadge(row.plotNumber),
+        },
+        {
+            label: 'Plot Price',
+            accessor: 'plotPrice',
+            sortable: true,
+            render: (row: any) => renderBadge(row.plotPrice),
+        },
+
         { label: 'Phone', accessor: 'phone', sortable: true },
-        { label: 'Status', accessor: 'status', sortable: true },
+        { label: 'City', accessor: 'city', sortable: true },
+        { label: 'State', accessor: 'state', sortable: true },
+
     ];
 
     return (
@@ -103,7 +220,7 @@ const LeadComponent: React.FC = () => {
             {/* Table */}
             <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
                 <CustomTable<any>
-                    data={leadList}
+                    data={normalizedLeads}
                     columns={columns}
                     isLoading={loading}
                     title="Leads"
@@ -119,7 +236,7 @@ const LeadComponent: React.FC = () => {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     pageSize={pageSize}
-                    totalRecords={totalRecords}
+                    totalRecords={total}
                     onPageChange={setCurrentPage}
                     onPageSizeChange={(size) => {
                         setPageSize(size);
@@ -145,13 +262,25 @@ const LeadComponent: React.FC = () => {
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
+                            <button
+                                onClick={() => handleFollowUp(row)}
+                                className="text-green-500 hover:text-green-700 p-1"
+                            >
+                                📞
+                            </button>
+                            <button
+                                onClick={() => handleTimeline(row)}
+                                className="text-purple-500 hover:text-purple-700 p-1"
+                            >
+                                🕒
+                            </button>
                         </div>
                     )}
                 />
             </div>
 
-            {/* Lead Modal */}
-            <LeadModal
+            {/* Modals */}
+            <ComprehensiveLeadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveLead}
@@ -159,7 +288,21 @@ const LeadComponent: React.FC = () => {
                 isLoading={isSaving}
             />
 
-            {/* Delete Confirmation */}
+            <FollowUpLeadModal
+                isOpen={isFollowUpModalOpen}
+                onClose={() => setIsFollowUpModalOpen(false)}
+                onSave={(data) => {
+                    console.log('Follow-up saved:', data);
+                    setIsFollowUpModalOpen(false);
+                }}
+            />
+
+            <TimelineLeadModal
+                isOpen={isTimelineModalOpen}
+                onClose={() => setIsTimelineModalOpen(false)}
+                lead={currentTimelineLead}
+            />
+
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
