@@ -3,7 +3,7 @@
 import { use } from "react";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Upload, Filter, Grid3X3, List, Menu } from "lucide-react";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { addPlot, deletePlot, fetchPlots, updatePlot, uploadPlotData } from "../../../../store/plotSlice";
 import PlotModal from "../PlotModal";
@@ -13,6 +13,8 @@ import UploadPreviewModal from "../../components/Common/UploadPreviewModal";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
+import { fetchPermissions } from "../../../../store/permissionSlice";
+import { fetchRolePermissionsSidebar } from "../../../../store/sidebarPermissionSlice";
 
 export default function ProjectStatusDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -33,7 +35,9 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [plotToDelete, setPlotToDelete] = useState<any>(null);
 
-    // Upload preview modal states
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
+
     const [isUploadPreviewOpen, setIsUploadPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -51,17 +55,46 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
     }, [id, currentPage, pageSize, searchValue, sortConfig, dispatch]);
 
     const columns: any = [
-        { label: "ID", accessor: "id" },
-        { label: "Plot Number", accessor: "plotNumber" },
-        { label: "City", accessor: "city" },
-        { label: "Facing", accessor: "facing" },
-        { label: "Land Type", accessor: "landType" },
-        { label: "Project Title", accessor: "projectTitle" },
-        { label: "Sq. Yard", accessor: "sqYard" },
-        { label: "Sq. Feet", accessor: "sqFeet" },
-        { label: "Price", accessor: "price" },
-        { label: "Status", accessor: "status" },
+        { label: "Plot No.", accessor: "plotNumber", mobile: true },
+        { label: "City", accessor: "city", mobile: true },
+        { label: "Facing", accessor: "facing", mobile: false },
+        { label: "Land Type", accessor: "landType", mobile: false },
+        { label: "Project", accessor: "projectTitle", mobile: false },
+        { label: "Sq. Yard", accessor: "sqYard", mobile: true },
+        { label: "Sq. Feet", accessor: "sqFeet", mobile: false },
+        { label: "Price", accessor: "price", mobile: true },
+        { label: "Status", accessor: "status", mobile: true },
     ];
+
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
+        useSelector((state: RootState) => state.sidebarPermissions);
+
+    const { list: allPermissions } = useSelector(
+        (state: RootState) => state.permissions
+    );
+
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar()); // roleId backend se mil jayega
+    }, [dispatch]);
+
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Plot Status'
+        );
+        return leadPerm?.permissionIds || [];
+    };
+
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        if (!leadPermissionIds.includes(permId)) return false;
+
+        const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
+        if (!matched) return false;
+
+        return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
+    };
 
     const handleOpenAdd = () => {
         setSelectedPlot(null);
@@ -117,7 +150,6 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
         fileInputRef.current?.click();
     };
 
-    // Helper functions for file processing
     const processCSV = (file: File): Promise<any[]> => {
         return new Promise((resolve, reject) => {
             Papa.parse(file, {
@@ -154,7 +186,6 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                         return;
                     }
 
-                    // Convert to objects with headers
                     const headers = jsonData[0] as string[];
                     const rows = jsonData.slice(1) as any[][];
                     const parsedData = rows.map(row => {
@@ -188,7 +219,6 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
         try {
             let parsedData: any[] = [];
 
-            // Parse the file to show preview
             if (fileExtension === 'csv') {
                 parsedData = await processCSV(file);
             } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
@@ -200,7 +230,6 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                 return;
             }
 
-            // Set preview data and show modal
             setPreviewData(parsedData);
             setSelectedFile(file);
             setFileName(file.name);
@@ -210,7 +239,6 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             console.error('File parsing error:', error);
             toast.error(error instanceof Error ? error.message : 'Failed to process file');
         } finally {
-            // Clear the input so the same file can be selected again if needed
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
@@ -229,13 +257,11 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             if (uploadPlotData.fulfilled.match(result)) {
                 toast.success("File uploaded successfully!");
                 setIsUploadPreviewOpen(false);
-                // Refresh the plots list after successful upload
                 dispatch(fetchPlots({
                     projectId: id,
                     page: currentPage,
                     limit: pageSize
                 }));
-                // Clear states
                 setSelectedFile(null);
                 setPreviewData([]);
                 setFileName("");
@@ -255,37 +281,170 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
         setFileName("");
     };
 
-    return (
-        <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto p-6">
-            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    const PlotCard = ({ plot }: { plot: any }) => (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start">
                 <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-                        Project Plots
-                    </h1>
-                    <p className="text-sm sm:text-base text-gray-600">
-                        Plots for project ID {id}
-                    </p>
+                    <h3 className="font-semibold text-lg text-gray-900">{plot.plotNumber}</h3>
+                    <p className="text-sm text-gray-600">{plot.city}</p>
                 </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${plot.status === 'Available' ? 'bg-green-100 text-green-800' :
+                    plot.status === 'Sold' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                    }`}>
+                    {plot.status}
+                </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                    <span className="text-gray-500 block">Sq. Yard</span>
+                    <span className="font-medium">{plot.sqYard?.toLocaleString() || 'N/A'}</span>
+                </div>
+                <div>
+                    <span className="text-gray-500 block">Price</span>
+                    <span className="font-semibold text-green-600">
+                        ₹{plot.price?.toLocaleString() || 'N/A'}
+                    </span>
+                </div>
+            </div>
+
+            <div className="flex gap-2 pt-3 border-t">
+                <button
+                    onClick={hasPermission(22, "edit") ? () => handleOpenEdit(plot) : undefined}
+                    disabled={!hasPermission(22, "edit")}
+                    title={hasPermission(22, "edit") ? "Edit" : "Access restricted by Admin"}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+        ${hasPermission(22, "edit")
+                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        }`}
+                >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                </button>
+
+                <button
+                    onClick={hasPermission(4, "delete") ? () => handleOpenDelete(plot) : undefined}
+                    disabled={!hasPermission(4, "delete")}
+                    title={hasPermission(4, "delete") ? "Delete" : "Access restricted by Admin"}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+        ${hasPermission(4, "delete")
+                            ? "bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        }`}
+                >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                </button>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white">
+            {/* Mobile Header */}
+            <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 lg:hidden">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-lg font-bold text-gray-900">Project Plots</h1>
+                        <p className="text-xs text-gray-600">ID: {id}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
+                            className="p-2 text-gray-500 hover:text-gray-700"
+                        >
+                            {viewMode === 'table' ? <Grid3X3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
+                        </button>
+                        <button
+                            onClick={() => setShowMobileFilters(!showMobileFilters)}
+                            className="p-2 text-gray-500 hover:text-gray-700"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Action Buttons */}
+            <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
                 <div className="flex gap-2">
                     <button
-                        onClick={handleUploadClick}
-                        disabled={uploadLoading}
-                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base"
+                        onClick={hasPermission(20, "upload") ? handleUploadClick : undefined}
+                        disabled={uploadLoading || !hasPermission(20, "upload")}
+                        title={!hasPermission(20, "upload") ? "Restricted by Admin" : "Upload"}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${hasPermission(20, "upload")
+                            ? "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                            : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                            }`}
                     >
-                        <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                        {uploadLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Upload className="w-4 h-4" />
+                        )}
                         Upload
                     </button>
                     <button
-                        onClick={handleOpenAdd}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base"
+                        onClick={hasPermission(21, "add") ? handleOpenAdd : undefined}
+                        disabled={!hasPermission(21, "add")}
+                        title={!hasPermission(21, "add") ? "Restricted by Admin" : "Add New"}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${hasPermission(21, "add")
+                            ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                            : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                            }`}
                     >
-                        <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <Plus className="w-4 h-4" />
                         Add New
                     </button>
                 </div>
             </div>
 
-            {/* Hidden file input */}
+            <div className="hidden lg:block p-6">
+                <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                            Project Plots
+                        </h1>
+                        <p className="text-sm sm:text-base text-gray-600">
+                            Plots for project ID {id}
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={hasPermission(20, "upload") ? handleUploadClick : undefined}
+                            disabled={uploadLoading || !hasPermission(20, "upload")}
+                            title={!hasPermission(20, "upload") ? "Access restricted by Admin" : "Upload"}
+                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${hasPermission(20, "upload")
+                                ? "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
+                        >
+                            {uploadLoading ? (
+                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                            ) : (
+                                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                            )}
+                            Upload
+                        </button>
+
+                        <button
+                            onClick={hasPermission(21, "add") ? handleOpenAdd : undefined}
+                            disabled={!hasPermission(21, "add")}
+                            title={!hasPermission(21, "add") ? "Access restricted by Admin" : "Add New"}
+                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${hasPermission(21, "add")
+                                ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
+                        >
+                            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Add New
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <input
                 ref={fileInputRef}
                 type="file"
@@ -294,58 +453,135 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                 className="hidden"
             />
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <CustomTable<any>
-                    data={plots}
-                    columns={columns}
-                    isLoading={loading}
-                    title="Plot Details"
-                    searchValue={searchValue}
-                    onSearchChange={(val) => {
-                        setSearchValue(val);
-                        setCurrentPage(1);
-                    }}
-                    searchPlaceholder="Search plots..."
-                    showSearch
-                    sortConfig={sortConfig}
-                    onSortChange={setSortConfig}
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    pageSize={pageSize}
-                    totalRecords={total}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={(size) => {
-                        setPageSize(size);
-                        setCurrentPage(1);
-                    }}
-                    pageSizeOptions={[10, 25, 50, 100]}
-                    showPagination
-                    emptyMessage="No plots found"
-                    showColumnToggle
-                    hiddenColumns={hiddenColumns}
-                    onColumnVisibilityChange={setHiddenColumns}
-                    actions={(row) => (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => handleOpenEdit(row)}
-                                className="text-blue-500 hover:text-blue-700 p-1"
-                            >
-                                <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                                onClick={() => handleOpenDelete(row)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+            <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+                {/* Mobile Grid View */}
+                <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
+                    <div className="space-y-4">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search plots..."
+                                value={searchValue}
+                                onChange={(e) => {
+                                    setSearchValue(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
                         </div>
-                    )}
-                />
-                {loading && (
-                    <div className="flex justify-center py-6">
-                        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+
+                        {loading ? (
+                            <div className="flex justify-center py-8">
+                                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grid gap-4">
+                                    {plots.map((plot) => (
+                                        <PlotCard key={plot.id} plot={plot} />
+                                    ))}
+                                </div>
+
+                                {plots.length === 0 && (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <p>No plots found</p>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* Mobile Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-between items-center pt-4 border-t">
+                                <button
+                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Previous
+                                </button>
+                                <span className="text-sm text-gray-600">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
+
+                {/* Table View - Mobile & Desktop */}
+                <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
+                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <CustomTable<any>
+                            data={plots}
+                            columns={columns}
+                            isLoading={loading}
+                            title="Plot Details"
+                            searchValue={searchValue}
+                            onSearchChange={(val) => {
+                                setSearchValue(val);
+                                setCurrentPage(1);
+                            }}
+                            searchPlaceholder="Search plots..."
+                            showSearch
+                            sortConfig={sortConfig}
+                            onSortChange={setSortConfig}
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            pageSize={pageSize}
+                            totalRecords={total}
+                            onPageChange={setCurrentPage}
+                            onPageSizeChange={(size) => {
+                                setPageSize(size);
+                                setCurrentPage(1);
+                            }}
+                            pageSizeOptions={[10, 25, 50, 100]}
+                            showPagination
+                            emptyMessage="No plots found"
+                            showColumnToggle
+                            hiddenColumns={hiddenColumns}
+                            onColumnVisibilityChange={setHiddenColumns}
+                            actions={(row) => (
+                                <div className="flex gap-1 sm:gap-2">
+                                    <button
+                                        onClick={hasPermission(22, "edit") ? () => handleOpenEdit(row) : undefined}
+                                        disabled={!hasPermission(22, "edit")}
+                                        title={!hasPermission(22, "edit") ? "Restricted by Admin" : "Edit"}
+                                        className={`p-1 transition-colors ${hasPermission(22, "edit")
+                                            ? "text-blue-500 hover:text-blue-700 cursor-pointer"
+                                            : "text-gray-400 cursor-not-allowed"
+                                            }`}
+                                    >
+                                        <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    </button>
+
+                                    <button
+                                        onClick={hasPermission(4, "delete") ? () => handleOpenDelete(row) : undefined}
+                                        disabled={!hasPermission(4, "delete")}
+                                        title={!hasPermission(4, "delete") ? "Restricted by Admin" : "Delete"}
+                                        className={`p-1 transition-colors ${hasPermission(4, "delete")
+                                            ? "text-red-500 hover:text-red-700 cursor-pointer"
+                                            : "text-gray-400 cursor-not-allowed"
+                                            }`}
+                                    >
+                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    </button>
+                                </div>
+                            )}
+                        />
+                    </div>
+                </div>
             </div>
 
             <PlotModal

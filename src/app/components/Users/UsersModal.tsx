@@ -52,10 +52,20 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
         clearErrors,
     } = useForm<UserFormData>();
 
+    const password = watch('password') || '';
     const profileImage = watch('profileImage');
     const roleId = watch('roleId');
     const status = watch('status');
     const [preview, setPreview] = useState<string | null>(null);
+
+    // Password rules
+    const passwordRules = [
+        { label: 'At least 1 uppercase letter', regex: /[A-Z]/ },
+        { label: 'At least 1 lowercase letter', regex: /[a-z]/ },
+        { label: 'At least 1 number', regex: /\d/ },
+        { label: 'At least 1 special character (@$!%*?&)', regex: /[@$!%*?&]/ },
+        { label: 'Length between 8–16 characters', regex: /^.{8,16}$/ },
+    ];
 
     // Load roles when modal opens
     useEffect(() => {
@@ -184,15 +194,17 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                             message: "Password must not exceed 16 characters",
                                         },
                                         validate: (value: any) => {
-                                            if (!user && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-                                                return "Password must contain at least one uppercase, lowercase, and number";
+                                            if (!user) {
+                                                const regex =
+                                                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+                                                if (!regex.test(value)) {
+                                                    return "Password must contain uppercase, lowercase, number, and special character";
+                                                }
                                             }
                                             return true;
                                         },
                                     }}
                                 />
-
-                                {/* Eye Toggle Button */}
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
@@ -200,6 +212,17 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
+
+                                {/* Live Password Errors (only unsatisfied rules show) */}
+                                {!user && password && (
+                                    <ul className="mt-2 text-sm space-y-1 text-red-500">
+                                        {passwordRules
+                                            .filter((rule) => !rule.regex.test(password))
+                                            .map((rule, index) => (
+                                                <li key={index}>❌ {rule.label}</li>
+                                            ))}
+                                    </ul>
+                                )}
                             </div>
 
                             {/* Phone Number Input */}
@@ -239,7 +262,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Status<span className="text-red-500 ml-1">*</span>
+                                    Status
                                 </label>
                                 <CommonDropdown
                                     options={statusOptions}

@@ -130,7 +130,7 @@ const CustomTable = <T extends { id: number | string }>({
     const endRecord = Math.min(currentPage * pageSize, totalRecords);
 
     return (
-        <div className="w-full mx-auto px-2 sm:px-0">
+        <div className="w-full mx-auto  sm:px-0">
             {/* Header */}
             <div className="bg-white dark:bg-gray-900 rounded-t-xl border border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4">
                 <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
@@ -156,7 +156,7 @@ const CustomTable = <T extends { id: number | string }>({
             </div>
 
             {/* Table Container with proper scroll */}
-            <div className="bg-white dark:bg-gray-900 border-x border-gray-200 dark:border-gray-700 -mx-2 sm:mx-0">
+            <div className="bg-white dark:bg-gray-900 border-x border-gray-200 dark:border-gray-700  sm:mx-0">
                 <div className="overflow-x-auto">
                     <table className="w-full text-xs sm:text-sm" style={{ minWidth: '600px' }}>
                         <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
