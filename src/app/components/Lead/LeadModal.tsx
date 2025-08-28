@@ -1,332 +1,365 @@
-"use client";
+'use client';
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import FormInput from "../Common/FormInput";
+import { useDispatch, useSelector } from "react-redux";
 import CommonDropdown from "../Common/CommonDropdown";
+import FormInput from "../Common/FormInput";
+import { exportUsers } from "../../../../store/userSlice";
+import { AppDispatch, RootState } from "../../../../store/store";
+import { fetchLeadPlatforms } from "../../../../store/leadPlateformSlice";
+import { fetchProjectStatuses } from "../../../../store/projectSlice";
+import { fetchPlots } from "../../../../store/plotSlice";
+import { fetchLeadStages } from "../../../../store/leadStageSlice";
+import { fetchStatuses } from "../../../../store/statusMasterSlice";
 
-interface FormData {
-    name: string;
-    mobile: string;
-    altMobile: string;
-    email: string;
-    plotInterestNo: string;
-    source: string;
-    assignUser: string;
-    phase: string;
-    offerPrice: number;
-    siteVisitDate: string;
-    siteVisitTime: string;
-    siteVisitInfo: string;
-    visitRemark: string;
+interface ComprehensiveLeadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+  initialData?: any;
+  isLoading?: boolean;
 }
 
-interface LeadModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSave: (data: FormData) => void;
-    initialData?: Partial<FormData> | null;
-    isLoading?: boolean;
-}
-
-const statusOptions = [
-    { label: "Direct Call", value: "Direct Call" },
-    { label: "Facebook", value: "Facebook" },
-    { label: "Google Ads", value: "Google Ads" },
-];
-
-const assignUserOptions = [
-    { label: "User 1", value: "User 1" },
-    { label: "User 2", value: "User 2" },
-];
-
-const phaseOptions = [
-    { label: "Phase 1", value: "Phase 1" },
-    { label: "Phase 2", value: "Phase 2" },
-];
-
-const LeadModal: React.FC<LeadModalProps> = ({
-    isOpen,
-    onClose,
-    onSave,
-    initialData,
-    isLoading,
+const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  isLoading = false,
 }) => {
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        clearErrors,
-        watch,
-        reset,
-        formState: { errors },
-    } = useForm<FormData>({
-        defaultValues: {
-            name: "",
-            mobile: "",
-            altMobile: "",
-            email: "",
-            plotInterestNo: "",
-            source: "",
-            assignUser: "",
-            phase: "",
-            offerPrice: 0,
-            siteVisitDate: "",
-            siteVisitTime: "",
-            siteVisitInfo: "",
-            visitRemark: "",
-            ...initialData,
-        },
-    });
+  const dispatch = useDispatch<AppDispatch>();
 
-    const submitHandler = (data: FormData) => {
-        onSave(data);
-        handleClose(); // also reset when saving
-    };
+  const { data: users = [], loading: usersLoading } = useSelector(
+    (state: RootState) => state.users
+  );
 
-    const handleClose = () => {
-        reset(); // clears values + errors
-        onClose();
-    };
+  const actualUsersData = useMemo(() => {
+    if (Array.isArray(users)) return users;
+    if (users?.data) {
+      if (Array.isArray(users.data)) return users.data;
+      if (users.data?.data && Array.isArray(users.data.data)) return users.data.data;
+    }
+    return [];
+  }, [users]);
 
-    // When modal opens with initialData, reset form
-    useEffect(() => {
-        if (isOpen) {
-            reset({
-                name: "",
-                mobile: "",
-                altMobile: "",
-                email: "",
-                plotInterestNo: "",
-                source: "",
-                assignUser: "",
-                phase: "",
-                offerPrice: 0,
-                siteVisitDate: "",
-                siteVisitTime: "",
-                siteVisitInfo: "",
-                visitRemark: "",
-                ...initialData,
-            });
-        }
-    }, [isOpen, initialData, reset]);
+  const { leadPlatforms, loading: platformLoading } = useSelector(
+    (state: RootState) => state.leadPlateform
+  );
 
-    if (!isOpen) return null;
+  const actualPlatformOptions = useMemo(() => {
+    return leadPlatforms.map((platform: any) => ({
+      label: platform.platformType,
+      value: platform.id,
+    }));
+  }, [leadPlatforms]);
 
-    return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4" style={{ margin: "0" }}   >
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 overflow-y-auto max-h-[90vh]">
-                {/* Header */}
-                <div className="flex justify-between items-center border-b pb-3 mb-6">
-                    <h2 className="text-xl font-semibold text-gray-800">Add Lead</h2>
-                    <button
-                        onClick={handleClose}
-                        className="text-gray-500 hover:text-gray-700"
-                    >
-                        ✕
-                    </button>
-                </div>
+  const { list: projectList, loading: statusLoading } = useSelector(
+    (state: RootState) => state.projectStatus
+  );
 
-                {/* Form */}
-                <form
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                    onSubmit={handleSubmit(submitHandler)}
-                >
-                    <FormInput<FormData>
-                        name="name"
-                        label="Name"
-                        register={register}
-                        errors={errors}
-                        required
-                        clearErrors={clearErrors}
-                        placeholder="Enter Name"
-                    />
+  const projectStatusOptions = useMemo(() => {
+    const projects = projectList?.projects || [];
+    return projects.map((status: any) => ({
+      label: status.title,
+      value: status.id,
+    }));
+  }, [projectList]);
 
-                    <FormInput<FormData>
-                        name="mobile"
-                        label="Mobile"
-                        register={register}
-                        errors={errors}
-                        required
-                        clearErrors={clearErrors}
-                        placeholder="Enter Mobile"
-                    />
+  const { plots, loading: plotsLoading } = useSelector(
+    (state: RootState) => state.plotSlice
+  );
 
-                    <FormInput<FormData>
-                        name="altMobile"
-                        label="Alt Mobile"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                        placeholder="Enter Alt Mobile"
-                    />
+  const plotOptions = useMemo(() => {
+    return plots.map((plot: any) => ({
+      label: plot.plotNumber,
+      value: plot.id,
+    }));
+  }, [plots]);
 
-                    <FormInput<FormData>
-                        name="email"
-                        label="Email"
-                        type="email"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                        placeholder="Enter Email"
-                    />
+  const { list: stageList, loading: stageLoading } = useSelector(
+    (state: RootState) => state.leadStages
+  );
 
-                    <FormInput<FormData>
-                        name="plotInterestNo"
-                        label="Plot Interest No"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                        placeholder="Enter Plot Interest No"
-                    />
+  const leadStageOptions = useMemo(() => {
+    const stages = stageList || [];
+    return stages.map((s: any) => ({
+      label: s.type,
+      value: s.id,
+    }));
+  }, [stageList]);
 
-                    {/* Source Dropdown */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Source<span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <CommonDropdown
-                            options={statusOptions}
-                            onChange={(value) =>
-                                setValue("source", (value as any).value, {
-                                    shouldValidate: true,
-                                })
-                            }
-                            placeholder="Select Source"
-                            selected={
-                                statusOptions.find(
-                                    (s) => s.value === watch("source")
-                                ) || null
-                            }
-                        />
-                        {errors.source && (
-                            <p className="mt-1 text-sm text-red-600">
-                                {errors.source.message}
-                            </p>
-                        )}
-                    </div>
+  const { list: statusList, loading: leadStatusLoading } = useSelector(
+    (state: RootState) => state.statuses
+  );
 
-                    {/* Assign User Dropdown */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Assign User
-                        </label>
-                        <CommonDropdown
-                            options={assignUserOptions}
-                            onChange={(value) =>
-                                setValue("assignUser", (value as any).value, {
-                                    shouldValidate: true,
-                                })
-                            }
-                            placeholder="Select User"
-                            selected={
-                                assignUserOptions.find(
-                                    (s) => s.value === watch("assignUser")
-                                ) || null
-                            }
-                        />
-                        {errors.assignUser && (
-                            <p className="mt-1 text-sm text-red-600">
-                                {errors.assignUser.message}
-                            </p>
-                        )}
-                    </div>
+  const leadStatusOptions = useMemo(() => {
+    const statuses = statusList || [];
+    return statuses.map((s: any) => ({
+      label: s.type,
+      value: s.id,
+    }));
+  }, [statusList]);
 
-                    {/* Phase Dropdown */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phase
-                        </label>
-                        <CommonDropdown
-                            options={phaseOptions}
-                            onChange={(value) =>
-                                setValue("phase", (value as any).value, {
-                                    shouldValidate: true,
-                                })
-                            }
-                            placeholder="Select Phase"
-                            selected={
-                                phaseOptions.find((s) => s.value === watch("phase")) || null
-                            }
-                        />
-                        {errors.phase && (
-                            <p className="mt-1 text-sm text-red-600">
-                                {errors.phase.message}
-                            </p>
-                        )}
-                    </div>
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(exportUsers({ page: 1, limit: 100, searchValue: "" }));
+      dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: "" }));
+      dispatch(fetchProjectStatuses({ page: 1, limit: 100, searchValue: "" }));
+      dispatch(fetchLeadStages({ page: 1, limit: 100, searchValue: "" }));
+      dispatch(fetchStatuses({ page: 1, limit: 100, searchValue: "" }));
+    }
+  }, [dispatch, isOpen]);
 
-                    <FormInput<FormData>
-                        name="offerPrice"
-                        label="Offer Price"
-                        type="number"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                        placeholder="Enter Offer Price"
-                    />
+  const assignedToOptions = useMemo(() => {
+    return actualUsersData.map((user: any) => ({
+      label: user.name,
+      value: user.id,
+    }));
+  }, [actualUsersData]);
 
-                    <FormInput<FormData>
-                        name="siteVisitDate"
-                        label="Site Visit Date"
-                        type="date"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                    />
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    clearErrors,
+    setValue,
+    watch,
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      city: "",
+      state: "",
+      assignedTo: null,
+      platformId: null,
+      projectStatusId: null,
+      plotId: null,
+      leadStageId: null,
+      leadStatusId: null,
+    },
+  });
 
-                    <FormInput<FormData>
-                        name="siteVisitTime"
-                        label="Site Visit Time"
-                        type="time"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                    />
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+    } else if (isOpen) {
+      reset();
+    }
+  }, [initialData, isOpen, reset]);
 
-                    <FormInput<FormData>
-                        name="siteVisitInfo"
-                        label="Site Visit Info"
-                        type="textarea"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                        placeholder="Enter site visit info"
-                    />
+  const selectedProjectId = watch("projectStatusId");
+  useEffect(() => {
+    if (selectedProjectId) {
+      dispatch(
+        fetchPlots({
+          projectId: selectedProjectId,
+          page: 1,
+          limit: 100,
+          search: "",
+        })
+      );
+      setValue("plotId", null);
+    }
+  }, [dispatch, selectedProjectId, setValue]);
 
-                    <FormInput<FormData>
-                        name="visitRemark"
-                        label="Visit Remark"
-                        type="textarea"
-                        register={register}
-                        errors={errors}
-                        clearErrors={clearErrors}
-                        placeholder="Enter visit remark"
-                    />
-                </form>
+  const onSubmit = (data: any) => {
+    onSave(data);
+  };
 
-                {/* Footer */}
-                <div className="flex justify-end gap-3 mt-6 border-t pt-4">
-                    <button
-                        type="button"
-                        onClick={handleClose}
-                        className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-                        disabled={isLoading}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        onClick={handleSubmit(submitHandler)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? "Saving..." : "Save changes"}
-                    </button>
-                </div>
-            </div>
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" style={{ margin: "0px" }}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-800">
+            {initialData ? "Edit Lead" : "Add New Lead"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+            disabled={isLoading}
+          >
+            ×
+          </button>
         </div>
-    );
+
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormInput
+              name="name"
+              label="Name"
+              placeholder="Enter Name"
+              required
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+            <FormInput
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="Enter Email"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+            <FormInput
+              name="phone"
+              label="Phone"
+              type="tel"
+              placeholder="Enter Phone Number"
+              required
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+            <FormInput
+              name="city"
+              label="City"
+              placeholder="Enter City"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+            <FormInput
+              name="state"
+              label="State"
+              placeholder="Enter State"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assigned To <span className="text-red-500">*</span>
+              </label>
+              <CommonDropdown
+                options={assignedToOptions}
+                selected={
+                  watch("assignedTo")
+                    ? assignedToOptions.find((opt: any) => opt.value === watch("assignedTo")) || null
+                    : null
+                }
+                onChange={(val: any) => setValue("assignedTo", val?.value || null)}
+                placeholder={usersLoading ? "Loading..." : "Select Assignee"}
+                error={!!errors.assignedTo}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Platform <span className="text-red-500">*</span>
+              </label>
+              <CommonDropdown
+                options={actualPlatformOptions}
+                selected={
+                  watch("platformId")
+                    ? actualPlatformOptions.find((opt) => opt.value === watch("platformId")) || null
+                    : null
+                }
+                onChange={(val: any) => setValue("platformId", val?.value || null)}
+                placeholder={platformLoading ? "Loading..." : "Select Platform"}
+                error={!!errors.platformId}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Project Status <span className="text-red-500">*</span>
+              </label>
+              <CommonDropdown
+                options={projectStatusOptions}
+                selected={
+                  watch("projectStatusId")
+                    ? projectStatusOptions.find((opt) => opt.value === watch("projectStatusId")) || null
+                    : null
+                }
+                onChange={(val: any) => setValue("projectStatusId", val?.value || null)}
+                placeholder={statusLoading ? "Loading..." : "Select Project Status"}
+                error={!!errors.projectStatusId}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Plot <span className="text-red-500">*</span>
+              </label>
+              <CommonDropdown
+                options={plotOptions}
+                selected={
+                  watch("plotId")
+                    ? plotOptions.find((opt) => opt.value === watch("plotId")) || null
+                    : null
+                }
+                onChange={(val: any) => setValue("plotId", val?.value || null)}
+                placeholder={plotsLoading ? "Loading..." : "Select Plot"}
+                error={!!errors.plotId}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lead Stage <span className="text-red-500">*</span>
+              </label>
+              <CommonDropdown
+                options={leadStageOptions}
+                selected={
+                  watch("leadStageId")
+                    ? leadStageOptions.find((opt: any) => opt.value === watch("leadStageId")) || null
+                    : null
+                }
+                onChange={(val: any) => setValue("leadStageId", val?.value || null)}
+                placeholder={stageLoading ? "Loading..." : "Select Lead Stage"}
+                error={!!errors.leadStageId}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lead Status <span className="text-red-500">*</span>
+              </label>
+              <CommonDropdown
+                options={leadStatusOptions}
+                selected={
+                  watch("leadStatusId")
+                    ? leadStatusOptions.find((opt: any) => opt.value === watch("leadStatusId")) || null
+                    : null
+                }
+                onChange={(val: any) => setValue("leadStatusId", val?.value || null)}
+                placeholder={leadStatusLoading ? "Loading..." : "Select Lead Status"}
+                error={!!errors.leadStatusId}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              disabled={isLoading}
+            >
+              {isLoading ? "Saving..." : initialData ? "Update Lead" : "Save Lead"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
-export default LeadModal;
+export default ComprehensiveLeadModal;

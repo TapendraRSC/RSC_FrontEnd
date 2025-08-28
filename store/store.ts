@@ -12,6 +12,7 @@ import plotSlice from "./plotSlice";
 import leadStages from "./leadStageSlice";
 import statuses from "./statusMasterSlice";
 import leadPlateform from "./leadPlateformSlice";
+import leads from "./leadSlice";
 
 const store = configureStore({
     reducer: {
@@ -28,6 +29,7 @@ const store = configureStore({
         leadStages: leadStages,
         statuses: statuses,
         leadPlateform: leadPlateform,
+        leads: leads,
     },
 });
 
