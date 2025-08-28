@@ -1,11 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "@/libs/axios";
 
+// ------------------ Async Thunks ------------------
 
+// ✅ Fetch All Leads
 export const fetchLeads = createAsyncThunk(
     "leads/fetchAll",
     async (
-        { page = 1, limit = 10, searchValue = "" }: { page?: number; limit?: number; searchValue?: string },
+        {
+            page = 1,
+            limit = 10,
+            searchValue = "",
+        }: { page?: number; limit?: number; searchValue?: string },
         { rejectWithValue }
     ) => {
         try {
@@ -19,6 +25,7 @@ export const fetchLeads = createAsyncThunk(
     }
 );
 
+// ✅ Fetch Lead By ID
 export const fetchLeadById = createAsyncThunk(
     "leads/fetchById",
     async (id: string, { rejectWithValue }) => {
@@ -31,6 +38,7 @@ export const fetchLeadById = createAsyncThunk(
     }
 );
 
+// ✅ Create Lead
 export const createLead = createAsyncThunk(
     "leads/create",
     async (payload: any, { rejectWithValue }) => {
@@ -43,9 +51,13 @@ export const createLead = createAsyncThunk(
     }
 );
 
+// ✅ Update Lead
 export const updateLead = createAsyncThunk(
     "leads/update",
-    async ({ id, payload }: { id: string; payload: any }, { rejectWithValue }) => {
+    async (
+        { id, payload }: { id: string; payload: any },
+        { rejectWithValue }
+    ) => {
         try {
             const res = await axiosInstance.put(`/leads/updateLead/${id}`, payload);
             return res.data.data;
@@ -68,6 +80,26 @@ export const deleteLead = createAsyncThunk(
     }
 );
 
+// ✅ Upload Leads (Excel File)
+export const uploadLeads = createAsyncThunk(
+    "leads/upload",
+    async (file: File, { rejectWithValue }) => {
+        try {
+            const formData = new FormData();
+            formData.append("excelFile", file);
+
+            const res = await axiosInstance.post("/leads/upload-leads", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            return res.data.data;
+        } catch (err: any) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+// ------------------ Types ------------------
 
 export interface Lead {
     id: number;
@@ -94,6 +126,7 @@ export interface Lead {
     // Lead status
     leadStatusId: number;
     leadStatus?: string;
+    assignedUserName?: string;
 }
 
 interface LeadState {
@@ -133,6 +166,7 @@ const leadSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // ✅ Fetch Leads
             .addCase(fetchLeads.pending, (state) => {
                 state.loading = true;
             })
@@ -169,29 +203,47 @@ const leadSlice = createSlice({
                 state.error = action.payload as string;
             })
 
-            // Fetch By ID
+            // ✅ Fetch By ID
             .addCase(fetchLeadById.fulfilled, (state, action) => {
                 state.current = action.payload;
             })
 
-            // Create
+            // ✅ Create Lead
             .addCase(createLead.fulfilled, (state, action) => {
                 state.list.push(action.payload);
             })
 
-            // Update
+            // ✅ Update Lead
             .addCase(updateLead.fulfilled, (state, action) => {
                 if (action.payload && action.payload.id) {
-                    const index = state.list.findIndex((l) => l.id === action.payload.id);
+                    const index = state.list.findIndex(
+                        (l) => l.id === action.payload.id
+                    );
                     if (index !== -1) {
                         state.list[index] = action.payload;
                     }
                 }
             })
 
-            // Delete
+            // ✅ Delete Lead
             .addCase(deleteLead.fulfilled, (state, action) => {
                 state.list = state.list.filter((l: any) => l.id !== action.payload);
+            })
+
+            // ✅ Upload Leads
+            .addCase(uploadLeads.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(uploadLeads.fulfilled, (state, action) => {
+                state.loading = false;
+                if (Array.isArray(action.payload)) {
+                    // agar API multiple leads return kare
+                    state.list = [...state.list, ...action.payload];
+                }
+            })
+            .addCase(uploadLeads.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
             });
     },
 });

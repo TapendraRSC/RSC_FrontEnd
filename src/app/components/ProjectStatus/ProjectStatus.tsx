@@ -10,6 +10,8 @@ import { AppDispatch, RootState } from '../../../../store/store';
 import { toast } from 'react-toastify';
 import { addStatus, deleteStatus, fetchProjectStatuses, ProjectStatus, updateStatus } from '../../../../store/projectSlice';
 import Link from 'next/link';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
+import { fetchPermissions } from '../../../../store/permissionSlice';
 
 const ProjectStatusComponent: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -173,6 +175,41 @@ const ProjectStatusComponent: React.FC = () => {
         },
     ];
 
+
+    // Permissions 
+
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
+        useSelector((state: RootState) => state.sidebarPermissions);
+
+    const { list: allPermissions } = useSelector(
+        (state: RootState) => state.permissions
+    );
+
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar()); // roleId backend se mil jayega
+    }, [dispatch]);
+
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Project Status'
+        );
+        return leadPerm?.permissionIds || [];
+    };
+
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        // rolePermissions se id check
+        if (!leadPermissionIds.includes(permId)) return false;
+
+        // master list se naam check
+        const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
+        if (!matched) return false;
+
+        return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
+    };
+
     const ProjectStatusCard = ({ project }: { project: ProjectStatus }) => (
         <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start">
@@ -225,15 +262,28 @@ const ProjectStatusComponent: React.FC = () => {
                     View
                 </Link>
                 <button
-                    onClick={() => handleEdit(project)}
-                    className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                    onClick={hasPermission(22, "edit") ? () => handleEdit(project) : undefined}
+                    disabled={!hasPermission(22, "edit")}
+                    title={!hasPermission(22, "edit") ? "Restricted by Admin" : ""}
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors
+        ${hasPermission(22, "edit")
+                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }`}
                 >
                     <Pencil className="w-4 h-4" />
                     Edit
                 </button>
+
                 <button
-                    onClick={() => handleDelete(project)}
-                    className="bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-1"
+                    onClick={hasPermission(4, "delete") ? () => handleDelete(project) : undefined}
+                    disabled={!hasPermission(4, "delete")}
+                    title={!hasPermission(4, "delete") ? "Restricted by Admin" : ""}
+                    className={`px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1 transition-colors
+        ${hasPermission(4, "delete")
+                            ? "bg-red-50 text-red-600 hover:bg-red-100"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }`}
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
@@ -270,9 +320,13 @@ const ProjectStatusComponent: React.FC = () => {
 
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
                 <button
-                    onClick={handleAdd}
-                    disabled={isSaving}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+                    onClick={hasPermission(21, "add") ? handleAdd : undefined}
+                    disabled={!hasPermission(21, "add") || isSaving}
+                    title={!hasPermission(21, "add") ? "Restricted by Admin" : ""}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium ${hasPermission(21, "add")
+                        ? "bg-blue-500 hover:bg-blue-600 text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
                 >
                     {isSaving ? (
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -281,6 +335,7 @@ const ProjectStatusComponent: React.FC = () => {
                     )}
                     Add New Project
                 </button>
+
             </div>
 
             <div className="hidden lg:block p-6">
@@ -292,9 +347,13 @@ const ProjectStatusComponent: React.FC = () => {
                         <p className="text-sm sm:text-base text-gray-600">Manage project statuses</p>
                     </div>
                     <button
-                        onClick={handleAdd}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base"
+                        onClick={hasPermission(21, "add") ? handleAdd : undefined}
+                        disabled={!hasPermission(21, "add") || isSaving}
+                        title={!hasPermission(21, "add") ? "Restricted by Admin" : ""}
+                        className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${hasPermission(21, "add")
+                            ? "bg-blue-500 hover:bg-blue-600 text-white"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}
                     >
                         {isSaving ? (
                             <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -303,6 +362,7 @@ const ProjectStatusComponent: React.FC = () => {
                         )}
                         Add New
                     </button>
+
                 </div>
             </div>
 
@@ -431,17 +491,28 @@ const ProjectStatusComponent: React.FC = () => {
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
+                                    {/* Edit */}
                                     <button
-                                        onClick={() => handleEdit(row)}
-                                        className="text-blue-500 hover:text-blue-700 p-1"
-                                        title="Edit"
+                                        onClick={hasPermission(22, "edit") ? () => handleEdit(row) : undefined}
+                                        disabled={!hasPermission(22, "edit")}
+                                        title={!hasPermission(22, "edit") ? "Restricted by Admin" : "Edit"}
+                                        className={`p-1 rounded ${hasPermission(22, "edit")
+                                            ? "text-blue-500 hover:text-blue-700"
+                                            : "text-gray-400 cursor-not-allowed"
+                                            }`}
                                     >
                                         <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </button>
+
+                                    {/* Delete */}
                                     <button
-                                        onClick={() => handleDelete(row)}
-                                        className="text-red-500 hover:text-red-700 p-1"
-                                        title="Delete"
+                                        onClick={hasPermission(4, "delete") ? () => handleDelete(row) : undefined}
+                                        disabled={!hasPermission(4, "delete")}
+                                        title={!hasPermission(4, "delete") ? "Restricted by Admin" : "Delete"}
+                                        className={`p-1 rounded ${hasPermission(4, "delete")
+                                            ? "text-red-500 hover:text-red-700"
+                                            : "text-gray-400 cursor-not-allowed"
+                                            }`}
                                     >
                                         <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </button>

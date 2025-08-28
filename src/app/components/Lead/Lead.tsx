@@ -1,21 +1,40 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { Pencil, Trash2, Plus, Upload } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import ComprehensiveLeadModal from './LeadModal';
 import FollowUpLeadModal from './FollowUpLeadModal';
 import TimelineLeadModal from './TimelineLeadModal';
+import UploadPreviewModal from '../../components/Common/UploadPreviewModal';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-import { createLead, deleteLead, fetchLeads, updateLead } from '../../../../store/leadSlice';
+import {
+    createLead,
+    deleteLead,
+    fetchLeads,
+    updateLead,
+    uploadLeads,
+} from '../../../../store/leadSlice';
+import { fetchPermissions } from '../../../../store/permissionSlice';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
+import { RootState } from '../../../../store/store';
 
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
 
-    const { list: leadList, loading, page, totalPages, total } = useSelector(
-        (state: any) => state.leads
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const { list: leadList, loading, totalPages, total } = useSelector(
+        (state: RootState) => state.leads
+    );
+
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
+        useSelector((state: RootState) => state.sidebarPermissions);
+
+    const { list: allPermissions } = useSelector(
+        (state: RootState) => state.permissions
     );
 
     const [searchValue, setSearchValue] = useState('');
@@ -29,13 +48,113 @@ const LeadComponent: React.FC = () => {
     const [leadToDelete, setLeadToDelete] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
-    const [currentFollowUpLead, setCurrentFollowUpLead] = useState<any | null>(null);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
     const [currentTimelineLead, setCurrentTimelineLead] = useState<any | null>(null);
+    const [isUploadPreviewOpen, setIsUploadPreviewOpen] = useState(false);
+    const [previewData, setPreviewData] = useState<any[]>([]);
+    const [fileName, setFileName] = useState<string>('');
+    const [uploadLoading, setUploadLoading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     useEffect(() => {
         dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
+
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar());
+    }, [dispatch]);
+
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Lead'
+        );
+        return leadPerm?.permissionIds || [];
+    };
+
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        if (!leadPermissionIds.includes(permId)) return false;
+        const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
+        if (!matched) return false;
+        return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
+    };
+
+    const normalizedLeads = useMemo(() => {
+        return (leadList || [])?.map((lead: any, index: number) => ({
+            ...lead,
+            sr: index + 1 + (currentPage - 1) * pageSize,
+            leadStatus: lead?.leadStatus || 'N/A',
+            platformType: lead?.platformType || 'N/A',
+            plotNumber: lead?.plotNumber || 'N/A',
+            plotPrice: lead?.plotPrice || 'N/A',
+        }));
+    }, [leadList, currentPage, pageSize]);
+
+    const resetUploadStates = () => {
+        setIsUploadPreviewOpen(false);
+        setPreviewData([]);
+        setFileName('');
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setFileName(file.name);
+        setSelectedFile(file);
+
+        const reader = new FileReader();
+        reader.onload = (event: any) => {
+            try {
+                const text = event.target.result as string;
+                const rows = text.split("\n").map((row: string) => row.split(","));
+                const preview = rows.map((cols: string[], i: number) => ({
+                    id: i + 1,
+                    name: cols[0] || "",
+                    email: cols[1] || "",
+                    phone: cols[2] || "",
+                    city: cols[3] || "",
+                    state: cols[4] || "",
+                }));
+                setPreviewData(preview.filter(r => r.name));
+                setIsUploadPreviewOpen(true);
+            } catch (err) {
+                toast.error("Failed to parse file");
+                resetUploadStates();
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleClosePreview = () => {
+        resetUploadStates();
+    };
+
+    const handleConfirmUpload = async () => {
+        if (!selectedFile) {
+            toast.error("No file selected");
+            return;
+        }
+
+        setUploadLoading(true);
+        try {
+            await dispatch(uploadLeads(selectedFile)).unwrap();
+            toast.success("Leads uploaded successfully");
+            resetUploadStates();
+            dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+        } catch (err: any) {
+            console.error('Upload error:', err);
+            toast.error(err?.message || "Failed to upload leads");
+        } finally {
+            setUploadLoading(false);
+        }
+    };
 
     const handleAdd = () => {
         setCurrentLead(null);
@@ -58,25 +177,15 @@ const LeadComponent: React.FC = () => {
                 .unwrap()
                 .then(() => {
                     toast.success('Lead deleted successfully');
+                    dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
                 })
                 .catch(() => toast.error('Failed to delete lead'));
             setIsDeleteModalOpen(false);
         }
     };
 
-    const handleFollowUp = (lead: any) => {
-        setCurrentFollowUpLead(lead);
-        setIsFollowUpModalOpen(true);
-    };
-
-    const handleTimeline = (lead: any) => {
-        setCurrentTimelineLead(lead);
-        setIsTimelineModalOpen(true);
-    };
-
     const handleSaveLead = async (data: any) => {
         setIsSaving(true);
-
         if (currentLead) {
             await dispatch(updateLead({ id: currentLead.id, payload: data }))
                 .unwrap()
@@ -100,31 +209,13 @@ const LeadComponent: React.FC = () => {
         }
     };
 
-    /** ✅ Normalize Leads */
-    const normalizedLeads = useMemo(() => {
-        return (leadList || []).map((lead: any, index: number) => ({
-            ...lead,
-            sr: index + 1 + (currentPage - 1) * pageSize,
-            leadStatus: lead?.leadStatus || "N/A",
-            platformType: lead?.platformType || "N/A",
-            plotNumber: lead?.plotNumber || "N/A",
-            plotPrice: lead?.plotPrice || "N/A",
-        }));
-    }, [leadList, currentPage, pageSize]);
-
     const stringToColor = (str: string) => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = str.charCodeAt(i) + ((hash << 10) - hash);
         }
-
         const baseHue = Math.abs(hash) % 360;
-
-        let hue = baseHue;
-        if (hue >= 40 && hue <= 60) hue = (hue + 80) % 360; // Skip brown range
-        if (hue >= 200 && hue <= 220) hue = (hue + 60) % 360; // Skip muddy blue range
-
-        return `hsl(${hue}, 65%, 92%)`;
+        return `hsl(${baseHue}, 65%, 92%)`;
     };
 
     const stringToTextColor = (str: string) => {
@@ -132,32 +223,24 @@ const LeadComponent: React.FC = () => {
         for (let i = 0; i < str.length; i++) {
             hash = str.charCodeAt(i) + ((hash << 10) - hash);
         }
-
         const baseHue = Math.abs(hash) % 360;
-
-        let hue = baseHue;
-        if (hue >= 40 && hue <= 60) hue = (hue + 80) % 360;
-        if (hue >= 200 && hue <= 220) hue = (hue + 60) % 360;
-
-        return `hsl(${hue}, 75%, 25%)`;
+        return `hsl(${baseHue}, 75%, 25%)`;
     };
 
     const renderBadge = (value: string) => {
         if (!value) return null;
-
-        const bgColor = stringToColor(value);
-        const textColor = stringToTextColor(value);
-
         return (
             <span
                 className="px-2 py-1 rounded-full text-xs font-medium"
-                style={{ backgroundColor: bgColor, color: textColor }}
+                style={{
+                    backgroundColor: stringToColor(value),
+                    color: stringToTextColor(value),
+                }}
             >
                 {value}
             </span>
         );
     };
-
 
     const columns: any = [
         { label: 'Sr', accessor: 'sr', sortable: true },
@@ -193,12 +276,18 @@ const LeadComponent: React.FC = () => {
             sortable: true,
             render: (row: any) => renderBadge(row.plotPrice),
         },
-
         { label: 'Phone', accessor: 'phone', sortable: true },
         { label: 'City', accessor: 'city', sortable: true },
         { label: 'State', accessor: 'state', sortable: true },
-
     ];
+
+    if (rolePermissionsLoading) {
+        return <p>Loading permissions...</p>;
+    }
+
+    if (!hasPermission(17, "view")) {
+        return <p className="text-red-500">You don't have permission to view leads.</p>;
+    }
 
     return (
         <div className="space-y-8 p-3 sm:p-6">
@@ -208,16 +297,35 @@ const LeadComponent: React.FC = () => {
                     <h1 className="text-xl sm:text-2xl font-bold">Lead Master</h1>
                     <p className="text-sm text-gray-600">Manage leads</p>
                 </div>
-                <button
-                    onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add New
-                </button>
+                <div className="flex gap-3">
+                    <label className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer bg-green-500 hover:bg-green-600 text-white">
+                        <Upload className="w-5 h-5" />
+                        Upload
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                            className="hidden"
+                            onChange={handleFileSelect}
+                        />
+                    </label>
+
+                    <div data-tooltip-id="add-permission-tooltip">
+                        <button
+                            onClick={hasPermission(21, "add") ? handleAdd : undefined}
+                            disabled={!hasPermission(21, "add")}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${hasPermission(21, "add")
+                                ? "bg-blue-500 hover:bg-blue-600 text-white"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
+                        >
+                            <Plus className="w-5 h-5" />
+                            Add New
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {/* Table */}
             <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
                 <CustomTable<any>
                     data={normalizedLeads}
@@ -251,35 +359,38 @@ const LeadComponent: React.FC = () => {
                     actions={(row) => (
                         <div className="flex gap-2">
                             <button
-                                onClick={() => handleEdit(row)}
-                                className="text-blue-500 hover:text-blue-700 p-1"
+                                onClick={() => hasPermission(22, "edit") && handleEdit(row)}
+                                disabled={!hasPermission(22, "edit")}
+                                className={`p-1 rounded ${hasPermission(22, "edit")
+                                    ? "text-blue-500 hover:text-blue-700"
+                                    : "text-gray-400 cursor-not-allowed"
+                                    }`}
                             >
                                 <Pencil className="w-4 h-4" />
                             </button>
+
                             <button
-                                onClick={() => handleDelete(row)}
-                                className="text-red-500 hover:text-red-700 p-1"
+                                onClick={() => hasPermission(4, "delete") && handleDelete(row)}
+                                disabled={!hasPermission(4, "delete")}
+                                className={`p-1 rounded ${hasPermission(4, "delete")
+                                    ? "text-red-500 hover:text-red-700"
+                                    : "text-gray-400 cursor-not-allowed"
+                                    }`}
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
+
                             <button
-                                onClick={() => handleFollowUp(row)}
+                                onClick={() => setIsFollowUpModalOpen(true)}
                                 className="text-green-500 hover:text-green-700 p-1"
                             >
                                 📞
-                            </button>
-                            <button
-                                onClick={() => handleTimeline(row)}
-                                className="text-purple-500 hover:text-purple-700 p-1"
-                            >
-                                🕒
                             </button>
                         </div>
                     )}
                 />
             </div>
 
-            {/* Modals */}
             <ComprehensiveLeadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -291,10 +402,7 @@ const LeadComponent: React.FC = () => {
             <FollowUpLeadModal
                 isOpen={isFollowUpModalOpen}
                 onClose={() => setIsFollowUpModalOpen(false)}
-                onSave={(data) => {
-                    console.log('Follow-up saved:', data);
-                    setIsFollowUpModalOpen(false);
-                }}
+                onSave={(data) => setIsFollowUpModalOpen(false)}
             />
 
             <TimelineLeadModal
@@ -310,6 +418,16 @@ const LeadComponent: React.FC = () => {
                 title="Confirm Deletion"
                 message={`Are you sure you want to delete "${leadToDelete?.name}"?`}
                 Icon={Trash2}
+            />
+
+            <UploadPreviewModal
+                isOpen={isUploadPreviewOpen}
+                onClose={handleClosePreview}
+                onConfirmUpload={handleConfirmUpload}
+                fileName={fileName}
+                previewData={previewData}
+                isLoading={uploadLoading}
+                totalRows={previewData.length}
             />
         </div>
     );

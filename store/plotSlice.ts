@@ -24,7 +24,7 @@ interface PlotState {
     loading: boolean;
     error: string | null;
     currentPlot: Plot | null;
-    uploadLoading: boolean; // Add separate loading state for upload
+    uploadLoading: boolean;
 }
 
 const initialState: PlotState = {
@@ -41,7 +41,14 @@ const initialState: PlotState = {
 export const fetchPlots = createAsyncThunk(
     "plots/fetchPlots",
     async (
-        params: { projectId?: number | string; page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string },
+        params: {
+            projectId?: number | string;
+            page?: number;
+            limit?: number;
+            search?: string;
+            sortBy?: string;
+            sortOrder?: string;
+        },
         { rejectWithValue }
     ) => {
         try {
@@ -51,7 +58,7 @@ export const fetchPlots = createAsyncThunk(
                 limit = 10,
                 search,
                 sortBy,
-                sortOrder
+                sortOrder,
             } = params || {};
 
             const res = await axiosInstance.get(`/plots/getAllPlots`, {
@@ -61,9 +68,10 @@ export const fetchPlots = createAsyncThunk(
                     limit,
                     search: search || undefined,
                     sortBy,
-                    sortOrder
-                }
+                    sortOrder,
+                },
             });
+
             return res.data?.data;
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || err.message);
@@ -84,19 +92,26 @@ export const addPlot = createAsyncThunk(
     }
 );
 
-// Bulk upload plots via CSV/Excel
+// Bulk upload plots
 export const uploadPlotData = createAsyncThunk(
     "plots/uploadData",
-    async ({ projectId, file }: { projectId: string | number; file: File }, { rejectWithValue }) => {
+    async (
+        { projectId, file }: { projectId: string | number; file: File },
+        { rejectWithValue }
+    ) => {
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append("file", file);
 
-            const res = await axiosInstance.post(`/plots/upload-data/${projectId}`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            const res = await axiosInstance.post(
+                `/plots/upload-data/${projectId}`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
             return res.data;
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || err.message);
@@ -110,9 +125,18 @@ export const getPlotById = createAsyncThunk(
     async (id: number, { rejectWithValue }) => {
         try {
             const res = await axiosInstance.get(`/plots/getPlot/${id}`);
-            return res.data;
+
+            if (!res.data || !res.data.data) {
+                // agar response me data hi nahi to 404 ki tarah treat kro
+                return rejectWithValue("Plot not found");
+            }
+
+            return res.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data?.message || err.message);
+            // 404 aaya to bhi reject karke handle karenge
+            return rejectWithValue(
+                err.response?.data?.message || err.message || "Plot not found"
+            );
         }
     }
 );
@@ -120,7 +144,10 @@ export const getPlotById = createAsyncThunk(
 // Update plot
 export const updatePlot = createAsyncThunk(
     "plots/updatePlot",
-    async ({ id, data }: { id: number; data: Omit<Plot, "id"> }, { rejectWithValue }) => {
+    async (
+        { id, data }: { id: number; data: Omit<Plot, "id"> },
+        { rejectWithValue }
+    ) => {
         try {
             const res = await axiosInstance.put(`/plots/updatePlot/${id}`, data);
             return res.data;
@@ -150,6 +177,10 @@ const plotSlice = createSlice({
         clearCurrentPlot: (state) => {
             state.currentPlot = null;
         },
+        clearCurrentPlotBeforeFetch: (state) => {
+            state.currentPlot = null;
+            state.error = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -161,11 +192,12 @@ const plotSlice = createSlice({
             .addCase(fetchPlots.fulfilled, (state, action) => {
                 state.loading = false;
                 state.plots = action.payload.plots || [];
-                state.total = action.payload.total;
-                state.totalPages = action.payload.totalPages;
+                state.total = action.payload.total || 0;
+                state.totalPages = action.payload.totalPages || 0;
             })
             .addCase(fetchPlots.rejected, (state, action) => {
                 state.loading = false;
+                state.plots = []; // ❌ clear plots on error
                 state.error = action.payload as string;
             })
 
@@ -199,14 +231,20 @@ const plotSlice = createSlice({
             .addCase(getPlotById.pending, (state) => {
                 state.loading = true;
                 state.error = null;
+                state.currentPlot = null; // ✅ always clear before fetch
             })
-            .addCase(getPlotById.fulfilled, (state, action: PayloadAction<Plot>) => {
-                state.loading = false;
-                state.currentPlot = action.payload;
-            })
+            .addCase(
+                getPlotById.fulfilled,
+                (state, action: PayloadAction<Plot>) => {
+                    state.loading = false;
+                    state.currentPlot = action.payload;
+                    state.error = null;
+                }
+            )
             .addCase(getPlotById.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                state.currentPlot = null; // ✅ clear on error
             })
 
             // updatePlot
@@ -229,7 +267,12 @@ const plotSlice = createSlice({
             })
             .addCase(deletePlot.fulfilled, (state, action: PayloadAction<number>) => {
                 state.loading = false;
-                state.plots = state.plots.filter((plot) => plot.id !== action.payload);
+                state.plots = state.plots.filter(
+                    (plot) => plot.id !== action.payload
+                );
+                if (state.currentPlot?.id === action.payload) {
+                    state.currentPlot = null;
+                }
             })
             .addCase(deletePlot.rejected, (state, action) => {
                 state.loading = false;
@@ -238,5 +281,6 @@ const plotSlice = createSlice({
     },
 });
 
-export const { clearCurrentPlot } = plotSlice.actions;
+export const { clearCurrentPlot, clearCurrentPlotBeforeFetch } =
+    plotSlice.actions;
 export default plotSlice.reducer;

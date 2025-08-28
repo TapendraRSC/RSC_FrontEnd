@@ -54,7 +54,6 @@ const Users: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
-    // Mobile responsive states
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -201,27 +200,28 @@ const Users: React.FC = () => {
     const handleUserSubmit = async (data: any) => {
         setIsSubmitting(true);
         let resultAction: any;
+
         if (editingUser) {
             resultAction = await dispatch(updateUser({ id: editingUser.id, userData: data }));
         } else {
             resultAction = await dispatch(addUser(data));
         }
-        if (
-            (editingUser && updateUser.fulfilled.match(resultAction)) ||
-            (!editingUser && addUser.fulfilled.match(resultAction))
-        ) {
-            const res = resultAction.payload;
-            if (res?.success) {
-                toast.success(res.message);
-                dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
-                setModalOpen(false);
-            } else {
-                toast.error(res?.message || "An error occurred");
-            }
+
+        const res = resultAction.payload;
+
+        if (res?.success) {
+            toast.success(res.message);
+            dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
+            setModalOpen(false);
         } else {
-            const errorPayload: any = resultAction.payload || resultAction.error;
-            toast.error(errorPayload?.message || "An unexpected error occurred");
+            // Backend ka actual error message show karo
+            const errorMessage = Array.isArray(res?.errors) && res.errors.length > 0
+                ? res.errors[0]  // sirf pehla validation error
+                : res?.message;
+
+            toast.error(errorMessage);
         }
+
         setIsSubmitting(false);
     };
 
@@ -232,9 +232,19 @@ const Users: React.FC = () => {
 
     const confirmDelete = async () => {
         if (userToDelete) {
-            await dispatch(deleteUser(userToDelete.id));
-            await dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
-            setIsDeleteModalOpen(false);
+            try {
+                const res = await dispatch(deleteUser(userToDelete.id));
+
+                if (res.meta.requestStatus === "fulfilled") {
+                    toast.success("User deleted successfully ");
+                    await dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
+                    setIsDeleteModalOpen(false);
+                } else {
+                    toast.error("Failed to delete user ❌");
+                }
+            } catch (error) {
+                toast.error("Something went wrong while deleting user ⚠️");
+            }
         }
     };
 

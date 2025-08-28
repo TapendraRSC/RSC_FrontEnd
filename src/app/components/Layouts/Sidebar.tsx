@@ -78,12 +78,12 @@ const Sidebar = () => {
                 { pageName: 'Status Master View', title: 'Status Master View', href: '/statusmasterview' },
             ]
         },
-        plotStatus: {
-            pageName: 'Plot Status',
-            title: 'Plot Status',
-            href: '/plotstatus',
-            type: 'single'
-        },
+        // plotStatus: {
+        //     pageName: 'Plot Status',
+        //     title: 'Plot Status',
+        //     href: '/plotstatus',
+        //     type: 'single'
+        // },
         projectstatus: {
             pageName: 'Project Status',
             title: 'Project Status',
@@ -233,7 +233,7 @@ const Sidebar = () => {
                                 </li>
                             )}
 
-                            {filteredMenuItems.plotStatus && (
+                            {/* {filteredMenuItems.plotStatus && (
                                 <li className="menu nav-item">
                                     <Link href={filteredMenuItems.plotStatus.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                                         <span className="text-black dark:text-white">
@@ -241,7 +241,7 @@ const Sidebar = () => {
                                         </span>
                                     </Link>
                                 </li>
-                            )}
+                            )} */}
                             {filteredMenuItems.projectstatus && (
                                 <li className="menu nav-item">
                                     <Link href={filteredMenuItems.projectstatus.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
