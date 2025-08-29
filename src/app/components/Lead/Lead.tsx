@@ -29,7 +29,7 @@ const LeadComponent: React.FC = () => {
     const { list: leadList, loading, totalPages, total } = useSelector(
         (state: RootState) => state.leads
     );
-
+    // console.log("leadList", leadList)
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
 
@@ -55,6 +55,7 @@ const LeadComponent: React.FC = () => {
     const [fileName, setFileName] = useState<string>('');
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
 
     useEffect(() => {
         dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
@@ -85,12 +86,17 @@ const LeadComponent: React.FC = () => {
         return (leadList || [])?.map((lead: any, index: number) => ({
             ...lead,
             sr: index + 1 + (currentPage - 1) * pageSize,
-            leadStatus: lead?.leadStatus || 'N/A',
-            platformType: lead?.platformType || 'N/A',
-            plotNumber: lead?.plotNumber || 'N/A',
-            plotPrice: lead?.plotPrice || 'N/A',
+            leadStatus: lead?.leadStatus || "N/A",
+            platformType: lead?.platformType || "N/A",
+            plotNumber: lead?.plotNumber || "N/A",
+            plotPrice: lead?.plotPrice || "N/A",
+
+            // 👇 yeh add karo
+            plotProjectId: lead?.plotProjectId || null,
+            plotProjectTitle: lead?.plotProjectTitle || "N/A",
         }));
     }, [leadList, currentPage, pageSize]);
+
 
     const resetUploadStates = () => {
         setIsUploadPreviewOpen(false);
@@ -422,7 +428,10 @@ const LeadComponent: React.FC = () => {
                             </button>
 
                             <button
-                                onClick={() => setIsFollowUpModalOpen(true)}
+                                onClick={() => {
+                                    setSelectedLeadId(row);
+                                    setIsFollowUpModalOpen(true);
+                                }}
                                 className="text-green-500 hover:text-green-700 p-1"
                             >
                                 📞
@@ -440,11 +449,14 @@ const LeadComponent: React.FC = () => {
                 isLoading={isSaving}
             />
 
-            <FollowUpLeadModal
-                isOpen={isFollowUpModalOpen}
-                onClose={() => setIsFollowUpModalOpen(false)}
-                onSave={(data) => setIsFollowUpModalOpen(false)}
-            />
+            {selectedLeadId && (
+                <FollowUpLeadModal
+                    isOpen={isFollowUpModalOpen}
+                    onClose={() => setIsFollowUpModalOpen(false)}
+                    lead={selectedLeadId}
+                />
+            )}
+
 
             <TimelineLeadModal
                 isOpen={isTimelineModalOpen}

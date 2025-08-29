@@ -59,7 +59,7 @@ export const updateLead = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const res = await axiosInstance.put(`/leads/updateLead/${id}`, payload);
+            const res = await axiosInstance.put(`/leads/editLead/${id}`, payload);
             return res.data.data;
         } catch (err: any) {
             return rejectWithValue(err.response?.data || err.message);
@@ -188,15 +188,24 @@ const leadSlice = createSlice({
                         assignedTo: item.assignedTo,
                         platformId: item.platformId,
                         platformType: item.platformType,
+
+                        // Plot info
                         plotId: item.plotId,
                         plotNumber: item.plotNumber,
                         plotPrice: item.plotPrice,
+
+                        // 👇 Add these two if API sends them
+                        plotProjectId: item.plotProjectId,
+                        plotProjectTitle: item.plotProjectTitle,
+
+                        // Lead stage / status
                         leadStageId: item.leadStageId,
                         leadStage: item.leadStage,
                         leadStatusId: item.leadStatusId,
                         leadStatus: item.leadStatus,
                         assignedUserName: item.assignedUserName,
                     })) || [];
+
             })
             .addCase(fetchLeads.rejected, (state, action) => {
                 state.loading = false;

@@ -2,34 +2,28 @@
 import React, { useEffect, useState } from "react";
 import {
     User,
-    Book,
     Folder,
     Users,
     MapPin,
     Globe,
     Facebook,
     TrendingUp,
-    Calendar,
-    Star,
+    Activity,
     ArrowUp,
     ArrowDown,
-    Activity,
 } from "lucide-react";
+import axiosInstance from "@/libs/axios";
+
+interface StatItem {
+    title: string;
+    value: number;
+    icon: React.ReactNode;
+    color: string;
+}
 
 const SalesDashboard = () => {
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    const statsData = [
-        { title: "Associates", value: 25, icon: <User size={18} />, trend: "+12%", trendUp: true, color: "blue" },
-        { title: "Bookings", value: 1637, icon: <Book size={18} />, trend: "+8.2%", trendUp: true, color: "emerald" },
-        { title: "Projects", value: 17, icon: <Folder size={18} />, trend: "+3.1%", trendUp: true, color: "purple" },
-        { title: "Leads", value: 4912, icon: <Users size={18} />, trend: "-2.4%", trendUp: false, color: "orange" },
-        { title: "Site Visits", value: 14, icon: <MapPin size={18} />, trend: "+5.7%", trendUp: true, color: "pink" },
-    ];
+    const [statsData, setStatsData] = useState<StatItem[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     const sourceData = [
         { title: "HomeOnline", value: 0, icon: <Globe size={18} />, color: "slate" },
@@ -39,21 +33,40 @@ const SalesDashboard = () => {
         { title: "99acres.com", value: 0, icon: <Globe size={18} />, color: "yellow" },
     ];
 
-    const leadData = [
-        { title: "Total Lead", value: 7541, trend: "+15.3%", trendUp: true },
-        { title: "Fresh Lead", value: 68, trend: "+22.1%", trendUp: true },
-    ];
+    useEffect(() => {
+        fetchStats();
+    }, []);
 
-    const agendaData = [
-        { title: "Today Visits", value: 0, target: 5 },
-        { title: "Today Followups", value: 0, target: 12 },
-    ];
+    const fetchStats = async () => {
+        setIsLoading(true);
+        try {
+            const res = await axiosInstance.get("/dashboard/dashboard-stats");
+            const data = res.data.data;
 
-    const performerData = [
-        { title: "Leads", value: 58, color: "bg-blue-500" },
-        { title: "Visits", value: 0, color: "bg-emerald-500" },
-        { title: "Bookings", value: 0, color: "bg-purple-500" },
-    ];
+            const updatedStats: any = Object.entries(data).map(([key, value]) => {
+                // Convert camelCase key to Title Case
+                const title = key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase());
+
+                // Choose icon and color dynamically
+                let icon: React.ReactNode = <Users size={18} />;
+                let color = "blue";
+
+                if (key.toLowerCase().includes("user")) icon = <User size={18} />;
+                if (key.toLowerCase().includes("plot")) color = "pink";
+                if (key.toLowerCase().includes("project")) color = "purple";
+                if (key.toLowerCase().includes("lead")) color = "orange";
+
+                return { title, value: value ?? 0, icon, color };
+            });
+
+            setStatsData(updatedStats);
+        } catch (error) {
+            console.error("Error fetching dashboard stats:", error);
+            setStatsData([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const getColorClasses = (color: string, type = "bg") => {
         const colors: Record<string, string> = {
@@ -99,18 +112,9 @@ const SalesDashboard = () => {
                                 <div className={`p-3 rounded-xl ${getColorClasses(item.color, "bg")}`}>
                                     {item.icon}
                                 </div>
-                                <div
-                                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${item.trendUp
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
-                                        }`}
-                                >
-                                    {item.trendUp ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-                                    {item.trend}
-                                </div>
                             </div>
                             <p className="mt-3 text-sm font-semibold text-slate-600">{item.title}</p>
-                            <p className="text-xl sm:text-2xl font-bold">{item.value.toLocaleString()}</p>
+                            <p className="text-xl sm:text-2xl font-bold">{(item.value ?? 0).toLocaleString()}</p>
                         </div>
                     ))}
                 </div>
@@ -135,82 +139,6 @@ const SalesDashboard = () => {
                             </div>
                         ))}
                     </div>
-                </div>
-
-                {/* LEADS */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {leadData.map((item, idx) => (
-                        <div
-                            key={idx}
-                            className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-transform hover:-translate-y-1"
-                        >
-                            <div className="flex justify-between items-center">
-                                <TrendingUp className="text-blue-500" />
-                                <div
-                                    className={`px-3 py-1 rounded-full text-xs font-bold ${item.trendUp
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
-                                        }`}
-                                >
-                                    {item.trend}
-                                </div>
-                            </div>
-                            <p className="mt-3 text-sm font-semibold text-slate-600">{item.title}</p>
-                            <p className="text-2xl font-bold">{item.value.toLocaleString()}</p>
-                        </div>
-                    ))}
-                </div>
-
-                {/* AGENDA + PERFORMER */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Agenda */}
-                    <div className="bg-white rounded-xl shadow-lg p-4">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <Calendar className="text-emerald-500" size={18} />
-                            Today's Agenda
-                        </h2>
-                        {agendaData.map((item, idx) => (
-                            <div key={idx} className="mb-4">
-                                <div className="flex justify-between">
-                                    <p className="font-semibold">{item.title}</p>
-                                    <p className="font-bold">{item.value}</p>
-                                </div>
-                                <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
-                                    <div
-                                        className="bg-emerald-500 h-2 rounded-full"
-                                        style={{ width: `${Math.min((item.value / item.target) * 100, 100)}%` }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Performer */}
-                    <div className="bg-white rounded-xl shadow-lg p-4">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <Star className="text-yellow-500" size={18} />
-                            Top Performer
-                        </h2>
-                        {performerData.map((item, idx) => (
-                            <div key={idx} className="flex justify-between items-center mb-4">
-                                <p className="font-semibold">{item.title}</p>
-                                <p className="font-bold">{item.value}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* REVENUE */}
-                <div className="bg-white rounded-xl shadow-lg p-4">
-                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                        <TrendingUp className="text-purple-500" size={18} />
-                        Revenue Overview
-                    </h2>
-                    {isMounted && (
-                        <div className="h-48 flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 rounded-xl">
-                            <p className="text-slate-500">Chart Visualization</p>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
