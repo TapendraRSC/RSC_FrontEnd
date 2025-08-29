@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Pencil, Trash2, Plus, Upload } from 'lucide-react';
+import { Pencil, Trash2, Plus, Upload, Loader2 } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import ComprehensiveLeadModal from './LeadModal';
@@ -243,42 +243,72 @@ const LeadComponent: React.FC = () => {
     };
 
     const columns: any = [
-        { label: 'Sr', accessor: 'sr', sortable: true },
-        { label: 'Name', accessor: 'name', sortable: true },
-        { label: 'Email', accessor: 'email', sortable: true },
+        // { label: 'Sr', accessor: 'sr', sortable: true,
+
+        //  },
+        {
+            label: 'Name', accessor: 'name', sortable: true, minWidth: 200,
+            maxWidth: 300,
+            showTooltip: true
+        },
+        {
+            label: 'Email', accessor: 'email', sortable: true,
+            showTooltip: true
+
+        },
         {
             label: 'Lead Status',
             accessor: 'leadStatus',
             sortable: true,
             render: (row: any) => renderBadge(row.leadStatus),
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
         },
         {
             label: 'Platform Type',
             accessor: 'platformType',
             sortable: true,
             render: (row: any) => renderBadge(row.platformType),
+            showTooltip: true
         },
         {
             label: 'Assigned Person',
             accessor: 'assignedUserName',
             sortable: true,
             render: (row: any) => renderBadge(row.assignedUserName),
+            showTooltip: true
         },
         {
             label: 'Plot Number',
             accessor: 'plotNumber',
             sortable: true,
             render: (row: any) => renderBadge(row.plotNumber),
+            showTooltip: true
         },
         {
             label: 'Plot Price',
             accessor: 'plotPrice',
             sortable: true,
             render: (row: any) => renderBadge(row.plotPrice),
+            showTooltip: true
         },
-        { label: 'Phone', accessor: 'phone', sortable: true },
-        { label: 'City', accessor: 'city', sortable: true },
-        { label: 'State', accessor: 'state', sortable: true },
+        {
+            label: 'Phone', accessor: 'phone', sortable: true,
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
+        },
+        {
+            label: 'City', accessor: 'city', sortable: true,
+            showTooltip: true
+
+        },
+        {
+            label: 'State', accessor: 'state', sortable: true, minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
+        },
     ];
 
     if (rolePermissionsLoading) {
@@ -298,8 +328,17 @@ const LeadComponent: React.FC = () => {
                     <p className="text-sm text-gray-600">Manage leads</p>
                 </div>
                 <div className="flex gap-3">
-                    <label className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer bg-green-500 hover:bg-green-600 text-white">
-                        <Upload className="w-5 h-5" />
+                    <label
+                        className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+    ${hasPermission(20, "upload")
+                                ? "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                    >
+                        {uploadLoading ? (
+                            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                        ) : (
+                            <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                        )}
                         Upload
                         <input
                             ref={fileInputRef}
@@ -307,8 +346,10 @@ const LeadComponent: React.FC = () => {
                             accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                             className="hidden"
                             onChange={handleFileSelect}
+                            disabled={!hasPermission(20, "upload")}
                         />
                     </label>
+
 
                     <div data-tooltip-id="add-permission-tooltip">
                         <button

@@ -1,3 +1,5 @@
+"use client";
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '@/libs/axios';
 
@@ -39,12 +41,23 @@ export const getUserById = createAsyncThunk(
     }
 );
 
-// Thunk to add a user
+// Thunk to add a user (with profileImage using FormData)
 export const addUser = createAsyncThunk(
     'users/addUser',
     async (userData: any, thunkAPI) => {
         try {
-            const response = await axiosInstance.post('users/addUser', userData);
+            const formData = new FormData();
+            Object.keys(userData).forEach((key) => {
+                if (key === 'profileImage' && userData[key]) {
+                    formData.append(key, userData[key]); // append file
+                } else {
+                    formData.append(key, userData[key]);
+                }
+            });
+
+            const response = await axiosInstance.post('users/addUser', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             return response.data;
         } catch (error: any) {
             return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to add user');
@@ -52,12 +65,23 @@ export const addUser = createAsyncThunk(
     }
 );
 
-// Thunk to update a user
+// Thunk to update a user (with profileImage using FormData)
 export const updateUser = createAsyncThunk(
     'users/updateUser',
     async ({ id, userData }: { id: number; userData: any }, thunkAPI) => {
         try {
-            const response = await axiosInstance.put(`users/updateUser/${id}`, userData);
+            const formData = new FormData();
+            Object.keys(userData).forEach((key) => {
+                if (key === 'profileImage' && userData[key]) {
+                    formData.append(key, userData[key]); // append file
+                } else {
+                    formData.append(key, userData[key]);
+                }
+            });
+
+            const response = await axiosInstance.put(`users/updateUser/${id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             return response.data;
         } catch (error: any) {
             return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to update user');
@@ -84,6 +108,7 @@ const userSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
+            // Export Users
             .addCase(exportUsers.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -96,6 +121,8 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+
+            // Get User by ID
             .addCase(getUserById.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -108,6 +135,8 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+
+            // Add User
             .addCase(addUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -120,6 +149,8 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+
+            // Update User
             .addCase(updateUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -132,6 +163,8 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+
+            // Delete User
             .addCase(deleteUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;

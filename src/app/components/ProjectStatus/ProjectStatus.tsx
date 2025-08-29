@@ -112,13 +112,15 @@ const ProjectStatusComponent: React.FC = () => {
             label: 'Sr',
             accessor: 'id',
             sortable: true,
-            mobile: false
+            mobile: false,
+            showTooltip: true
         },
         {
             label: 'Project Title',
             accessor: 'title',
             sortable: true,
             mobile: true,
+            showTooltip: true,
             render: (row: ProjectStatus) => (
                 <Link
                     href={`/projectstatus/${row.id}`}
@@ -142,6 +144,7 @@ const ProjectStatusComponent: React.FC = () => {
                 ) : (
                     '-'
                 ),
+            showTooltip: true
         },
         {
             label: 'PDF',
@@ -160,6 +163,7 @@ const ProjectStatusComponent: React.FC = () => {
                 ) : (
                     '-'
                 ),
+            showTooltip: true
         },
         {
             label: 'Status',
@@ -172,6 +176,7 @@ const ProjectStatusComponent: React.FC = () => {
                     {row.status}
                 </span>
             ),
+            showTooltip: true
         },
     ];
 

@@ -139,7 +139,9 @@ const statusSlice = createSlice({
 
             // Create
             .addCase(createStatus.fulfilled, (state, action) => {
-                state.list.push(action.payload);
+                if (action.payload) {
+                    state.list.push(action.payload);
+                }
             })
 
             // Update

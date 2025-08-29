@@ -55,15 +55,44 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
     }, [id, currentPage, pageSize, searchValue, sortConfig, dispatch]);
 
     const columns: any = [
-        { label: "Plot No.", accessor: "plotNumber", mobile: true },
-        { label: "City", accessor: "city", mobile: true },
-        { label: "Facing", accessor: "facing", mobile: false },
-        { label: "Land Type", accessor: "landType", mobile: false },
-        { label: "Project", accessor: "projectTitle", mobile: false },
-        { label: "Sq. Yard", accessor: "sqYard", mobile: true },
-        { label: "Sq. Feet", accessor: "sqFeet", mobile: false },
-        { label: "Price", accessor: "price", mobile: true },
-        { label: "Status", accessor: "status", mobile: true },
+        {
+            label: "Plot No.", accessor: "plotNumber", mobile: true,
+            showTooltip: true
+        },
+        {
+            label: "City", accessor: "city", mobile: true,
+            showTooltip: true
+        },
+        {
+            label: "Facing", accessor: "facing", mobile: false,
+            showTooltip: true
+        },
+        {
+            label: "Land Type", accessor: "landType", mobile: false,
+            showTooltip: true
+        },
+        {
+            label: "Project", accessor: "projectTitle", mobile: false, minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
+        },
+        {
+            label: "Sq. Yard", accessor: "sqYard", mobile: true,
+            showTooltip: true
+        },
+        {
+            label: "Sq. Feet", accessor: "sqFeet", mobile: false,
+            showTooltip: true
+        },
+        {
+            label: "Price", accessor: "price", mobile: true,
+            showTooltip: true
+        },
+        {
+            label: "Status", accessor: "status", mobile: true, minWidth: 150,
+            maxWidth: 300,
+            showTooltip: true
+        },
     ];
 
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =

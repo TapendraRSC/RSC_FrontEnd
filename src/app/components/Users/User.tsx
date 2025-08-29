@@ -277,7 +277,8 @@ const Users: React.FC = () => {
             accessor: 'id',
             sortable: true,
             width: '80px',
-            mobile: false // Hide on mobile
+            mobile: false,
+            showTooltip: true
         },
         {
             label: 'Profile Image',
@@ -292,13 +293,17 @@ const Users: React.FC = () => {
                 ) : (
                     '-'
                 ),
+            showTooltip: true
         },
         {
             label: 'Name',
             accessor: 'name',
             sortable: true,
             width: '150px',
-            mobile: true // Show on mobile
+            mobile: true,
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
         },
         {
             label: 'Email',
@@ -311,13 +316,17 @@ const Users: React.FC = () => {
                     {row.email}
                 </div>
             ),
+            showTooltip: true
         },
         {
             label: 'Phone',
             accessor: 'phoneNumber',
             sortable: true,
             width: '140px',
-            mobile: false // Hide on mobile
+            mobile: false,
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
         },
         {
             label: 'Role',
@@ -332,14 +341,15 @@ const Users: React.FC = () => {
                         {roleType}
                     </div>
                 );
-            }
+            },
+            // showTooltip: true
         },
         {
             label: 'Status',
             accessor: 'status',
             sortable: true,
             width: '100px',
-            mobile: false, // Hide on mobile
+            mobile: false,
             render: (row: User) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'active'
                     ? 'bg-green-100 text-green-800'
@@ -347,7 +357,8 @@ const Users: React.FC = () => {
                     }`}>
                     {row.status || 'Active'}
                 </span>
-            )
+            ),
+            showTooltip: true
         },
     ];
 

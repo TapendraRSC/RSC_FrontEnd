@@ -15,7 +15,7 @@ interface UserFormData {
     password: string;
     phoneNumber: string;
     roleId: number;
-    profileImage: FileList;
+    profileImage: File | null;
     status: string;
 }
 
@@ -25,7 +25,7 @@ interface User {
     email: string;
     phoneNumber: string;
     roleId: number;
-    profileImage: string;
+    profileImage: string | null;
     status: string;
     password: string;
 }
@@ -39,26 +39,19 @@ interface UsersModalProps {
 
 const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user }) => {
     const dispatch = useDispatch<AppDispatch>();
-    const [showPassword, setShowPassword] = useState(false);
     const { data: roles = [] } = useSelector((state: RootState) => state.roles);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        watch,
-        reset,
-        setValue,
-        clearErrors,
-    } = useForm<UserFormData>();
-
-    const password = watch('password') || '';
-    const profileImage = watch('profileImage');
-    const roleId = watch('roleId');
-    const status = watch('status');
+    const [showPassword, setShowPassword] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
 
-    // Password rules
+    const { register, handleSubmit, watch, formState: { errors }, reset, setValue, clearErrors } = useForm<UserFormData>();
+
+    const password = watch('password') || '';
+    const roleId = watch('roleId');
+    const status = watch('status');
+
+    // Password rules for live display
     const passwordRules = [
         { label: 'At least 1 uppercase letter', regex: /[A-Z]/ },
         { label: 'At least 1 lowercase letter', regex: /[a-z]/ },
@@ -85,39 +78,36 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                 password: user.password,
                 status: user.status || 'active',
             });
-            if (user.profileImage) {
-                setPreview(user.profileImage);
-            }
+            if (user.profileImage) setPreview(user.profileImage);
         } else {
             reset({ status: 'active' });
             setPreview(null);
+            setSelectedFile(null);
         }
     }, [user, reset]);
 
+    // Register roleId and status manually
     useEffect(() => {
         register('roleId', { required: 'Role is required' });
         register('status', { required: 'Status is required' });
     }, [register]);
 
+    // Handle file selection
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            setPreview(url);
-        }
+        const file = e.target.files?.[0] || null;
+        setSelectedFile(file);
+        if (file) setPreview(URL.createObjectURL(file));
     };
 
     const handleClose = () => {
         reset();
         setPreview(null);
-        if (preview) {
-            URL.revokeObjectURL(preview);
-        }
+        setSelectedFile(null);
         onClose();
     };
 
     const submitHandler = (data: UserFormData) => {
-        onSubmit(data);
+        onSubmit({ ...data, profileImage: selectedFile });
     };
 
     if (!isOpen) return null;
@@ -145,7 +135,9 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                     <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
                         {user ? 'Edit User' : 'Add New User'}
                     </h2>
+
                     <form onSubmit={handleSubmit(submitHandler)} className="space-y-4 sm:space-y-6">
+                        {/* Name & Email */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                             <FormInput<UserFormData>
                                 name="name"
@@ -172,8 +164,8 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                             />
                         </div>
 
+                        {/* Password & Phone */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                            {/* Password Input */}
                             <div className="relative">
                                 <FormInput<UserFormData>
                                     name="password"
@@ -185,21 +177,12 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                     errors={errors}
                                     clearErrors={clearErrors}
                                     validation={{
-                                        minLength: {
-                                            value: 8,
-                                            message: "Password must be at least 8 characters",
-                                        },
-                                        maxLength: {
-                                            value: 16,
-                                            message: "Password must not exceed 16 characters",
-                                        },
+                                        minLength: { value: 8, message: "Password must be at least 8 characters" },
+                                        maxLength: { value: 16, message: "Password must not exceed 16 characters" },
                                         validate: (value: any) => {
                                             if (!user) {
-                                                const regex =
-                                                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
-                                                if (!regex.test(value)) {
-                                                    return "Password must contain uppercase, lowercase, number, and special character";
-                                                }
+                                                const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/;
+                                                if (!regex.test(value)) return "Password must contain uppercase, lowercase, number, and special character";
                                             }
                                             return true;
                                         },
@@ -213,19 +196,15 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
 
-                                {/* Live Password Errors (only unsatisfied rules show) */}
                                 {!user && password && (
                                     <ul className="mt-2 text-sm space-y-1 text-red-500">
-                                        {passwordRules
-                                            .filter((rule) => !rule.regex.test(password))
-                                            .map((rule, index) => (
-                                                <li key={index}>❌ {rule.label}</li>
-                                            ))}
+                                        {passwordRules.filter(rule => !rule.regex.test(password)).map((rule, i) => (
+                                            <li key={i}>❌ {rule.label}</li>
+                                        ))}
                                     </ul>
                                 )}
                             </div>
 
-                            {/* Phone Number Input */}
                             <FormInput<UserFormData>
                                 name="phoneNumber"
                                 label="Phone Number"
@@ -237,14 +216,12 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                 clearErrors={clearErrors}
                                 validation={{
                                     required: "Phone number is required",
-                                    pattern: {
-                                        value: /^[0-9]{10}$/,
-                                        message: "Phone number must be exactly 10 digits",
-                                    },
+                                    pattern: { value: /^[0-9]{10}$/, message: "Phone number must be exactly 10 digits" },
                                 }}
                             />
                         </div>
 
+                        {/* Role & Status */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -252,58 +229,33 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                 </label>
                                 <CommonDropdown
                                     options={roleOptions}
-                                    selected={roleOptions.find((r) => r.value === Number(roleId)) || null}
+                                    selected={roleOptions.find(r => r.value === Number(roleId)) || null}
                                     onChange={(value) => setValue('roleId', Number((value as any).value))}
                                     placeholder="Select a role"
                                 />
-                                {errors.roleId && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.roleId.message}</p>
-                                )}
+                                {errors.roleId && <p className="mt-1 text-sm text-red-600">{errors.roleId.message}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Status
-                                </label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                                 <CommonDropdown
                                     options={statusOptions}
-                                    selected={statusOptions.find((s) => s.value === status) || null}
+                                    selected={statusOptions.find(s => s.value === status) || null}
                                     onChange={(value) => setValue('status', (value as any).value)}
                                     placeholder="Select status"
                                 />
-                                {errors.status && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
-                                )}
+                                {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>}
                             </div>
                         </div>
 
+                        {/* Profile Image */}
                         <div>
                             <div className="flex flex-col sm:flex-row sm:items-start sm:space-x-4 space-y-3 sm:space-y-0">
                                 <div className="flex-1">
-                                    <FormInput<UserFormData>
-                                        name="profileImage"
-                                        label="Profile Image"
+                                    <input
                                         type="file"
                                         accept="image/*"
-                                        register={register}
-                                        errors={errors}
                                         onChange={handleImageChange}
-                                        clearErrors={clearErrors}
-                                        className="file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-                                        validation={{
-                                            validate: (files: any) => {
-                                                if (!files || files.length === 0) return true;
-                                                const file = files[0];
-                                                const maxSize = 5 * 1024 * 1024;
-                                                if (file.size > maxSize) {
-                                                    return 'File size must be less than 5MB';
-                                                }
-                                                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                                                if (!allowedTypes.includes(file.type)) {
-                                                    return 'Only JPEG, PNG, GIF, and WebP images are allowed';
-                                                }
-                                                return true;
-                                            },
-                                        }}
+                                        className="file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 w-full"
                                     />
                                 </div>
                                 {preview && (
@@ -320,6 +272,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                             </div>
                         </div>
 
+                        {/* Buttons */}
                         <div className="flex flex-col sm:flex-row justify-end sm:space-x-3 space-y-3 sm:space-y-0 pt-4 border-t">
                             <button
                                 type="button"

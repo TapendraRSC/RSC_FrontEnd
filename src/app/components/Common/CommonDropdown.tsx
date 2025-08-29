@@ -16,7 +16,7 @@ interface CommonDropdownProps {
     isMulti?: boolean;
     placeholder?: string;
     className?: string;
-    error?: boolean; // 👈 new prop
+    error?: boolean;
 }
 
 export default function CommonDropdown({
@@ -26,7 +26,7 @@ export default function CommonDropdown({
     isMulti = false,
     placeholder = 'Select...',
     className = '',
-    error = false, // 👈 default false
+    error = false,
 }: CommonDropdownProps) {
     const [open, setOpen] = useState(false);
 
@@ -74,19 +74,25 @@ export default function CommonDropdown({
 
             {open && (
                 <div className="absolute z-10 mt-2 w-full bg-white border rounded-xl shadow-lg max-h-48 overflow-y-auto scrollbar-thin">
-                    {options.map((option) => (
-                        <div
-                            key={option.value}
-                            className={clsx(
-                                'cursor-pointer px-4 py-2 text-sm flex items-center justify-between hover:bg-gray-100',
-                                isSelected(option) && 'bg-gray-100 font-medium'
-                            )}
-                            onClick={() => handleSelect(option)}
-                        >
-                            <span>{option.label}</span>
-                            {isSelected(option) && <Check size={16} />}
+                    {options.length > 0 ? (
+                        options.map((option) => (
+                            <div
+                                key={option.value}
+                                className={clsx(
+                                    'cursor-pointer px-4 py-2 text-sm flex items-center justify-between hover:bg-gray-100',
+                                    isSelected(option) && 'bg-gray-100 font-medium'
+                                )}
+                                onClick={() => handleSelect(option)}
+                            >
+                                <span>{option.label}</span>
+                                {isSelected(option) && <Check size={16} />}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                            No Data found
                         </div>
-                    ))}
+                    )}
                 </div>
             )}
         </div>
