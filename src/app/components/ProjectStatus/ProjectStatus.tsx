@@ -266,32 +266,30 @@ const ProjectStatusComponent: React.FC = () => {
                     <Eye className="w-4 h-4" />
                     View
                 </Link>
-                <button
-                    onClick={hasPermission(22, "edit") ? () => handleEdit(project) : undefined}
-                    disabled={!hasPermission(22, "edit")}
-                    title={!hasPermission(22, "edit") ? "Restricted by Admin" : ""}
-                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors
-        ${hasPermission(22, "edit")
-                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
-                >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                </button>
+                {/* Edit Button */}
+                {hasPermission(22, "edit") && (
+                    <button
+                        onClick={() => handleEdit(project)}
+                        className="flex-1 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors
+                   bg-blue-50 text-blue-600 hover:bg-blue-100"
+                    >
+                        <Pencil className="w-4 h-4" />
+                        Edit
+                    </button>
+                )}
 
-                <button
-                    onClick={hasPermission(4, "delete") ? () => handleDelete(project) : undefined}
-                    disabled={!hasPermission(4, "delete")}
-                    title={!hasPermission(4, "delete") ? "Restricted by Admin" : ""}
-                    className={`px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1 transition-colors
-        ${hasPermission(4, "delete")
-                            ? "bg-red-50 text-red-600 hover:bg-red-100"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
-                >
-                    <Trash2 className="w-4 h-4" />
-                </button>
+                {/* Delete Button */}
+                {hasPermission(4, "delete") && (
+                    <button
+                        onClick={() => handleDelete(project)}
+                        className="px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1 transition-colors
+                   bg-red-50 text-red-600 hover:bg-red-100"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                    </button>
+                )}
+
             </div>
         </div>
     );
@@ -324,23 +322,24 @@ const ProjectStatusComponent: React.FC = () => {
             </div>
 
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
-                <button
-                    onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                    disabled={!hasPermission(21, "add") || isSaving}
-                    title={!hasPermission(21, "add") ? "Restricted by Admin" : ""}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium ${hasPermission(21, "add")
-                        ? "bg-blue-500 hover:bg-blue-600 text-white"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        }`}
-                >
-                    {isSaving ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                        <Plus className="w-5 h-5" />
-                    )}
-                    Add New Project
-                </button>
-
+                {hasPermission(21, "add") && (
+                    <button
+                        onClick={handleAdd}
+                        disabled={isSaving}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium 
+            ${isSaving
+                                ? "bg-blue-400 text-white cursor-wait"
+                                : "bg-blue-500 hover:bg-blue-600 text-white"
+                            }`}
+                    >
+                        {isSaving ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Plus className="w-5 h-5" />
+                        )}
+                        Add New Project
+                    </button>
+                )}
             </div>
 
             <div className="hidden lg:block p-6">
@@ -351,22 +350,25 @@ const ProjectStatusComponent: React.FC = () => {
                         </h1>
                         <p className="text-sm sm:text-base text-gray-600">Manage project statuses</p>
                     </div>
-                    <button
-                        onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                        disabled={!hasPermission(21, "add") || isSaving}
-                        title={!hasPermission(21, "add") ? "Restricted by Admin" : ""}
-                        className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${hasPermission(21, "add")
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            }`}
-                    >
-                        {isSaving ? (
-                            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                        )}
-                        Add New
-                    </button>
+                    {hasPermission(21, "add") && (
+                        <button
+                            onClick={handleAdd}
+                            disabled={isSaving}
+                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base 
+            ${isSaving
+                                    ? "bg-blue-400 text-white cursor-wait"
+                                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                                }`}
+                        >
+                            {isSaving ? (
+                                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                            )}
+                            Add New
+                        </button>
+                    )}
+
 
                 </div>
             </div>
@@ -497,30 +499,28 @@ const ProjectStatusComponent: React.FC = () => {
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
                                     {/* Edit */}
-                                    <button
-                                        onClick={hasPermission(22, "edit") ? () => handleEdit(row) : undefined}
-                                        disabled={!hasPermission(22, "edit")}
-                                        title={!hasPermission(22, "edit") ? "Restricted by Admin" : "Edit"}
-                                        className={`p-1 rounded ${hasPermission(22, "edit")
-                                            ? "text-blue-500 hover:text-blue-700"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {/* Edit */}
+                                    {hasPermission(22, "edit") && (
+                                        <button
+                                            onClick={() => handleEdit(row)}
+                                            title="Edit"
+                                            className="p-1 rounded text-blue-500 hover:text-blue-700"
+                                        >
+                                            <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
 
                                     {/* Delete */}
-                                    <button
-                                        onClick={hasPermission(4, "delete") ? () => handleDelete(row) : undefined}
-                                        disabled={!hasPermission(4, "delete")}
-                                        title={!hasPermission(4, "delete") ? "Restricted by Admin" : "Delete"}
-                                        className={`p-1 rounded ${hasPermission(4, "delete")
-                                            ? "text-red-500 hover:text-red-700"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {hasPermission(4, "delete") && (
+                                        <button
+                                            onClick={() => handleDelete(row)}
+                                            title="Delete"
+                                            className="p-1 rounded text-red-500 hover:text-red-700"
+                                        >
+                                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
+
                                 </div>
                             )}
                         />

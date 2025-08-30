@@ -249,9 +249,7 @@ const LeadComponent: React.FC = () => {
     };
 
     const columns: any = [
-        // { label: 'Sr', accessor: 'sr', sortable: true,
 
-        //  },
         {
             label: 'Name', accessor: 'name', sortable: true, minWidth: 200,
             maxWidth: 300,
@@ -334,41 +332,39 @@ const LeadComponent: React.FC = () => {
                     <p className="text-sm text-gray-600">Manage leads</p>
                 </div>
                 <div className="flex gap-3">
-                    <label
-                        className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
-    ${hasPermission(20, "upload")
-                                ? "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-                    >
-                        {uploadLoading ? (
-                            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                        ) : (
-                            <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
-                        )}
-                        Upload
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                            className="hidden"
-                            onChange={handleFileSelect}
-                            disabled={!hasPermission(20, "upload")}
-                        />
-                    </label>
+                    {hasPermission(20, "upload") && (
+                        <label
+                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                   bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                        >
+                            {uploadLoading ? (
+                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                            ) : (
+                                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                            )}
+                            Upload
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                                className="hidden"
+                                onChange={handleFileSelect}
+                            />
+                        </label>
+                    )}
 
 
                     <div data-tooltip-id="add-permission-tooltip">
-                        <button
-                            onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                            disabled={!hasPermission(21, "add")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${hasPermission(21, "add")
-                                ? "bg-blue-500 hover:bg-blue-600 text-white"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                }`}
-                        >
-                            <Plus className="w-5 h-5" />
-                            Add New
-                        </button>
+                        {hasPermission(21, "add") && (
+                            <button
+                                onClick={handleAdd}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Add New
+                            </button>
+                        )}
+
                     </div>
                 </div>
             </div>
@@ -405,37 +401,37 @@ const LeadComponent: React.FC = () => {
                     onColumnVisibilityChange={setHiddenColumns}
                     actions={(row) => (
                         <div className="flex gap-2">
-                            <button
-                                onClick={() => hasPermission(22, "edit") && handleEdit(row)}
-                                disabled={!hasPermission(22, "edit")}
-                                className={`p-1 rounded ${hasPermission(22, "edit")
-                                    ? "text-blue-500 hover:text-blue-700"
-                                    : "text-gray-400 cursor-not-allowed"
-                                    }`}
-                            >
-                                <Pencil className="w-4 h-4" />
-                            </button>
+                            {/* Edit Button */}
+                            {hasPermission(22, "edit") && (
+                                <button
+                                    onClick={() => handleEdit(row)}
+                                    className="p-1 rounded text-blue-500 hover:text-blue-700 cursor-pointer"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                            )}
 
-                            <button
-                                onClick={() => hasPermission(4, "delete") && handleDelete(row)}
-                                disabled={!hasPermission(4, "delete")}
-                                className={`p-1 rounded ${hasPermission(4, "delete")
-                                    ? "text-red-500 hover:text-red-700"
-                                    : "text-gray-400 cursor-not-allowed"
-                                    }`}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+                            {/* Delete Button */}
+                            {hasPermission(4, "delete") && (
+                                <button
+                                    onClick={() => handleDelete(row)}
+                                    className="p-1 rounded text-red-500 hover:text-red-700 cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            )}
 
+                            {/* Follow-up Button */}
                             <button
                                 onClick={() => {
                                     setSelectedLeadId(row);
                                     setIsFollowUpModalOpen(true);
                                 }}
-                                className="text-green-500 hover:text-green-700 p-1"
+                                className="text-green-500 hover:text-green-700 p-1 cursor-pointer"
                             >
                                 📞
                             </button>
+
                         </div>
                     )}
                 />

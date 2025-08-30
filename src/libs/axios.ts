@@ -41,53 +41,34 @@ const shouldRefreshToken = () => {
 };
 
 const refreshAccessToken = async (): Promise<string | null> => {
-    if (refreshingPromise) {
-        return refreshingPromise; // If already refreshing, return same promise
-    }
+    if (refreshingPromise) return refreshingPromise;
 
     refreshingPromise = (async () => {
         try {
             const refreshToken = localStorage.getItem("refreshToken");
-            const accessToken = localStorage.getItem("accessToken");
-
             if (!refreshToken) throw new Error("Refresh token missing");
-
-            const headers: Record<string, string> = {
-                "Content-Type": "application/json",
-            };
-
-            if (accessToken) {
-                headers.Authorization = `Bearer ${accessToken}`;
-            }
 
             const response = await axios.post(
                 `${axiosInstance.defaults.baseURL}auth/refreshToken`,
-                { refreshToken },
-                { headers }
+                { refreshToken }, // only refreshToken
+                { headers: { "Content-Type": "application/json" } }
             );
 
             const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
 
-            if (newAccessToken) {
-                localStorage.setItem("accessToken", newAccessToken);
-            }
+            if (newAccessToken) localStorage.setItem("accessToken", newAccessToken);
+            if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
 
-            if (newRefreshToken) {
-                localStorage.setItem("refreshToken", newRefreshToken);
-            }
-
+            lastRefreshTime = Date.now();
             console.log("🔄 Tokens refreshed");
-
-            lastRefreshTime = Date.now(); // ⏱️ Track refresh
             return newAccessToken;
-        } catch (error) {
-            console.error("❌ Token refresh failed:", error);
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
+        } catch (err) {
+            console.error("❌ Token refresh failed:", err);
+            localStorage.clear();
             window.location.href = "/login";
             return null;
         } finally {
-            refreshingPromise = null; // Clear lock
+            refreshingPromise = null;
         }
     })();
 

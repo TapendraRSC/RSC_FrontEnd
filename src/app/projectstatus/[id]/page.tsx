@@ -339,33 +339,30 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             </div>
 
             <div className="flex gap-2 pt-3 border-t">
-                <button
-                    onClick={hasPermission(22, "edit") ? () => handleOpenEdit(plot) : undefined}
-                    disabled={!hasPermission(22, "edit")}
-                    title={hasPermission(22, "edit") ? "Edit" : "Access restricted by Admin"}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
-        ${hasPermission(22, "edit")
-                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
-                >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                </button>
+                {/* Edit Button */}
+                {hasPermission(22, "edit") && (
+                    <button
+                        onClick={() => handleOpenEdit(plot)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                   bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                        title="Edit"
+                    >
+                        <Pencil className="w-4 h-4" />
+                        Edit
+                    </button>
+                )}
 
-                <button
-                    onClick={hasPermission(4, "delete") ? () => handleOpenDelete(plot) : undefined}
-                    disabled={!hasPermission(4, "delete")}
-                    title={hasPermission(4, "delete") ? "Delete" : "Access restricted by Admin"}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
-        ${hasPermission(4, "delete")
-                            ? "bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
-                >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                </button>
+                {hasPermission(4, "delete") && (
+                    <button
+                        onClick={() => handleOpenDelete(plot)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                   bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                        title="Delete"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -399,34 +396,36 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             {/* Mobile Action Buttons */}
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
                 <div className="flex gap-2">
-                    <button
-                        onClick={hasPermission(20, "upload") ? handleUploadClick : undefined}
-                        disabled={uploadLoading || !hasPermission(20, "upload")}
-                        title={!hasPermission(20, "upload") ? "Restricted by Admin" : "Upload"}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${hasPermission(20, "upload")
-                            ? "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
-                            : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                            }`}
-                    >
-                        {uploadLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Upload className="w-4 h-4" />
-                        )}
-                        Upload
-                    </button>
-                    <button
-                        onClick={hasPermission(21, "add") ? handleOpenAdd : undefined}
-                        disabled={!hasPermission(21, "add")}
-                        title={!hasPermission(21, "add") ? "Restricted by Admin" : "Add New"}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${hasPermission(21, "add")
-                            ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-                            : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                            }`}
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add New
-                    </button>
+                    {/* Upload Button */}
+                    {hasPermission(20, "upload") && (
+                        <button
+                            onClick={handleUploadClick}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                   bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                            title="Upload"
+                        >
+                            {uploadLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Upload className="w-4 h-4" />
+                            )}
+                            Upload
+                        </button>
+                    )}
+
+                    {/* Add New Button */}
+                    {hasPermission(21, "add") && (
+                        <button
+                            onClick={handleOpenAdd}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                   bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                            title="Add New"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add New
+                        </button>
+                    )}
+
                 </div>
             </div>
 
@@ -441,35 +440,34 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <button
-                            onClick={hasPermission(20, "upload") ? handleUploadClick : undefined}
-                            disabled={uploadLoading || !hasPermission(20, "upload")}
-                            title={!hasPermission(20, "upload") ? "Access restricted by Admin" : "Upload"}
-                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${hasPermission(20, "upload")
-                                ? "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                }`}
-                        >
-                            {uploadLoading ? (
-                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                            ) : (
-                                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
-                            )}
-                            Upload
-                        </button>
+                        {hasPermission(20, "upload") && (
+                            <button
+                                onClick={handleUploadClick}
+                                className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                   bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                                title="Upload"
+                            >
+                                {uploadLoading ? (
+                                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                                ) : (
+                                    <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                                )}
+                                Upload
+                            </button>
+                        )}
 
-                        <button
-                            onClick={hasPermission(21, "add") ? handleOpenAdd : undefined}
-                            disabled={!hasPermission(21, "add")}
-                            title={!hasPermission(21, "add") ? "Access restricted by Admin" : "Add New"}
-                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${hasPermission(21, "add")
-                                ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                }`}
-                        >
-                            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Add New
-                        </button>
+                        {hasPermission(21, "add") && (
+                            <button
+                                onClick={handleOpenAdd}
+                                className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                   bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                                title="Add New"
+                            >
+                                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                                Add New
+                            </button>
+                        )}
+
                     </div>
                 </div>
             </div>
@@ -583,29 +581,28 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    <button
-                                        onClick={hasPermission(22, "edit") ? () => handleOpenEdit(row) : undefined}
-                                        disabled={!hasPermission(22, "edit")}
-                                        title={!hasPermission(22, "edit") ? "Restricted by Admin" : "Edit"}
-                                        className={`p-1 transition-colors ${hasPermission(22, "edit")
-                                            ? "text-blue-500 hover:text-blue-700 cursor-pointer"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {/* Edit Button */}
+                                    {hasPermission(22, "edit") && (
+                                        <button
+                                            onClick={() => handleOpenEdit(row)}
+                                            className="p-1 transition-colors text-blue-500 hover:text-blue-700 cursor-pointer"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
 
-                                    <button
-                                        onClick={hasPermission(4, "delete") ? () => handleOpenDelete(row) : undefined}
-                                        disabled={!hasPermission(4, "delete")}
-                                        title={!hasPermission(4, "delete") ? "Restricted by Admin" : "Delete"}
-                                        className={`p-1 transition-colors ${hasPermission(4, "delete")
-                                            ? "text-red-500 hover:text-red-700 cursor-pointer"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {/* Delete Button */}
+                                    {hasPermission(4, "delete") && (
+                                        <button
+                                            onClick={() => handleOpenDelete(row)}
+                                            className="p-1 transition-colors text-red-500 hover:text-red-700 cursor-pointer"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
+
                                 </div>
                             )}
                         />
