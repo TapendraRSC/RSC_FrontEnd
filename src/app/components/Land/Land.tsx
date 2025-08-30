@@ -209,31 +209,32 @@ const Land: React.FC = () => {
             </div>
 
             <div className="flex gap-2 pt-3 border-t border-gray-100">
-                <button
-                    onClick={hasPermission(22, "edit") ? () => handleEdit(land) : undefined}
-                    disabled={!hasPermission(22, "edit")}
-                    title={!hasPermission(22, "edit") ? "Access restricted by Admin" : "Edit"}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${hasPermission(22, "edit")
-                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
-                >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                </button>
+                {/* Edit Button */}
+                {hasPermission(22, "edit") && (
+                    <button
+                        onClick={() => handleEdit(land)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                   bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                        title="Edit"
+                    >
+                        <Pencil className="w-4 h-4" />
+                        Edit
+                    </button>
+                )}
 
-                <button
-                    onClick={hasPermission(4, "delete") ? () => handleDelete(land) : undefined}
-                    disabled={!hasPermission(4, "delete")}
-                    title={!hasPermission(4, "delete") ? "Access restricted by Admin" : "Delete"}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${hasPermission(4, "delete")
-                            ? "bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
-                >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                </button>
+                {/* Delete Button */}
+                {hasPermission(4, "delete") && (
+                    <button
+                        onClick={() => handleDelete(land)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                   bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                        title="Delete"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                    </button>
+                )}
+
             </div>
         </div>
     );
@@ -268,18 +269,18 @@ const Land: React.FC = () => {
 
             {/* Mobile Action Button */}
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
-                <button
-                    onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                    disabled={!hasPermission(21, "add")}
-                    title={!hasPermission(21, "add") ? "Access restricted by Admin" : "Add New Land"}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium ${hasPermission(21, "add")
-                        ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-                        : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                        }`}
-                >
-                    <Plus className="w-5 h-5" />
-                    Add New Land
-                </button>
+                {hasPermission(21, "add") && (
+                    <button
+                        onClick={handleAdd}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
+                   bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                        title="Add New Land"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add New Land
+                    </button>
+                )}
+
             </div>
 
             {/* Desktop Header */}
@@ -294,18 +295,16 @@ const Land: React.FC = () => {
                         </p>
                     </div>
                     <div>
-                        <button
-                            onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                            disabled={!hasPermission(21, "add")}
-                            title={!hasPermission(21, "add") ? "Access restricted by Admin" : "Add Land"}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${hasPermission(21, "add")
-                                ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                }`}
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Land
-                        </button>
+                        {hasPermission(21, "add") && (
+                            <button
+                                onClick={handleAdd}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                                title="Add Land"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Land
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -424,29 +423,28 @@ const Land: React.FC = () => {
                             onColumnVisibilityChange={handleColumnVisibilityChange}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    <button
-                                        onClick={hasPermission(22, "edit") ? () => handleEdit(row) : undefined}
-                                        disabled={!hasPermission(22, "edit")}
-                                        title={!hasPermission(22, "edit") ? "Access restricted by Admin" : "Edit"}
-                                        className={`p-1 rounded transition-colors ${hasPermission(22, "edit")
-                                            ? "text-blue-500 hover:text-blue-700 cursor-pointer"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {/* Edit Button */}
+                                    {hasPermission(22, "edit") && (
+                                        <button
+                                            onClick={() => handleEdit(row)}
+                                            className="p-1 rounded text-blue-500 hover:text-blue-700 cursor-pointer"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
 
-                                    <button
-                                        onClick={hasPermission(4, "delete") ? () => handleDelete(row) : undefined}
-                                        disabled={!hasPermission(4, "delete")}
-                                        title={!hasPermission(4, "delete") ? "Access restricted by Admin" : "Delete"}
-                                        className={`p-1 rounded transition-colors ${hasPermission(4, "delete")
-                                            ? "text-red-500 hover:text-red-700 cursor-pointer"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {/* Delete Button */}
+                                    {hasPermission(4, "delete") && (
+                                        <button
+                                            onClick={() => handleDelete(row)}
+                                            className="p-1 rounded text-red-500 hover:text-red-700 cursor-pointer"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
+
                                 </div>
                             )}
                         />

@@ -135,7 +135,9 @@ const leadStageSlice = createSlice({
             })
 
             .addCase(createLeadStage.fulfilled, (state, action) => {
-                state.list.push(action.payload);
+                if (action.payload) {
+                    state.list.push(action.payload);
+                }
             })
 
             .addCase(updateLeadStage.fulfilled, (state, action) => {

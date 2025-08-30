@@ -29,11 +29,10 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   isLoading = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-
   const { data: users = [], loading: usersLoading } = useSelector(
     (state: RootState) => state.users
   );
-
+  // console.log("initaila=data", initialData)
   const actualUsersData = useMemo(() => {
     if (Array.isArray(users)) return users;
     if (users?.data) {
@@ -60,9 +59,9 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
   const projectStatusOptions = useMemo(() => {
     const projects = projectList?.projects || [];
-    return projects.map((status: any) => ({
-      label: status.title,
-      value: status.id,
+    return projects.map((p: any) => ({
+      label: p.title,
+      value: p.id,
     }));
   }, [projectList]);
 
@@ -144,13 +143,18 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
   useEffect(() => {
     if (initialData) {
-      reset(initialData);
+      reset({
+        ...initialData,
+        projectStatusId: initialData.plotProjectId || null, // dropdown ke liye
+        plotId: initialData.plotId || null,
+      });
     } else if (isOpen) {
       reset();
     }
   }, [initialData, isOpen, reset]);
 
   const selectedProjectId = watch("projectStatusId");
+
   useEffect(() => {
     if (selectedProjectId) {
       dispatch(
@@ -161,9 +165,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           search: "",
         })
       );
-      setValue("plotId", null);
     }
-  }, [dispatch, selectedProjectId, setValue]);
+  }, [dispatch, selectedProjectId]);
 
   const onSubmit = (data: any) => {
     onSave(data);
@@ -188,58 +191,25 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormInput
-              name="name"
-              label="Name"
-              placeholder="Enter Name"
-              required
-              register={register}
-              errors={errors}
-              clearErrors={clearErrors}
-            />
-            <FormInput
-              name="email"
-              label="Email"
-              type="email"
-              placeholder="Enter Email"
-              register={register}
-              errors={errors}
-              clearErrors={clearErrors}
-            />
-            <FormInput
-              name="phone"
-              label="Phone"
-              type="tel"
-              placeholder="Enter Phone Number"
-              required
-              register={register}
-              errors={errors}
-              clearErrors={clearErrors}
-            />
-            <FormInput
-              name="city"
-              label="City"
-              placeholder="Enter City"
-              register={register}
-              errors={errors}
-              clearErrors={clearErrors}
-            />
-            <FormInput
-              name="state"
-              label="State"
-              placeholder="Enter State"
-              register={register}
-              errors={errors}
-              clearErrors={clearErrors}
-            />
+            <FormInput name="name" label="Name" required placeholder="Enter Name"
+              register={register} errors={errors} clearErrors={clearErrors} />
+            <FormInput name="email" label="Email" type="email" placeholder="Enter Email"
+              register={register} errors={errors} clearErrors={clearErrors} />
+            <FormInput name="phone" label="Phone" type="tel" required placeholder="Enter Phone"
+              register={register} errors={errors} clearErrors={clearErrors} />
+            <FormInput name="city" label="City" placeholder="Enter City"
+              register={register} errors={errors} clearErrors={clearErrors} />
+            <FormInput name="state" label="State" placeholder="Enter State"
+              register={register} errors={errors} clearErrors={clearErrors} />
           </div>
 
+          {/* Dropdowns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Assigned To */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assigned To <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium mb-1">Assigned To *</label>
               <CommonDropdown
                 options={assignedToOptions}
                 selected={
@@ -253,10 +223,9 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
             </div>
 
+            {/* Platform */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Platform <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium mb-1">Platform *</label>
               <CommonDropdown
                 options={actualPlatformOptions}
                 selected={
@@ -270,10 +239,9 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
             </div>
 
+            {/* Project */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Status <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium mb-1">Project *</label>
               <CommonDropdown
                 options={projectStatusOptions}
                 selected={
@@ -282,15 +250,14 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     : null
                 }
                 onChange={(val: any) => setValue("projectStatusId", val?.value || null)}
-                placeholder={statusLoading ? "Loading..." : "Select Project Status"}
+                placeholder={statusLoading ? "Loading..." : "Select Project"}
                 error={!!errors.projectStatusId}
               />
             </div>
 
+            {/* Plot */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Plot <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium mb-1">Plot *</label>
               <CommonDropdown
                 options={plotOptions}
                 selected={
@@ -304,15 +271,14 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
             </div>
 
+            {/* Lead Stage */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lead Stage <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium mb-1">Lead Stage *</label>
               <CommonDropdown
                 options={leadStageOptions}
                 selected={
                   watch("leadStageId")
-                    ? leadStageOptions.find((opt: any) => opt.value === watch("leadStageId")) || null
+                    ? leadStageOptions.find((opt) => opt.value === watch("leadStageId")) || null
                     : null
                 }
                 onChange={(val: any) => setValue("leadStageId", val?.value || null)}
@@ -321,15 +287,14 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
             </div>
 
+            {/* Lead Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lead Status <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium mb-1">Lead Status *</label>
               <CommonDropdown
                 options={leadStatusOptions}
                 selected={
                   watch("leadStatusId")
-                    ? leadStatusOptions.find((opt: any) => opt.value === watch("leadStatusId")) || null
+                    ? leadStatusOptions.find((opt) => opt.value === watch("leadStatusId")) || null
                     : null
                 }
                 onChange={(val: any) => setValue("leadStatusId", val?.value || null)}
@@ -339,20 +304,16 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             </div>
           </div>
 
+          {/* Footer */}
           <div className="flex justify-end gap-3 pt-6 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              disabled={isLoading}
-            >
+            <button type="button" onClick={onClose}
+              className="px-6 py-2 border rounded-lg"
+              disabled={isLoading}>
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              disabled={isLoading}
-            >
+            <button type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg"
+              disabled={isLoading}>
               {isLoading ? "Saving..." : initialData ? "Update Lead" : "Save Lead"}
             </button>
           </div>

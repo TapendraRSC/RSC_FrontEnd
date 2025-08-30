@@ -45,33 +45,32 @@ const LeadPlatformCard = ({
             </div>
         </div>
         <div className="flex gap-2 pt-3 border-t border-gray-100">
-            <button
-                onClick={hasPermission(22, "edit") ? onEdit : undefined}
-                disabled={!hasPermission(22, "edit")}
-                title={hasPermission(22, "edit") ? "Edit" : "Access restricted by Admin"}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
-                    ${hasPermission(22, "edit")
-                        ? "bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    }`}
-            >
-                <Pencil className="w-4 h-4" />
-                Edit
-            </button>
+            {/* Edit Button */}
+            {hasPermission(22, "edit") && (
+                <button
+                    onClick={onEdit}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium
+                   transition-colors bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                    title="Edit"
+                >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                </button>
+            )}
 
-            <button
-                onClick={hasPermission(4, "delete") ? onDelete : undefined}
-                disabled={!hasPermission(4, "delete")}
-                title={hasPermission(4, "delete") ? "Delete" : "Access restricted by Admin"}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
-                    ${hasPermission(4, "delete")
-                        ? "bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    }`}
-            >
-                <Trash2 className="w-4 h-4" />
-                Delete
-            </button>
+            {/* Delete Button */}
+            {hasPermission(4, "delete") && (
+                <button
+                    onClick={onDelete}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium
+                   transition-colors bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                    title="Delete"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                </button>
+            )}
+
         </div>
     </div>
 );
@@ -200,18 +199,17 @@ const LeadPlateform: React.FC = () => {
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lead Platform Master</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and track your lead platforms</p>
                     </div>
-                    <button
-                        onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                        disabled={!hasPermission(21, "add")}
-                        title={!hasPermission(21, "add") ? "Access restricted by Admin" : "Add New Platform"}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white ${hasPermission(21, "add")
-                            ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
-                            : "bg-gray-400 cursor-not-allowed"
-                            }`}
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add New Platform
-                    </button>
+                    {hasPermission(21, "add") && (
+                        <button
+                            onClick={handleAdd}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                            title="Add New Platform"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add New Platform
+                        </button>
+                    )}
+
                 </div>
             </div>
 
@@ -241,27 +239,22 @@ const LeadPlateform: React.FC = () => {
                 </div>
             </div>
 
-            {/* Sticky Add Button for Mobile */}
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
-                <button
-                    onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                    disabled={!hasPermission(21, "add")}
-                    title={hasPermission(21, "add") ? "Add New Platform" : "Access restricted by Admin"}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
-        ${hasPermission(21, "add")
-                            ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-                            : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                        }`}
-                >
-                    <Plus className="w-5 h-5" />
-                    Add New Platform
-                </button>
-
+                {hasPermission(21, "add") && (
+                    <button
+                        onClick={handleAdd}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
+                   bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                        title="Add New Platform"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add New Platform
+                    </button>
+                )}
             </div>
 
             {/* Main Content */}
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
-                {/* Grid View (Mobile) */}
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
                         <div className="relative">
@@ -286,17 +279,17 @@ const LeadPlateform: React.FC = () => {
                         ) : (
                             <>
                                 <div className="grid gap-4">
-                                    {leadPlatforms.map((platform: any) => (
+                                    {leadPlatforms?.map((platform: any) => (
                                         <LeadPlatformCard
                                             key={platform.id}
                                             platform={platform}
                                             onEdit={() => handleEdit(platform)}
                                             onDelete={() => handleDelete(platform)}
-                                            hasPermission={hasPermission} // <-- pass karo
+                                            hasPermission={hasPermission}
                                         />
                                     ))}
                                 </div>
-                                {leadPlatforms.length === 0 && (
+                                {leadPlatforms?.length === 0 && (
                                     <div className="text-center py-12">
                                         <div className="text-gray-400 text-5xl mb-4">🖥️</div>
                                         <p className="text-gray-500 text-lg font-medium">No platforms found</p>
@@ -383,29 +376,27 @@ const LeadPlateform: React.FC = () => {
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row: LeadPlatform) => (
                                 <div className="flex gap-2">
-                                    <button
-                                        onClick={hasPermission(22, "edit") ? () => handleEdit(row) : undefined}
-                                        disabled={!hasPermission(22, "edit")}
-                                        title={hasPermission(22, "edit") ? "Edit" : "Access restricted by Admin"}
-                                        className={`p-1 rounded transition-colors ${hasPermission(22, "edit")
-                                            ? "text-blue-500 hover:text-blue-700 cursor-pointer"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Pencil className="w-4 h-4" />
-                                    </button>
+                                    {/* Edit Button */}
+                                    {hasPermission(22, "edit") && (
+                                        <button
+                                            onClick={() => handleEdit(row)}
+                                            className="p-1 rounded text-blue-500 hover:text-blue-700 cursor-pointer"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                    )}
 
-                                    <button
-                                        onClick={hasPermission(4, "delete") ? () => handleDelete(row) : undefined}
-                                        disabled={!hasPermission(4, "delete")}
-                                        title={hasPermission(4, "delete") ? "Delete" : "Access restricted by Admin"}
-                                        className={`p-1 rounded transition-colors ${hasPermission(4, "delete")
-                                            ? "text-red-500 hover:text-red-700 cursor-pointer"
-                                            : "text-gray-400 cursor-not-allowed"
-                                            }`}
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    {/* Delete Button */}
+                                    {hasPermission(4, "delete") && (
+                                        <button
+                                            onClick={() => handleDelete(row)}
+                                            className="p-1 rounded text-red-500 hover:text-red-700 cursor-pointer"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         />

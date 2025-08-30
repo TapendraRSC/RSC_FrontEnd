@@ -327,24 +327,24 @@ const PagePermission: React.FC = () => {
                             showColumnToggle={true}
                             hiddenColumns={hiddenColumns}
                             onColumnVisibilityChange={handleColumnVisibilityChange}
-                            actions={(row: PagePermission) => (
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleEdit(row)}
-                                        className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
-                                        title="Edit"
-                                    >
-                                        <Pencil className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(row)}
-                                        className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            )}
+                        // actions={(row: PagePermission) => (
+                        //     <div className="flex gap-2">
+                        //         <button
+                        //             onClick={() => handleEdit(row)}
+                        //             className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                        //             title="Edit"
+                        //         >
+                        //             <Pencil className="w-4 h-4" />
+                        //         </button>
+                        //         <button
+                        //             onClick={() => handleDelete(row)}
+                        //             className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                        //             title="Delete"
+                        //         >
+                        //             <Trash2 className="w-4 h-4" />
+                        //         </button>
+                        //     </div>
+                        // )}
                         />
                     </div>
                 </div>

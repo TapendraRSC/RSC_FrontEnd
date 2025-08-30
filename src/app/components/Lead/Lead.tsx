@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Pencil, Trash2, Plus, Upload } from 'lucide-react';
+import { Pencil, Trash2, Plus, Upload, Loader2 } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import ComprehensiveLeadModal from './LeadModal';
@@ -29,7 +29,7 @@ const LeadComponent: React.FC = () => {
     const { list: leadList, loading, totalPages, total } = useSelector(
         (state: RootState) => state.leads
     );
-
+    // console.log("leadList", leadList)
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
 
@@ -55,6 +55,7 @@ const LeadComponent: React.FC = () => {
     const [fileName, setFileName] = useState<string>('');
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
 
     useEffect(() => {
         dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
@@ -85,12 +86,17 @@ const LeadComponent: React.FC = () => {
         return (leadList || [])?.map((lead: any, index: number) => ({
             ...lead,
             sr: index + 1 + (currentPage - 1) * pageSize,
-            leadStatus: lead?.leadStatus || 'N/A',
-            platformType: lead?.platformType || 'N/A',
-            plotNumber: lead?.plotNumber || 'N/A',
-            plotPrice: lead?.plotPrice || 'N/A',
+            leadStatus: lead?.leadStatus || "N/A",
+            platformType: lead?.platformType || "N/A",
+            plotNumber: lead?.plotNumber || "N/A",
+            plotPrice: lead?.plotPrice || "N/A",
+
+            // 👇 yeh add karo
+            plotProjectId: lead?.plotProjectId || null,
+            plotProjectTitle: lead?.plotProjectTitle || "N/A",
         }));
     }, [leadList, currentPage, pageSize]);
+
 
     const resetUploadStates = () => {
         setIsUploadPreviewOpen(false);
@@ -243,42 +249,70 @@ const LeadComponent: React.FC = () => {
     };
 
     const columns: any = [
-        { label: 'Sr', accessor: 'sr', sortable: true },
-        { label: 'Name', accessor: 'name', sortable: true },
-        { label: 'Email', accessor: 'email', sortable: true },
+
+        {
+            label: 'Name', accessor: 'name', sortable: true, minWidth: 200,
+            maxWidth: 300,
+            showTooltip: true
+        },
+        {
+            label: 'Email', accessor: 'email', sortable: true,
+            showTooltip: true
+
+        },
         {
             label: 'Lead Status',
             accessor: 'leadStatus',
             sortable: true,
             render: (row: any) => renderBadge(row.leadStatus),
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
         },
         {
             label: 'Platform Type',
             accessor: 'platformType',
             sortable: true,
             render: (row: any) => renderBadge(row.platformType),
+            showTooltip: true
         },
         {
             label: 'Assigned Person',
             accessor: 'assignedUserName',
             sortable: true,
             render: (row: any) => renderBadge(row.assignedUserName),
+            showTooltip: true
         },
         {
             label: 'Plot Number',
             accessor: 'plotNumber',
             sortable: true,
             render: (row: any) => renderBadge(row.plotNumber),
+            showTooltip: true
         },
         {
             label: 'Plot Price',
             accessor: 'plotPrice',
             sortable: true,
             render: (row: any) => renderBadge(row.plotPrice),
+            showTooltip: true
         },
-        { label: 'Phone', accessor: 'phone', sortable: true },
-        { label: 'City', accessor: 'city', sortable: true },
-        { label: 'State', accessor: 'state', sortable: true },
+        {
+            label: 'Phone', accessor: 'phone', sortable: true,
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
+        },
+        {
+            label: 'City', accessor: 'city', sortable: true,
+            showTooltip: true
+
+        },
+        {
+            label: 'State', accessor: 'state', sortable: true, minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
+        },
     ];
 
     if (rolePermissionsLoading) {
@@ -298,30 +332,39 @@ const LeadComponent: React.FC = () => {
                     <p className="text-sm text-gray-600">Manage leads</p>
                 </div>
                 <div className="flex gap-3">
-                    <label className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer bg-green-500 hover:bg-green-600 text-white">
-                        <Upload className="w-5 h-5" />
-                        Upload
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                            className="hidden"
-                            onChange={handleFileSelect}
-                        />
-                    </label>
+                    {hasPermission(20, "upload") && (
+                        <label
+                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                   bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                        >
+                            {uploadLoading ? (
+                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                            ) : (
+                                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                            )}
+                            Upload
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                                className="hidden"
+                                onChange={handleFileSelect}
+                            />
+                        </label>
+                    )}
+
 
                     <div data-tooltip-id="add-permission-tooltip">
-                        <button
-                            onClick={hasPermission(21, "add") ? handleAdd : undefined}
-                            disabled={!hasPermission(21, "add")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${hasPermission(21, "add")
-                                ? "bg-blue-500 hover:bg-blue-600 text-white"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                }`}
-                        >
-                            <Plus className="w-5 h-5" />
-                            Add New
-                        </button>
+                        {hasPermission(21, "add") && (
+                            <button
+                                onClick={handleAdd}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Add New
+                            </button>
+                        )}
+
                     </div>
                 </div>
             </div>
@@ -358,34 +401,37 @@ const LeadComponent: React.FC = () => {
                     onColumnVisibilityChange={setHiddenColumns}
                     actions={(row) => (
                         <div className="flex gap-2">
-                            <button
-                                onClick={() => hasPermission(22, "edit") && handleEdit(row)}
-                                disabled={!hasPermission(22, "edit")}
-                                className={`p-1 rounded ${hasPermission(22, "edit")
-                                    ? "text-blue-500 hover:text-blue-700"
-                                    : "text-gray-400 cursor-not-allowed"
-                                    }`}
-                            >
-                                <Pencil className="w-4 h-4" />
-                            </button>
+                            {/* Edit Button */}
+                            {hasPermission(22, "edit") && (
+                                <button
+                                    onClick={() => handleEdit(row)}
+                                    className="p-1 rounded text-blue-500 hover:text-blue-700 cursor-pointer"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                            )}
 
-                            <button
-                                onClick={() => hasPermission(4, "delete") && handleDelete(row)}
-                                disabled={!hasPermission(4, "delete")}
-                                className={`p-1 rounded ${hasPermission(4, "delete")
-                                    ? "text-red-500 hover:text-red-700"
-                                    : "text-gray-400 cursor-not-allowed"
-                                    }`}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+                            {/* Delete Button */}
+                            {hasPermission(4, "delete") && (
+                                <button
+                                    onClick={() => handleDelete(row)}
+                                    className="p-1 rounded text-red-500 hover:text-red-700 cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            )}
 
+                            {/* Follow-up Button */}
                             <button
-                                onClick={() => setIsFollowUpModalOpen(true)}
-                                className="text-green-500 hover:text-green-700 p-1"
+                                onClick={() => {
+                                    setSelectedLeadId(row);
+                                    setIsFollowUpModalOpen(true);
+                                }}
+                                className="text-green-500 hover:text-green-700 p-1 cursor-pointer"
                             >
                                 📞
                             </button>
+
                         </div>
                     )}
                 />
@@ -399,11 +445,14 @@ const LeadComponent: React.FC = () => {
                 isLoading={isSaving}
             />
 
-            <FollowUpLeadModal
-                isOpen={isFollowUpModalOpen}
-                onClose={() => setIsFollowUpModalOpen(false)}
-                onSave={(data) => setIsFollowUpModalOpen(false)}
-            />
+            {selectedLeadId && (
+                <FollowUpLeadModal
+                    isOpen={isFollowUpModalOpen}
+                    onClose={() => setIsFollowUpModalOpen(false)}
+                    lead={selectedLeadId}
+                />
+            )}
+
 
             <TimelineLeadModal
                 isOpen={isTimelineModalOpen}
