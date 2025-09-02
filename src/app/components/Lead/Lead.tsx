@@ -315,13 +315,13 @@ const LeadComponent: React.FC = () => {
         },
     ];
 
-    if (rolePermissionsLoading) {
-        return <p>Loading permissions...</p>;
-    }
+    // if (rolePermissionsLoading) {
+    //     return <p>Loading permissions...</p>;
+    // }
 
-    if (!hasPermission(17, "view")) {
-        return <p className="text-red-500">You don't have permission to view leads.</p>;
-    }
+    // if (!hasPermission(17, "view")) {
+    //     return <p className="text-red-500">You don't have permission to view leads.</p>;
+    // }
 
     return (
         <div className="space-y-8 p-3 sm:p-6">
