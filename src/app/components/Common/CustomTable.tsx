@@ -17,7 +17,7 @@ type Column<T> = {
     minWidth?: number;
     maxWidth?: number;
     render?: (row: T) => React.ReactNode;
-    showTooltip?: boolean; // New prop to control tooltip visibility
+    showTooltip?: boolean;
 };
 
 type CustomTableProps<T> = {
@@ -46,12 +46,12 @@ type CustomTableProps<T> = {
     onColumnVisibilityChange?: (hiddenColumns: string[]) => void;
     globalMaxLength?: number;
     dynamicWidth?: boolean;
-    showTooltipForAll?: boolean; // New prop to show tooltips for all cells
+    showTooltipForAll?: boolean;
+    rowClassName?: (row: T) => string;
 };
 
 const useColumnVisibility = (initialHiddenColumns: string[]) => {
     const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set(initialHiddenColumns));
-
     const toggleColumnVisibility = useCallback((accessor: string) => {
         setHiddenCols(prevHiddenCols => {
             const newHiddenCols = new Set(prevHiddenCols);
@@ -63,7 +63,6 @@ const useColumnVisibility = (initialHiddenColumns: string[]) => {
             return newHiddenCols;
         });
     }, []);
-
     return { hiddenCols, toggleColumnVisibility };
 };
 
@@ -105,8 +104,10 @@ const CustomTable = <T extends { id: number | string }>({
     onColumnVisibilityChange,
     globalMaxLength = 20,
     dynamicWidth = true,
-    showTooltipForAll = false // Default to false to maintain existing behavior
+    showTooltipForAll = false,
+    rowClassName,
 }: CustomTableProps<T>) => {
+
     const { hiddenCols, toggleColumnVisibility } = useColumnVisibility(hiddenColumns);
     const [showColumnMenu, setShowColumnMenu] = useState(false);
 
@@ -136,11 +137,6 @@ const CustomTable = <T extends { id: number | string }>({
     const shouldShowTooltip = useCallback((text: string, maxLength: number = globalMaxLength, columnShowTooltip?: boolean) => {
         if (!text) return false;
         const textStr = String(text);
-
-        // Show tooltip if:
-        // 1. showTooltipForAll is true, OR
-        // 2. column-specific showTooltip is true, OR  
-        // 3. text is truncated (longer than maxLength)
         return showTooltipForAll || columnShowTooltip || textStr.length > maxLength;
     }, [globalMaxLength, showTooltipForAll]);
 
@@ -167,6 +163,34 @@ const CustomTable = <T extends { id: number | string }>({
 
     return (
         <div className="w-full mx-auto sm:px-0">
+            {/* Global CSS Styles for Blinking Animation */}
+            <style jsx global>{`
+                @keyframes greenBlink {
+                    0%, 100% { 
+                        background-color: inherit; 
+                    }
+                    50% { 
+                        background-color: rgba(34, 197, 94, 0.25);
+                        box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+                    }
+                }
+                
+                .fresh-lead-blink {
+                    animation: greenBlink 2s infinite;
+                    transition: all 0.3s ease;
+                }
+                
+                .fresh-lead-blink:hover {
+                    animation-play-state: paused;
+                    background-color: rgba(34, 197, 94, 0.15) !important;
+                }
+                
+                /* Alternative faster blink */
+                .fresh-lead-blink-fast {
+                    animation: greenBlink 1s infinite;
+                }
+            `}</style>
+
             {/* Header */}
             <div className="bg-white dark:bg-gray-900 rounded-t-xl border border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4">
                 <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
@@ -256,9 +280,17 @@ const CustomTable = <T extends { id: number | string }>({
                                     </tr>
                                 ))
                             ) : data?.length ? (
-                                data.map((row: any) => (
-                                    row && row.id ? (
-                                        <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
+                                data.map((row: any) => {
+                                    // Debug: Check if row has leadStatus === "Fresh"
+                                    const isRowFresh = row?.leadStatus === "Fresh";
+                                    const customRowClass = rowClassName ? rowClassName(row) : '';
+                                    const finalClassName = `hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 ${customRowClass}`;
+
+                                    return row && row.id ? (
+                                        <tr
+                                            key={row.id}
+                                            className={finalClassName}
+                                        >
                                             {visibleColumns.map((col: any) => {
                                                 const accessor = String(col.accessor);
                                                 const cellValue = String(row[col.accessor] || '');
@@ -266,7 +298,6 @@ const CustomTable = <T extends { id: number | string }>({
                                                 const truncatedText = truncateText(cellValue, maxLength);
                                                 const showTooltip = shouldShowTooltip(cellValue, maxLength, col.showTooltip);
                                                 const dynamicWidthValue = dynamicWidth ? columnWidths[accessor] : null;
-
                                                 return (
                                                     <td
                                                         key={accessor}
@@ -301,8 +332,8 @@ const CustomTable = <T extends { id: number | string }>({
                                                 </td>
                                             )}
                                         </tr>
-                                    ) : null
-                                ))
+                                    ) : null;
+                                })
                             ) : (
                                 <tr>
                                     <td colSpan={visibleColumns.length + (actions ? 1 : 0)} className="px-2 sm:px-4 py-6 sm:py-8 text-center">
@@ -352,7 +383,7 @@ const CustomTable = <T extends { id: number | string }>({
                                 >
                                     <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </button>
-                                <div className="flex gap-1 overflow-x-auto scrollbar-hide" style={{ maxWidth: '200px' }}>
+                                <div className="flex gap-1 overflow-x-auto scrollbar-hide" >
                                     {getPaginationNumbers().slice(0, 5).map((num, idx) =>
                                         num === '...' ? (
                                             <span key={idx} className="px-2 py-1.5 sm:py-2 text-gray-500 flex-shrink-0 text-xs sm:text-sm">...</span>

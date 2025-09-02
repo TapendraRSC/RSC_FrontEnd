@@ -103,9 +103,9 @@ const Sidebar = () => {
             type: 'single'
         },
         LeadPlateform: {
-            pageName: 'Lead Plateform',
-            title: 'Lead Plateform',
-            href: '/leadplateform',
+            pageName: 'Lead Platform',
+            title: 'Lead Platform',
+            href: '/leadplatform',
             type: 'single'
         }
     };
