@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Pencil, Trash2, Plus, Upload, Loader2 } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
@@ -23,13 +22,12 @@ import { RootState } from '../../../../store/store';
 
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
-
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { list: leadList, loading, totalPages, total } = useSelector(
         (state: RootState) => state.leads
     );
-    // console.log("leadList", leadList)
+
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
 
@@ -90,13 +88,10 @@ const LeadComponent: React.FC = () => {
             platformType: lead?.platformType || "N/A",
             plotNumber: lead?.plotNumber || "N/A",
             plotPrice: lead?.plotPrice || "N/A",
-
-            // 👇 yeh add karo
             plotProjectId: lead?.plotProjectId || null,
             plotProjectTitle: lead?.plotProjectTitle || "N/A",
         }));
     }, [leadList, currentPage, pageSize]);
-
 
     const resetUploadStates = () => {
         setIsUploadPreviewOpen(false);
@@ -249,22 +244,34 @@ const LeadComponent: React.FC = () => {
     };
 
     const columns: any = [
-
         {
-            label: 'Name', accessor: 'name', sortable: true, minWidth: 200,
+            label: 'Name',
+            accessor: 'name',
+            sortable: true,
+            minWidth: 200,
             maxWidth: 300,
             showTooltip: true
         },
         {
-            label: 'Email', accessor: 'email', sortable: true,
+            label: 'Email',
+            accessor: 'email',
+            sortable: true,
             showTooltip: true
-
         },
         {
             label: 'Lead Status',
             accessor: 'leadStatus',
             sortable: true,
             render: (row: any) => renderBadge(row.leadStatus),
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
+        },
+        {
+            label: 'Lead Stage',
+            accessor: 'leadStage',
+            sortable: true,
+            render: (row: any) => renderBadge(row.leadStage),
             minWidth: 200,
             maxWidth: 500,
             showTooltip: true
@@ -298,30 +305,28 @@ const LeadComponent: React.FC = () => {
             showTooltip: true
         },
         {
-            label: 'Phone', accessor: 'phone', sortable: true,
+            label: 'Phone',
+            accessor: 'phone',
+            sortable: true,
             minWidth: 200,
             maxWidth: 500,
             showTooltip: true
         },
         {
-            label: 'City', accessor: 'city', sortable: true,
+            label: 'City',
+            accessor: 'city',
+            sortable: true,
             showTooltip: true
-
         },
         {
-            label: 'State', accessor: 'state', sortable: true, minWidth: 200,
+            label: 'State',
+            accessor: 'state',
+            sortable: true,
+            minWidth: 200,
             maxWidth: 500,
             showTooltip: true
         },
     ];
-
-    // if (rolePermissionsLoading) {
-    //     return <p>Loading permissions...</p>;
-    // }
-
-    // if (!hasPermission(17, "view")) {
-    //     return <p className="text-red-500">You don't have permission to view leads.</p>;
-    // }
 
     return (
         <div className="space-y-8 p-3 sm:p-6">
@@ -352,8 +357,6 @@ const LeadComponent: React.FC = () => {
                             />
                         </label>
                     )}
-
-
                     <div data-tooltip-id="add-permission-tooltip">
                         {hasPermission(21, "add") && (
                             <button
@@ -364,12 +367,39 @@ const LeadComponent: React.FC = () => {
                                 Add New
                             </button>
                         )}
-
                     </div>
                 </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+                {/* Enhanced CSS Animation for Green Blinking */}
+                <style jsx>{`
+                    @keyframes greenBlink {
+                        0%, 100% { 
+                            background-color: inherit; 
+                        }
+                        50% { 
+                            background-color: rgba(34, 197, 94, 0.25);
+                            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+                        }
+                    }
+                    
+                    .fresh-lead-blink {
+                        animation: greenBlink 2s infinite;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .fresh-lead-blink:hover {
+                        animation-play-state: paused;
+                        background-color: rgba(34, 197, 94, 0.15) !important;
+                    }
+                    
+                    /* Alternative faster blink */
+                    .fresh-lead-blink-fast {
+                        animation: greenBlink 1s infinite;
+                    }
+                `}</style>
+
                 <CustomTable<any>
                     data={normalizedLeads}
                     columns={columns}
@@ -399,9 +429,15 @@ const LeadComponent: React.FC = () => {
                     showColumnToggle
                     hiddenColumns={hiddenColumns}
                     onColumnVisibilityChange={setHiddenColumns}
+                    rowClassName={(row: any) => {
+                        // console.log('Row data:', row);
+                        if (row.leadStatus === "Fresh") {
+                            return "fresh-lead-blink";
+                        }
+                        return "";
+                    }}
                     actions={(row) => (
                         <div className="flex gap-2">
-                            {/* Edit Button */}
                             {hasPermission(22, "edit") && (
                                 <button
                                     onClick={() => handleEdit(row)}
@@ -410,8 +446,6 @@ const LeadComponent: React.FC = () => {
                                     <Pencil className="w-4 h-4" />
                                 </button>
                             )}
-
-                            {/* Delete Button */}
                             {hasPermission(4, "delete") && (
                                 <button
                                     onClick={() => handleDelete(row)}
@@ -420,8 +454,6 @@ const LeadComponent: React.FC = () => {
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             )}
-
-                            {/* Follow-up Button */}
                             <button
                                 onClick={() => {
                                     setSelectedLeadId(row);
@@ -431,12 +463,12 @@ const LeadComponent: React.FC = () => {
                             >
                                 📞
                             </button>
-
                         </div>
                     )}
                 />
             </div>
 
+            {/* Modals */}
             <ComprehensiveLeadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -452,7 +484,6 @@ const LeadComponent: React.FC = () => {
                     lead={selectedLeadId}
                 />
             )}
-
 
             <TimelineLeadModal
                 isOpen={isTimelineModalOpen}

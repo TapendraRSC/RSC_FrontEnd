@@ -209,7 +209,7 @@ export default function PlotModal({
                             <FormInput<Plot>
                                 name="plotNumber"
                                 label="Plot Number"
-                                type="number"
+                                type="text"
                                 register={register}
                                 errors={errors}
                                 required
