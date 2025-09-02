@@ -114,7 +114,7 @@ const LeadPlateform: React.FC = () => {
 
     const getLeadPermissions = () => {
         const leadPerm = rolePermissions?.permissions?.find(
-            (p: any) => p.pageName === 'Land'
+            (p: any) => p.pageName === 'Lead Platform'
         );
         return leadPerm?.permissionIds || [];
     };
