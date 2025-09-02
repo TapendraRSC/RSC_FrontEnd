@@ -44,6 +44,7 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
     const [fileName, setFileName] = useState("");
 
     useEffect(() => {
+        if (!id) return; // wait for id
         dispatch(fetchPlots({
             projectId: id,
             page: currentPage,
@@ -53,6 +54,7 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             sortOrder: sortConfig?.direction
         }));
     }, [id, currentPage, pageSize, searchValue, sortConfig, dispatch]);
+
 
     const columns: any = [
         {

@@ -40,6 +40,7 @@ const shouldRefreshToken = () => {
     return false;
 };
 
+// libs/axios.ts
 const refreshAccessToken = async (): Promise<string | null> => {
     if (refreshingPromise) return refreshingPromise;
 
@@ -50,8 +51,8 @@ const refreshAccessToken = async (): Promise<string | null> => {
 
             const response = await axios.post(
                 `${axiosInstance.defaults.baseURL}auth/refreshToken`,
-                { refreshToken }, // only refreshToken
-                { headers: { "Content-Type": "application/json" } }
+                { refreshToken }, // JSON me send
+                { headers: { "Content-Type": "application/json" }, withCredentials: true } // important
             );
 
             const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
@@ -60,10 +61,8 @@ const refreshAccessToken = async (): Promise<string | null> => {
             if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
 
             lastRefreshTime = Date.now();
-            console.log("🔄 Tokens refreshed");
             return newAccessToken;
         } catch (err) {
-            console.error("❌ Token refresh failed:", err);
             localStorage.clear();
             window.location.href = "/login";
             return null;
@@ -74,6 +73,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
 
     return refreshingPromise;
 };
+
 
 // ✅ Request Interceptor
 axiosInstance.interceptors.request.use(
