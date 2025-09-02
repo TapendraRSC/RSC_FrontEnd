@@ -1,102 +1,88 @@
+'use client';
 
-import { Metadata } from 'next';
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ComponentsAuthLoginForm from '../components/forms/ComponentsAuthLoginForm';
 
-export const metadata: Metadata = {
-    title: 'Login',
-};
+const BoxedSignIn = () => {
+    const router = useRouter();
+    const [authChecked, setAuthChecked] = useState(false);
 
-const CoverLogin = () => {
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            router.replace('/');
+        } else {
+            setAuthChecked(true);
+        }
+    }, [router]);
+
+    if (!authChecked) return null; // Prevent flash
+
     return (
-        <div>
-            <div className="absolute inset-0">
-                <img src="/assets/images/auth/bg-gradient.png" alt="image" className="h-full w-full object-cover" />
+        <div className="relative min-h-screen">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0 h-full w-full">
+                <img
+                    src="/assets/images/auth/bg-gradient.png"
+                    alt="background"
+                    className="h-full w-full object-cover"
+                />
             </div>
-            <div className="relative flex min-h-screen items-center justify-center bg-[url(/assets/images/auth/map.png)] bg-cover bg-center bg-no-repeat px-6 py-10 dark:bg-[#060818] sm:px-16">
-                <img src="/assets/images/auth/coming-soon-object1.png" alt="image" className="absolute left-0 top-1/2 h-full max-h-[893px] -translate-y-1/2" />
-                <img src="/assets/images/auth/coming-soon-object2.png" alt="image" className="absolute left-24 top-0 h-40 md:left-[30%]" />
-                <img src="/assets/images/auth/coming-soon-object3.png" alt="image" className="absolute right-0 top-0 h-[300px]" />
-                <img src="/assets/images/auth/polygon-object.svg" alt="image" className="absolute bottom-0 end-[28%]" />
-                <div className="relative flex w-full max-w-[1502px] flex-col justify-between overflow-hidden rounded-md bg-white/60 backdrop-blur-lg dark:bg-black/50 lg:min-h-[758px] lg:flex-row lg:gap-10 xl:gap-0">
-                    <div className="relative hidden w-full items-center justify-center bg-[linear-gradient(225deg,rgba(239,18,98,1)_0%,rgba(67,97,238,1)_100%)] p-5 lg:inline-flex lg:max-w-[835px] xl:-ms-28 ltr:xl:skew-x-[14deg] rtl:xl:skew-x-[-14deg]">
-                        <div className="absolute inset-y-0 w-8 from-primary/10 via-transparent to-transparent ltr:-right-10 ltr:bg-gradient-to-r rtl:-left-10 rtl:bg-gradient-to-l xl:w-16 ltr:xl:-right-20 rtl:xl:-left-20"></div>
-                        <div className="ltr:xl:-skew-x-[14deg] rtl:xl:skew-x-[14deg]">
-                            <Link href="/" className="ms-10 block w-48 lg:w-72">
-                                <img src="/assets/images/auth/logo-white.svg" alt="Logo" className="w-full" />
-                            </Link>
-                            <div className="mt-24 hidden w-full max-w-[430px] lg:block">
-                                <img src="/assets/images/auth/login.svg" alt="Cover Image" className="w-full" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="relative flex w-full flex-col items-center justify-center gap-6 px-4 pb-16 pt-6 sm:px-6 lg:max-w-[667px]">
-                        <div className="flex w-full max-w-[440px] items-center gap-2 lg:absolute lg:end-6 lg:top-6 lg:max-w-full">
-                            <Link href="/" className="block w-8 lg:hidden">
-                                <img src="/assets/images/logo.svg" alt="Logo" className="mx-auto w-10" />
-                            </Link>
-                            {/* <LanguageDropdown className="ms-auto w-max" /> */}
-                        </div>
-                        <div className="w-full max-w-[440px] lg:mt-16">
-                            <div className="mb-10">
-                                <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Sign in</h1>
-                                <p className="text-base font-bold leading-normal text-white-dark">Enter your email and password to login</p>
-                            </div>
-                            <ComponentsAuthLoginForm />
 
-                            <div className="relative my-7 text-center md:mb-9">
-                                <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
-                                <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">or</span>
+            {/* Main Content Wrapper */}
+            <div className="relative flex min-h-screen items-center justify-center bg-[url(/assets/images/auth/map.png)] bg-cover bg-center bg-no-repeat px-3 py-6 dark:bg-[#060818] sm:px-6 md:px-10 lg:px-16 xl:py-10">
+
+                {/* Decorative Elements - Responsive positioning and sizing */}
+                <img
+                    src="/assets/images/auth/coming-soon-object1.png"
+                    alt="image"
+                    className="absolute left-0 top-1/2 h-full max-h-[400px] -translate-y-1/2 opacity-30 sm:opacity-50 md:max-h-[600px] lg:max-h-[893px] lg:opacity-100"
+                />
+                <img
+                    src="/assets/images/auth/coming-soon-object2.png"
+                    alt="image"
+                    className="absolute left-4 top-0 h-20 opacity-30 sm:left-12 sm:h-24 sm:opacity-50 md:left-24 md:h-32 md:opacity-75 lg:h-40 lg:opacity-100 xl:left-[30%]"
+                />
+                <img
+                    src="/assets/images/auth/coming-soon-object3.png"
+                    alt="image"
+                    className="absolute right-0 top-0 h-32 opacity-30 sm:h-40 sm:opacity-50 md:h-48 md:opacity-75 lg:h-[300px] lg:opacity-100"
+                />
+                <img
+                    src="/assets/images/auth/polygon-object.svg"
+                    alt="image"
+                    className="absolute bottom-0 end-[20%] opacity-30 sm:opacity-50 md:opacity-75 lg:end-[28%] lg:opacity-100"
+                />
+
+                {/* Login Card - Enhanced responsive design */}
+                <div className="relative w-full max-w-[320px] rounded-lg bg-[linear-gradient(45deg,#fff9f9_0%,rgba(255,255,255,0)_25%,rgba(255,255,255,0)_75%,_#fff9f9_100%)] p-1.5 dark:bg-[linear-gradient(52.22deg,#0E1726_0%,rgba(14,23,38,0)_18.66%,rgba(14,23,38,0)_51.04%,rgba(14,23,38,0)_80.07%,#0E1726_100%)] sm:max-w-[400px] sm:rounded-xl sm:p-2 md:max-w-[500px] lg:max-w-[600px] xl:max-w-[870px]">
+                    <div className="relative flex flex-col justify-center rounded-lg bg-white/70 px-4 py-8 backdrop-blur-lg dark:bg-black/60 sm:px-6 sm:py-12 sm:rounded-xl md:px-8 md:py-16 lg:min-h-[500px] lg:px-10 xl:px-6 xl:py-20">
+
+                        {/* Language Dropdown Container */}
+                        <div className="absolute end-3 top-3 sm:end-4 sm:top-4 md:end-6 md:top-6">
+                            {/* <LanguageDropdown /> */}
+                        </div>
+
+                        {/* Content Container */}
+                        <div className="mx-auto w-full max-w-[280px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[440px]">
+
+                            {/* Header Section */}
+                            <div className="mb-6 text-center sm:mb-8 md:mb-10 sm:text-left">
+                                <h1 className="text-2xl font-extrabold uppercase !leading-snug text-primary sm:text-3xl md:text-4xl lg:text-4xl">
+                                    Sign in
+                                </h1>
+                                <p className="mt-2 text-sm font-bold leading-normal text-white-dark sm:text-base md:mt-3">
+                                    Enter your email and password to login
+                                </p>
                             </div>
-                            <div className="mb-10 md:mb-[60px]">
-                                <ul className="flex justify-center gap-3.5 text-white">
-                                    <li>
-                                        <Link
-                                            href="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            {/* <IconInstagram /> */}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            href="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            {/* <IconFacebookCircle /> */}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            href="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            {/* <IconTwitter fill={true} /> */}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            href="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            {/* <IconGoogle /> */}
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="text-center dark:text-white">
-                                Don&apos;t have an account ?&nbsp;
-                                <Link href="/auth/cover-register" className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">
-                                    SIGN UP
-                                </Link>
+
+                            {/* Login Form */}
+                            <div className="w-full">
+                                <ComponentsAuthLoginForm />
                             </div>
                         </div>
-                        <p className="absolute bottom-6 w-full text-center dark:text-white">© {new Date().getFullYear()}.VRISTO All Rights Reserved.</p>
                     </div>
                 </div>
             </div>
@@ -104,4 +90,4 @@ const CoverLogin = () => {
     );
 };
 
-export default CoverLogin;
+export default BoxedSignIn;
