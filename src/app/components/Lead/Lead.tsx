@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Pencil, Trash2, Plus, Upload, Loader2 } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
+import { FilterConfig, FilterValue } from '../Common/TableFilter';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import ComprehensiveLeadModal from './LeadModal';
 import FollowUpLeadModal from './FollowUpLeadModal';
@@ -55,6 +56,9 @@ const LeadComponent: React.FC = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
 
+    // Filter state
+    const [filterValues, setFilterValues] = useState<FilterValue>({});
+
     useEffect(() => {
         dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
@@ -92,6 +96,82 @@ const LeadComponent: React.FC = () => {
             plotProjectTitle: lead?.plotProjectTitle || "N/A",
         }));
     }, [leadList, currentPage, pageSize]);
+
+    // Define filter configurations based on your lead data structure
+    const filters: FilterConfig<any>[] = [
+        {
+            key: 'name',
+            label: 'Name',
+            type: 'text',
+            placeholder: 'Search by name...'
+        },
+        {
+            key: 'email',
+            label: 'Email',
+            type: 'text',
+            placeholder: 'Search by email...'
+        },
+        {
+            key: 'phone',
+            label: 'Phone',
+            type: 'text',
+            placeholder: 'Search by phone...'
+        },
+        {
+            key: 'leadStatus',
+            label: 'Lead Status',
+            type: 'multiSelect',
+            placeholder: 'Select lead status...'
+            // Options will be auto-generated from data
+        },
+        {
+            key: 'leadStage',
+            label: 'Lead Stage',
+            type: 'multiSelect',
+            placeholder: 'Select lead stage...'
+        },
+        {
+            key: 'platformType',
+            label: 'Platform Type',
+            type: 'multiSelect',
+            placeholder: 'Select platform type...'
+        },
+        {
+            key: 'assignedUserName',
+            label: 'Assigned Person',
+            type: 'select',
+            placeholder: 'Select assigned person...'
+        },
+        {
+            key: 'city',
+            label: 'City',
+            type: 'multiSelect',
+            placeholder: 'Select cities...'
+        },
+        {
+            key: 'state',
+            label: 'State',
+            type: 'multiSelect',
+            placeholder: 'Select states...'
+        },
+        {
+            key: 'plotNumber',
+            label: 'Plot Number',
+            type: 'text',
+            placeholder: 'Search by plot number...'
+        },
+        {
+            key: 'plotPrice',
+            label: 'Plot Price',
+            type: 'text',
+            placeholder: 'Search by plot price...'
+        },
+        {
+            key: 'createdAt',
+            label: 'Created Date',
+            type: 'dateRange'
+        }
+    ];
 
     const resetUploadStates = () => {
         setIsUploadPreviewOpen(false);
@@ -259,6 +339,21 @@ const LeadComponent: React.FC = () => {
             showTooltip: true
         },
         {
+            label: 'Phone',
+            accessor: 'phone',
+            sortable: true,
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true
+        },
+        {
+            label: 'Assigned Person',
+            accessor: 'assignedUserName',
+            sortable: true,
+            render: (row: any) => renderBadge(row.assignedUserName),
+            showTooltip: true
+        },
+        {
             label: 'Lead Status',
             accessor: 'leadStatus',
             sortable: true,
@@ -283,13 +378,7 @@ const LeadComponent: React.FC = () => {
             render: (row: any) => renderBadge(row.platformType),
             showTooltip: true
         },
-        {
-            label: 'Assigned Person',
-            accessor: 'assignedUserName',
-            sortable: true,
-            render: (row: any) => renderBadge(row.assignedUserName),
-            showTooltip: true
-        },
+
         {
             label: 'Plot Number',
             accessor: 'plotNumber',
@@ -304,14 +393,7 @@ const LeadComponent: React.FC = () => {
             render: (row: any) => renderBadge(row.plotPrice),
             showTooltip: true
         },
-        {
-            label: 'Phone',
-            accessor: 'phone',
-            sortable: true,
-            minWidth: 200,
-            maxWidth: 500,
-            showTooltip: true
-        },
+
         {
             label: 'City',
             accessor: 'city',
@@ -334,7 +416,7 @@ const LeadComponent: React.FC = () => {
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold">Lead Master</h1>
-                    <p className="text-sm text-gray-600">Manage leads</p>
+                    <p className="text-sm text-gray-600">Manage leads with advanced filtering</p>
                 </div>
                 <div className="flex gap-3">
                     {hasPermission(20, "upload") && (
@@ -430,12 +512,16 @@ const LeadComponent: React.FC = () => {
                     hiddenColumns={hiddenColumns}
                     onColumnVisibilityChange={setHiddenColumns}
                     rowClassName={(row: any) => {
-                        // console.log('Row data:', row);
                         if (row.leadStatus === "Fresh") {
                             return "fresh-lead-blink";
                         }
                         return "";
                     }}
+                    // Filter props - Enable filters
+                    showFilters={true}
+                    filters={filters}
+                    filterValues={filterValues}
+                    onFilterChange={setFilterValues}
                     actions={(row) => (
                         <div className="flex gap-2">
                             {hasPermission(22, "edit") && (

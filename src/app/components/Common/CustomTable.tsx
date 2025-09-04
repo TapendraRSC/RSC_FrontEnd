@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight, Settings, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight, Settings, Eye, EyeOff, Filter, X } from 'lucide-react';
+import TableFilter, { FilterConfig, FilterValue } from './TableFilter';
 
 type SortConfig = {
     key: string;
@@ -48,6 +49,11 @@ type CustomTableProps<T> = {
     dynamicWidth?: boolean;
     showTooltipForAll?: boolean;
     rowClassName?: (row: T) => string;
+    // Filter props
+    showFilters?: boolean;
+    filters?: FilterConfig<T>[];
+    filterValues?: FilterValue;
+    onFilterChange?: (values: FilterValue) => void;
 };
 
 const useColumnVisibility = (initialHiddenColumns: string[]) => {
@@ -74,8 +80,60 @@ const calculateDynamicWidth = (data: any[], accessor: string, label: string, min
             maxContentLength = cellValue.length;
         }
     });
-    const calculatedWidth = Math.max(minWidth, Math.min(maxWidth, maxContentLength * 8 + 40));
-    return calculatedWidth;
+    return Math.max(minWidth, Math.min(maxWidth, maxContentLength * 8 + 40));
+};
+
+const applyFilters = <T extends any>(data: T[], filterValues: FilterValue, filters: FilterConfig<T>[]): T[] => {
+    if (!filterValues || Object.keys(filterValues).length === 0) {
+        return data;
+    }
+    return data.filter(row => {
+        return Object.entries(filterValues).every(([key, value]) => {
+            if (value === null || value === undefined || value === '') {
+                return true;
+            }
+            const filter = filters.find(f => String(f.key) === key);
+            if (!filter) return true;
+            const rowValue = row[key as keyof T];
+            const rowValueStr = String(rowValue || '').toLowerCase();
+            switch (filter.type) {
+                case 'text':
+                    return rowValueStr.includes(String(value).toLowerCase());
+                case 'select':
+                    return String(rowValue) === String(value);
+                case 'multiSelect':
+                    if (!Array.isArray(value) || value.length === 0) return true;
+                    return value.some(v => String(rowValue) === String(v));
+                case 'date':
+                    if (!rowValue || !value) return true;
+                    const rowDate = new Date(rowValue as string);
+                    const filterDate = new Date(value);
+                    return rowDate.toDateString() === filterDate.toDateString();
+                case 'dateRange':
+                    if (!rowValue) return true;
+                    const rowDateRange = new Date(rowValue as string);
+                    const { from, to } = value;
+                    if (from && to) {
+                        const fromDate = new Date(from);
+                        const toDate = new Date(to);
+                        return rowDateRange >= fromDate && rowDateRange <= toDate;
+                    } else if (from) {
+                        const fromDate = new Date(from);
+                        return rowDateRange >= fromDate;
+                    } else if (to) {
+                        const toDate = new Date(to);
+                        return rowDateRange <= toDate;
+                    }
+                    return true;
+                case 'number':
+                    const rowNumber = Number(rowValue);
+                    const filterNumber = Number(value);
+                    return !isNaN(rowNumber) && !isNaN(filterNumber) && rowNumber === filterNumber;
+                default:
+                    return true;
+            }
+        });
+    });
 };
 
 const CustomTable = <T extends { id: number | string }>({
@@ -106,16 +164,35 @@ const CustomTable = <T extends { id: number | string }>({
     dynamicWidth = true,
     showTooltipForAll = false,
     rowClassName,
+    // Filter props
+    showFilters = false,
+    filters = [],
+    filterValues = {},
+    onFilterChange,
 }: CustomTableProps<T>) => {
-
     const { hiddenCols, toggleColumnVisibility } = useColumnVisibility(hiddenColumns);
     const [showColumnMenu, setShowColumnMenu] = useState(false);
+    const [localFilterValues, setLocalFilterValues] = useState<FilterValue>(filterValues);
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
+    // Memoize filtered data to avoid unnecessary recalculations
+    const filteredData = useMemo(() => {
+        if (!showFilters || !filters.length) {
+            return data;
+        }
+        return applyFilters(data, localFilterValues, filters);
+    }, [data, localFilterValues, filters, showFilters]);
+
+    // Memoize display data to avoid recalculating column widths unnecessarily
+    const displayData = useMemo(() => filteredData, [filteredData]);
+
+    // Memoize visible columns
     const visibleColumns = useMemo(() =>
         columns.filter(col => !hiddenCols.has(String(col.accessor))),
         [columns, hiddenCols]
     );
 
+    // Memoize column widths, only recalculate if displayData or visibleColumns change
     const columnWidths = useMemo(() => {
         if (!dynamicWidth) return {};
         const widths: { [key: string]: number } = {};
@@ -123,10 +200,15 @@ const CustomTable = <T extends { id: number | string }>({
             const accessor = String(col.accessor);
             const minWidth = col.minWidth || 100;
             const maxWidth = col.maxWidth || 300;
-            widths[accessor] = calculateDynamicWidth(data, accessor, col.label, minWidth, maxWidth);
+            widths[accessor] = calculateDynamicWidth(displayData, accessor, col.label, minWidth, maxWidth);
         });
         return widths;
-    }, [data, visibleColumns, dynamicWidth]);
+    }, [displayData, visibleColumns, dynamicWidth]);
+
+    // Update localFilterValues when filterValues prop changes
+    useEffect(() => {
+        setLocalFilterValues(filterValues);
+    }, []);
 
     const truncateText = useCallback((text: string, maxLength: number = globalMaxLength) => {
         if (!text) return '';
@@ -146,6 +228,27 @@ const CustomTable = <T extends { id: number | string }>({
         onSortChange({ key: String(key), direction: newDirection });
     }, [onSortChange, sortConfig]);
 
+    const handleFilterChange = useCallback((values: FilterValue) => {
+        setLocalFilterValues(values);
+        if (onFilterChange) {
+            onFilterChange(values);
+        }
+        if (onPageChange) {
+            onPageChange(1);
+        }
+    }, [onFilterChange, onPageChange]);
+
+    const handleFilterClear = useCallback(() => {
+        const clearedValues: FilterValue = {};
+        setLocalFilterValues(clearedValues);
+        if (onFilterChange) {
+            onFilterChange(clearedValues);
+        }
+        if (onPageChange) {
+            onPageChange(1);
+        }
+    }, [onFilterChange, onPageChange]);
+
     const getPaginationNumbers = useCallback(() => {
         const range = [];
         for (let i = 1; i <= totalPages; i++) {
@@ -159,63 +262,115 @@ const CustomTable = <T extends { id: number | string }>({
     }, [totalPages, currentPage]);
 
     const startRecord = ((currentPage - 1) * pageSize) + 1;
-    const endRecord = Math.min(currentPage * pageSize, totalRecords);
+    const endRecord = Math.min(currentPage * pageSize, displayData.length || totalRecords);
+
+    const getActiveFiltersCount = () => {
+        return Object.keys(localFilterValues).filter(key => {
+            const value = localFilterValues[key];
+            if (Array.isArray(value)) return value.length > 0;
+            return value !== null && value !== undefined && value !== '';
+        }).length;
+    };
 
     return (
         <div className="w-full mx-auto sm:px-0">
-            {/* Global CSS Styles for Blinking Animation */}
             <style jsx global>{`
-                @keyframes greenBlink {
-                    0%, 100% { 
-                        background-color: inherit; 
-                    }
-                    50% { 
-                        background-color: rgba(34, 197, 94, 0.25);
-                        box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
-                    }
-                }
-                
-                .fresh-lead-blink {
-                    animation: greenBlink 2s infinite;
-                    transition: all 0.3s ease;
-                }
-                
-                .fresh-lead-blink:hover {
-                    animation-play-state: paused;
-                    background-color: rgba(34, 197, 94, 0.15) !important;
-                }
-                
-                /* Alternative faster blink */
-                .fresh-lead-blink-fast {
-                    animation: greenBlink 1s infinite;
-                }
-            `}</style>
-
-            {/* Header */}
+        @keyframes greenBlink {
+          0%, 100% { background-color: inherit; }
+          50% { background-color: rgba(34, 197, 94, 0.25); box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
+        }
+        .fresh-lead-blink {
+          animation: greenBlink 2s infinite;
+          transition: all 0.3s ease;
+        }
+        .fresh-lead-blink:hover {
+          animation-play-state: paused;
+          background-color: rgba(34, 197, 94, 0.15) !important;
+        }
+      `}</style>
             <div className="bg-white dark:bg-gray-900 rounded-t-xl border border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4">
                 <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
                     <div className="min-w-0">
                         <h2 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {totalRecords > 0 ? `${totalRecords} total records` : 'No records available'}
+                            {displayData.length > 0 ? `${displayData.length} total records` : 'No records available'}
                         </p>
                     </div>
-                    {showSearch && onSearchChange && (
-                        <div className="relative w-full sm:w-auto">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <input
-                                type="text"
-                                placeholder={searchPlaceholder}
-                                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 w-full sm:w-64 text-sm"
-                                value={searchValue}
-                                onChange={(e) => onSearchChange(e.target.value)}
-                            />
-                        </div>
-                    )}
+                    <div className="flex items-center gap-3">
+                        {showSearch && onSearchChange && (
+                            <div className="relative w-full sm:w-auto">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <input
+                                    type="text"
+                                    placeholder={searchPlaceholder}
+                                    className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 w-full sm:w-64 text-sm"
+                                    value={searchValue}
+                                    onChange={(e) => onSearchChange(e.target.value)}
+                                />
+                            </div>
+                        )}
+                        {showFilters && filters.length > 0 && (
+                            <button
+                                onClick={() => setIsFilterModalOpen(true)}
+                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${getActiveFiltersCount() > 0
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                <Filter className="w-4 h-4" />
+                                <span>Filters</span>
+                                {getActiveFiltersCount() > 0 && (
+                                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full">
+                                        {getActiveFiltersCount()}
+                                    </span>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
-
-            {/* Table Container */}
+            {isFilterModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl mx-4">
+                        <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Filters</h3>
+                            <button
+                                onClick={() => setIsFilterModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            <TableFilter
+                                filters={filters}
+                                values={localFilterValues}
+                                onChange={handleFilterChange}
+                                onClear={handleFilterClear}
+                                data={data}
+                                columns={visibleColumns.map(col => ({ label: col.label, accessor: col.accessor }))}
+                            />
+                        </div>
+                        <div className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700 gap-2">
+                            <button
+                                onClick={() => {
+                                    handleFilterClear();
+                                    setIsFilterModalOpen(false);
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                            >
+                                Clear
+                            </button>
+                            <button
+                                onClick={() => setIsFilterModalOpen(false)}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                            >
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="bg-white dark:bg-gray-900 border-x border-gray-200 dark:border-gray-700 sm:mx-0">
                 <div className="overflow-x-auto">
                     <table className="w-full text-xs sm:text-sm" style={{ minWidth: '600px' }}>
@@ -279,18 +434,12 @@ const CustomTable = <T extends { id: number | string }>({
                                         )}
                                     </tr>
                                 ))
-                            ) : data?.length ? (
-                                data.map((row: any) => {
-                                    // Debug: Check if row has leadStatus === "Fresh"
-                                    const isRowFresh = row?.leadStatus === "Fresh";
+                            ) : displayData.length ? (
+                                displayData.map((row: any) => {
                                     const customRowClass = rowClassName ? rowClassName(row) : '';
                                     const finalClassName = `hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 ${customRowClass}`;
-
                                     return row && row.id ? (
-                                        <tr
-                                            key={row.id}
-                                            className={finalClassName}
-                                        >
+                                        <tr key={row.id} className={finalClassName}>
                                             {visibleColumns.map((col: any) => {
                                                 const accessor = String(col.accessor);
                                                 const cellValue = String(row[col.accessor] || '');
@@ -339,7 +488,7 @@ const CustomTable = <T extends { id: number | string }>({
                                     <td colSpan={visibleColumns.length + (actions ? 1 : 0)} className="px-2 sm:px-4 py-6 sm:py-8 text-center">
                                         <div className="text-gray-500 dark:text-gray-400">
                                             <div className="text-sm sm:text-lg font-medium mb-2">{emptyMessage}</div>
-                                            <div className="text-xs sm:text-sm">Try adjusting your search criteria</div>
+                                            <div className="text-xs sm:text-sm">Try adjusting your search criteria or filters</div>
                                         </div>
                                     </td>
                                 </tr>
@@ -348,8 +497,6 @@ const CustomTable = <T extends { id: number | string }>({
                     </table>
                 </div>
             </div>
-
-            {/* Pagination */}
             {showPagination && (
                 <div className="bg-white dark:bg-gray-900 rounded-b-xl border border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4 -mx-2 sm:mx-0">
                     <div className="flex flex-col space-y-3 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
@@ -372,7 +519,7 @@ const CustomTable = <T extends { id: number | string }>({
                             </div>
                         )}
                         <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-center">
-                            {totalRecords > 0 ? `${startRecord}-${endRecord} of ${totalRecords}` : 'No results'}
+                            {displayData.length > 0 ? `${startRecord}-${endRecord} of ${displayData.length}` : 'No results'}
                         </div>
                         {onPageChange && totalPages > 1 && (
                             <div className="flex items-center justify-center gap-1">
