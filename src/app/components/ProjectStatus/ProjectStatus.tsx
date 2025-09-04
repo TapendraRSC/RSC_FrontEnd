@@ -1,25 +1,34 @@
-'use client';
+'use client'
+import React, { useEffect, useState, useMemo } from 'react'
+import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, FileText, Eye } from 'lucide-react'
+import CustomTable from '../Common/CustomTable'
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal'
+import ProjectStatusModal from './ProjectStatusModal'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '../../../../store/store'
+import { toast } from 'react-toastify'
+import {
+    addStatus,
+    deleteStatus,
+    fetchProjectStatuses,
+    ProjectStatus,
+    updateStatus
+} from '../../../../store/projectSlice'
+import Link from 'next/link'
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice'
+import { fetchPermissions } from '../../../../store/permissionSlice'
 
-import React, { useEffect, useState } from 'react';
-import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, FileText, Eye } from 'lucide-react';
-import CustomTable from '../Common/CustomTable';
-import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
-import ProjectStatusModal from './ProjectStatusModal';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../../../store/store';
-import { toast } from 'react-toastify';
-import { addStatus, deleteStatus, fetchProjectStatuses, ProjectStatus, updateStatus } from '../../../../store/projectSlice';
-import Link from 'next/link';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
-import { fetchPermissions } from '../../../../store/permissionSlice';
+type SortConfig = {
+    key: string;
+    direction: 'asc' | 'desc';
+} | null;
 
 const ProjectStatusComponent: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-
     const [searchValue, setSearchValue] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const [sortConfig, setSortConfig] = useState<any>(null);
+    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -30,7 +39,6 @@ const ProjectStatusComponent: React.FC = () => {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     const { list, loading, error } = useSelector((state: RootState) => state.projectStatus);
-
     const projectStatusList: ProjectStatus[] = list?.projects || [];
     const totalRecords = list?.total || 0;
     const totalPages = list?.totalPages || 1;
@@ -74,14 +82,12 @@ const ProjectStatusComponent: React.FC = () => {
             const formData: any = new FormData();
             formData.append('title', data.title);
             formData.append('status', data.status || 'active');
-
             if (data.projectImage?.[0]) {
                 formData.append('projectImage', data.projectImage[0]);
             }
             if (data.projectPdf?.[0]) {
                 formData.append('projectPdf', data.projectPdf[0]);
             }
-
             if (currentStatus) {
                 await dispatch(updateStatus({
                     id: currentStatus.id,
@@ -92,13 +98,11 @@ const ProjectStatusComponent: React.FC = () => {
                 await dispatch(addStatus(formData)).unwrap();
                 toast.success('Status added successfully');
             }
-
             dispatch(fetchProjectStatuses({
                 page: currentPage,
                 limit: pageSize,
                 searchValue
             }));
-
             setIsModalOpen(false);
         } catch (err: any) {
             toast.error(err || 'Failed to save status');
@@ -106,6 +110,22 @@ const ProjectStatusComponent: React.FC = () => {
             setIsSaving(false);
         }
     };
+
+    const sortedData = useMemo(() => {
+        if (!sortConfig) return projectStatusList;
+
+        return [...projectStatusList].sort((a, b) => {
+            const aVal = a[sortConfig.key as keyof ProjectStatus];
+            const bVal = b[sortConfig.key as keyof ProjectStatus];
+
+            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            }
+
+            const comparison = String(aVal).localeCompare(String(bVal));
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    }, [projectStatusList, sortConfig]);
 
     const columns: any = [
         {
@@ -180,19 +200,15 @@ const ProjectStatusComponent: React.FC = () => {
         },
     ];
 
-
-    // Permissions 
-
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
-
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
 
     useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar()); // roleId backend se mil jayega
+        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     const getLeadPermissions = () => {
@@ -205,13 +221,9 @@ const ProjectStatusComponent: React.FC = () => {
     const leadPermissionIds = getLeadPermissions();
 
     const hasPermission = (permId: number, permName: string) => {
-        // rolePermissions se id check
         if (!leadPermissionIds.includes(permId)) return false;
-
-        // master list se naam check
         const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
         if (!matched) return false;
-
         return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
     };
 
@@ -236,7 +248,6 @@ const ProjectStatusComponent: React.FC = () => {
                     {project.status}
                 </span>
             </div>
-
             {project.projectImage && (
                 <div className="relative">
                     <img
@@ -246,7 +257,6 @@ const ProjectStatusComponent: React.FC = () => {
                     />
                 </div>
             )}
-
             <div className="flex gap-2 pt-3 border-t border-gray-100">
                 {project.projectPdf && (
                     <a
@@ -266,30 +276,24 @@ const ProjectStatusComponent: React.FC = () => {
                     <Eye className="w-4 h-4" />
                     View
                 </Link>
-                {/* Edit Button */}
                 {hasPermission(22, "edit") && (
                     <button
                         onClick={() => handleEdit(project)}
-                        className="flex-1 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors
-                   bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        className="flex-1 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors bg-blue-50 text-blue-600 hover:bg-blue-100"
                     >
                         <Pencil className="w-4 h-4" />
                         Edit
                     </button>
                 )}
-
-                {/* Delete Button */}
                 {hasPermission(4, "delete") && (
                     <button
                         onClick={() => handleDelete(project)}
-                        className="px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1 transition-colors
-                   bg-red-50 text-red-600 hover:bg-red-100"
+                        className="px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1 transition-colors bg-red-50 text-red-600 hover:bg-red-100"
                     >
                         <Trash2 className="w-4 h-4" />
                         Delete
                     </button>
                 )}
-
             </div>
         </div>
     );
@@ -320,17 +324,13 @@ const ProjectStatusComponent: React.FC = () => {
                     </div>
                 </div>
             </div>
-
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
                 {hasPermission(21, "add") && (
                     <button
                         onClick={handleAdd}
                         disabled={isSaving}
-                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium 
-            ${isSaving
-                                ? "bg-blue-400 text-white cursor-wait"
-                                : "bg-blue-500 hover:bg-blue-600 text-white"
-                            }`}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
+                            ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
                     >
                         {isSaving ? (
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -341,7 +341,6 @@ const ProjectStatusComponent: React.FC = () => {
                     </button>
                 )}
             </div>
-
             <div className="hidden lg:block p-6">
                 <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
@@ -354,11 +353,8 @@ const ProjectStatusComponent: React.FC = () => {
                         <button
                             onClick={handleAdd}
                             disabled={isSaving}
-                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base 
-            ${isSaving
-                                    ? "bg-blue-400 text-white cursor-wait"
-                                    : "bg-blue-500 hover:bg-blue-600 text-white"
-                                }`}
+                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                                ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
                         >
                             {isSaving ? (
                                 <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -368,16 +364,11 @@ const ProjectStatusComponent: React.FC = () => {
                             Add New
                         </button>
                     )}
-
-
                 </div>
             </div>
-
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
-                {/* Mobile Grid View */}
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
-                        {/* Mobile Search */}
                         <div className="relative">
                             <input
                                 type="text"
@@ -393,7 +384,6 @@ const ProjectStatusComponent: React.FC = () => {
                                 <Search className="h-5 w-5 text-gray-400" />
                             </div>
                         </div>
-
                         {loading ? (
                             <div className="flex justify-center py-12">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -401,12 +391,11 @@ const ProjectStatusComponent: React.FC = () => {
                         ) : (
                             <>
                                 <div className="grid gap-4">
-                                    {projectStatusList.map((project) => (
+                                    {sortedData.map((project) => (
                                         <ProjectStatusCard key={project.id} project={project} />
                                     ))}
                                 </div>
-
-                                {projectStatusList.length === 0 && (
+                                {sortedData.length === 0 && (
                                     <div className="text-center py-12">
                                         <div className="text-gray-400 text-5xl mb-4">📋</div>
                                         <p className="text-gray-500 text-lg font-medium">No project statuses found</p>
@@ -417,8 +406,6 @@ const ProjectStatusComponent: React.FC = () => {
                                 )}
                             </>
                         )}
-
-                        {/* Mobile Pagination */}
                         {totalPages > 1 && (
                             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                                 <button
@@ -454,8 +441,6 @@ const ProjectStatusComponent: React.FC = () => {
                                 </button>
                             </div>
                         )}
-
-                        {/* Mobile Summary */}
                         <div className="bg-blue-50 rounded-lg p-3 text-center">
                             <p className="text-sm text-blue-700">
                                 Total: <span className="font-semibold">{totalRecords}</span> project statuses
@@ -463,12 +448,10 @@ const ProjectStatusComponent: React.FC = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Table View - Mobile & Desktop */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                         <CustomTable<ProjectStatus>
-                            data={projectStatusList}
+                            data={sortedData}
                             columns={columns}
                             isLoading={loading}
                             title="Project Status"
@@ -498,8 +481,6 @@ const ProjectStatusComponent: React.FC = () => {
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    {/* Edit */}
-                                    {/* Edit */}
                                     {hasPermission(22, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
@@ -509,8 +490,6 @@ const ProjectStatusComponent: React.FC = () => {
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
                                     )}
-
-                                    {/* Delete */}
                                     {hasPermission(4, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
@@ -520,14 +499,12 @@ const ProjectStatusComponent: React.FC = () => {
                                             <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
                                     )}
-
                                 </div>
                             )}
                         />
                     </div>
                 </div>
             </div>
-
             <ProjectStatusModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -535,7 +512,6 @@ const ProjectStatusComponent: React.FC = () => {
                 isLoading={isSaving}
                 currentProjectStatus={currentStatus}
             />
-
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
