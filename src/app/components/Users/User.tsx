@@ -210,7 +210,7 @@ const Users: React.FC = () => {
         const res = resultAction.payload;
 
         if (res?.success) {
-            toast.success(res.message);
+            // toast.success(res.message);
             dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
             setModalOpen(false);
         } else {

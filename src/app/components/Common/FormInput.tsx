@@ -7,16 +7,6 @@ import {
     UseFormClearErrors,
 } from 'react-hook-form';
 
-interface ValidationRule {
-    required?: string | boolean;
-    minLength?: { value: number; message: string };
-    maxLength?: { value: number; message: string };
-    pattern?: { value: RegExp; message: string };
-    min?: { value: number; message: string };
-    max?: { value: number; message: string };
-    validate?: (value: any) => boolean | string;
-}
-
 interface FormInputProps<T extends Record<string, any>> {
     name: Path<T>;
     label: string;
@@ -26,12 +16,13 @@ interface FormInputProps<T extends Record<string, any>> {
     validation?: RegisterOptions<T, Path<T>>;
     register: UseFormRegister<T>;
     errors: FieldErrors<T>;
-    clearErrors: UseFormClearErrors<T>; // Add this prop
+    clearErrors: UseFormClearErrors<T>;
     className?: string;
     accept?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     disabled?: boolean;
     step?: string | number;
+    maxLength?: number; // Add maxLength prop
 }
 
 const FormInput = <T extends Record<string, any>>({
@@ -43,46 +34,41 @@ const FormInput = <T extends Record<string, any>>({
     validation = {},
     register,
     errors,
-    clearErrors, // Add this
+    clearErrors,
     className = '',
     accept,
     onChange,
     disabled = false,
     step,
+    maxLength,
 }: FormInputProps<T>) => {
-    // Combine default rules
     const rules: RegisterOptions<T, Path<T>> = {
         ...validation,
         ...(required && { required: `${label} is required` }),
     };
 
-    // Add default patterns if not provided
-    if (type === 'email' && !validation?.pattern) {
-        rules.pattern = {
-            value: /^\S+@\S+\.\S+$/,
-            message: 'Invalid email format',
-        };
-    }
-
-    if (type === 'tel' && !validation?.pattern) {
-        rules.pattern = {
-            value: /^[0-9]{10}$/,
-            message: 'Enter a valid 10-digit number',
+    if (type === 'number' && maxLength) {
+        rules.validate = {
+            ...rules.validate,
+            maxLength: (value) =>
+                (value && value.toString().length <= maxLength) ||
+                `Must be at most ${maxLength} digits`,
         };
     }
 
     const error = errors[name];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Clear error when user starts typing
         if (error) {
             clearErrors(name);
         }
-
-        // Call the original onChange from register
+        if (type === 'number' && maxLength) {
+            const inputValue = e.target.value;
+            if (inputValue.length > maxLength) {
+                e.target.value = inputValue.slice(0, maxLength);
+            }
+        }
         register(name, rules).onChange(e);
-
-        // Call custom onChange if provided
         if (onChange) {
             onChange(e);
         }
@@ -95,27 +81,16 @@ const FormInput = <T extends Record<string, any>>({
             } ${className}`,
         placeholder,
         disabled,
-        maxLength: type === 'tel' ? 10 : undefined,
-        inputMode: type === 'tel' ? 'numeric' : undefined,
-        pattern: type === 'tel' ? '[0-9]*' : undefined,
-        accept,
         step,
-        onChange: handleInputChange, // Use our custom handler
-        onKeyDown:
-            type === 'tel'
-                ? (e: React.KeyboardEvent<HTMLInputElement>) => {
-                    const allowedKeys = [
-                        'Backspace',
-                        'Delete',
-                        'ArrowLeft',
-                        'ArrowRight',
-                        'Tab',
-                    ];
-                    if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
-                        e.preventDefault();
-                    }
+        onChange: handleInputChange,
+        onInput: type === 'number' && maxLength
+            ? (e: React.FormEvent<HTMLInputElement>) => {
+                const input = e.target as HTMLInputElement;
+                if (input.value.length > maxLength) {
+                    input.value = input.value.slice(0, maxLength);
                 }
-                : undefined,
+            }
+            : undefined,
     };
 
     return (

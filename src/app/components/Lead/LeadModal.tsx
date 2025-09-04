@@ -32,7 +32,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { data: users = [], loading: usersLoading } = useSelector(
     (state: RootState) => state.users
   );
-  // console.log("initaila=data", initialData)
+
   const actualUsersData = useMemo(() => {
     if (Array.isArray(users)) return users;
     if (users?.data) {
@@ -117,6 +117,26 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }));
   }, [actualUsersData]);
 
+  // Get logged-in user from localStorage
+  const currentUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
+
+  // Filter AssignedTo options based on roleId
+  const filteredAssignedToOptions = useMemo(() => {
+    if (currentUser.roleId === 36) {
+      const userOption = assignedToOptions.find(
+        (u: any) => u.value === currentUser.id
+      );
+      return userOption ? [userOption] : [];
+    }
+    return assignedToOptions;
+  }, [assignedToOptions, currentUser]);
+
   const {
     register,
     handleSubmit,
@@ -132,7 +152,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       phone: "",
       city: "",
       state: "",
-      assignedTo: null,
+      assignedTo: currentUser.roleId === 36 ? currentUser.id : null,
       platformId: null,
       projectStatusId: null,
       plotId: null,
@@ -141,11 +161,18 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     },
   });
 
+  // Set default AssignedTo if roleId is 36
+  useEffect(() => {
+    if (currentUser.roleId === 36) {
+      setValue("assignedTo", currentUser.id);
+    }
+  }, [currentUser, setValue]);
+
   useEffect(() => {
     if (initialData) {
       reset({
         ...initialData,
-        projectStatusId: initialData.plotProjectId || null, // dropdown ke liye
+        projectStatusId: initialData.plotProjectId || null,
         plotId: initialData.plotId || null,
       });
     } else if (isOpen) {
@@ -211,10 +238,12 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             <div>
               <label className="block text-sm font-medium mb-1">Assigned To *</label>
               <CommonDropdown
-                options={assignedToOptions}
+                options={filteredAssignedToOptions}
                 selected={
                   watch("assignedTo")
-                    ? assignedToOptions.find((opt: any) => opt.value === watch("assignedTo")) || null
+                    ? filteredAssignedToOptions.find(
+                      (opt: any) => opt.value === watch("assignedTo")
+                    ) || null
                     : null
                 }
                 onChange={(val: any) => setValue("assignedTo", val?.value || null)}

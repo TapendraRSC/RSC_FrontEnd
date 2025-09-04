@@ -1,13 +1,9 @@
-// src/store/slices/leadPlatformSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/libs/axios";
 
 export interface LeadPlatform {
     id: number;
-    name: string;
-    status?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    platformType: string; // API me 'platformType' hai, name nahi
 }
 
 interface LeadPlatformState {
@@ -28,7 +24,6 @@ const initialState: LeadPlatformState = {
     currentLeadPlatform: null,
 };
 
-// ✅ Fetch all lead platforms
 export const fetchLeadPlatforms = createAsyncThunk(
     "leadPlatforms/fetchAll",
     async (
@@ -40,14 +35,22 @@ export const fetchLeadPlatforms = createAsyncThunk(
             const res = await axiosInstance.get(`/leadPlatforms/getAllLeadPlatforms`, {
                 params: { page, limit, search: search || undefined },
             });
-            return res.data?.data; // { leadPlatforms, total, totalPages }
+
+            const data = res.data?.data; // ye nested data object hai
+            if (!data) return rejectWithValue("No data found");
+
+            return {
+                leadPlatforms: data.roles || [], // roles array hi hume chahiye
+                total: data.total || data.roles.length,
+                totalPages: data.totalPages || 1,
+            };
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || err.message);
         }
     }
 );
 
-// ✅ Create new lead platform
+
 export const createLeadPlatform = createAsyncThunk(
     "leadPlatforms/create",
     async (data: Omit<LeadPlatform, "id">, { rejectWithValue }) => {
@@ -68,20 +71,13 @@ export const updateLeadPlatform = createAsyncThunk(
     ) => {
         try {
             const res = await axiosInstance.put(`/leadPlatforms/updateLeadPlatform/${id}`, data);
-
-            // Agar API response ke andar data nahi hai, to manually id + data return karo
-            if (res.data?.data) {
-                return res.data.data as LeadPlatform;
-            } else {
-                return { id, ...data } as LeadPlatform;
-            }
+            return res.data?.data as LeadPlatform;
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || err.message);
         }
     }
 );
 
-// ✅ Delete lead platform
 export const deleteLeadPlatform = createAsyncThunk(
     "leadPlatforms/delete",
     async (id: number, { rejectWithValue }) => {
@@ -107,14 +103,14 @@ const leadPlatformSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // 🔹 fetchLeadPlatforms
+            // Fetch
             .addCase(fetchLeadPlatforms.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchLeadPlatforms.fulfilled, (state, action) => {
                 state.loading = false;
-                state.leadPlatforms = action.payload?.roles || [];
+                state.leadPlatforms = action.payload?.leadPlatforms || [];
                 state.total = action.payload?.total || 0;
                 state.totalPages = action.payload?.totalPages || 0;
             })
@@ -122,54 +118,27 @@ const leadPlatformSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
-
-            // 🔹 createLeadPlatform
-            .addCase(createLeadPlatform.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
+            // Create
             .addCase(createLeadPlatform.fulfilled, (state, action) => {
                 state.loading = false;
-                state.leadPlatforms.unshift(action.payload); // add new at top
+                if (action.payload) state.leadPlatforms.unshift(action.payload);
             })
-            .addCase(createLeadPlatform.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            })
-
-            // 🔹 updateLeadPlatform
-            .addCase(updateLeadPlatform.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
+            // Update
             .addCase(updateLeadPlatform.fulfilled, (state, action) => {
                 state.loading = false;
-                if (!action.payload?.id) return; // ✅ guard added
-
+                if (!action.payload?.id) return;
                 state.leadPlatforms = state.leadPlatforms.map((lp) =>
                     lp.id === action.payload.id ? action.payload : lp
                 );
             })
-            .addCase(updateLeadPlatform.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            })
-
-            // 🔹 deleteLeadPlatform
-            .addCase(deleteLeadPlatform.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
+            // Delete
             .addCase(deleteLeadPlatform.fulfilled, (state, action: PayloadAction<number>) => {
                 state.loading = false;
                 state.leadPlatforms = state.leadPlatforms.filter((lp) => lp.id !== action.payload);
-            })
-            .addCase(deleteLeadPlatform.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
             });
     },
 });
 
-export const { clearCurrentLeadPlatform, setCurrentLeadPlatform } = leadPlatformSlice.actions;
+export const { clearCurrentLeadPlatform, setCurrentLeadPlatform } =
+    leadPlatformSlice.actions;
 export default leadPlatformSlice.reducer;

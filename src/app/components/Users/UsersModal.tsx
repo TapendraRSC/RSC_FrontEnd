@@ -208,17 +208,24 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                             <FormInput<UserFormData>
                                 name="phoneNumber"
                                 label="Phone Number"
-                                type="tel"
+                                type="number"
                                 placeholder="Enter 10-digit number"
                                 required
                                 register={register}
                                 errors={errors}
                                 clearErrors={clearErrors}
+                                maxLength={10}  // Add maxLength prop
                                 validation={{
                                     required: "Phone number is required",
-                                    pattern: { value: /^[0-9]{10}$/, message: "Phone number must be exactly 10 digits" },
+                                    validate: {
+                                        is10Digits: (value) =>
+                                            (value && value.toString().length === 10) ||
+                                            "Phone number must be exactly 10 digits",
+                                    },
                                 }}
                             />
+
+
                         </div>
 
                         {/* Role & Status */}
