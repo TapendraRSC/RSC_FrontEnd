@@ -1,7 +1,7 @@
 "use client";
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '@/libs/axios';
+import { toast } from 'react-toastify';
 
 interface ExportedUserState {
     data: any;
@@ -54,7 +54,6 @@ export const addUser = createAsyncThunk(
                     formData.append(key, userData[key]);
                 }
             });
-
             const response = await axiosInstance.post('users/addUser', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
@@ -78,7 +77,6 @@ export const updateUser = createAsyncThunk(
                     formData.append(key, userData[key]);
                 }
             });
-
             const response = await axiosInstance.put(`users/updateUser/${id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
@@ -116,12 +114,13 @@ const userSlice = createSlice({
             .addCase(exportUsers.fulfilled, (state, action) => {
                 state.data = action.payload;
                 state.loading = false;
+                // toast.success(action.payload.message || 'Users exported successfully!');
             })
             .addCase(exportUsers.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(action.payload as string);
             })
-
             // Get User by ID
             .addCase(getUserById.pending, (state) => {
                 state.loading = true;
@@ -130,12 +129,13 @@ const userSlice = createSlice({
             .addCase(getUserById.fulfilled, (state, action) => {
                 state.data = action.payload;
                 state.loading = false;
+                // toast.success(action.payload.message || 'User fetched successfully!');
             })
             .addCase(getUserById.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(action.payload as string);
             })
-
             // Add User
             .addCase(addUser.pending, (state) => {
                 state.loading = true;
@@ -144,12 +144,13 @@ const userSlice = createSlice({
             .addCase(addUser.fulfilled, (state, action) => {
                 state.data = action.payload;
                 state.loading = false;
+                toast.success(action.payload.message || 'User added successfully!');
             })
             .addCase(addUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(action.payload as string);
             })
-
             // Update User
             .addCase(updateUser.pending, (state) => {
                 state.loading = true;
@@ -158,12 +159,13 @@ const userSlice = createSlice({
             .addCase(updateUser.fulfilled, (state, action) => {
                 state.data = action.payload;
                 state.loading = false;
+                toast.success(action.payload.message || 'User updated successfully!');
             })
             .addCase(updateUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(action.payload as string);
             })
-
             // Delete User
             .addCase(deleteUser.pending, (state) => {
                 state.loading = true;
@@ -172,10 +174,12 @@ const userSlice = createSlice({
             .addCase(deleteUser.fulfilled, (state, action) => {
                 state.data = action.payload;
                 state.loading = false;
+                toast.success(action.payload.message);
             })
             .addCase(deleteUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(action.payload as string);
             });
     },
 });
