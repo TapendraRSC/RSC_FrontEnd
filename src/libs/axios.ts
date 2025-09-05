@@ -1,4 +1,3 @@
-// libs/axios.ts
 import axios from "axios";
 
 const axiosInstance = axios.create({
@@ -29,7 +28,6 @@ const isTokenExpiringSoon = (token: string | null) => {
     return (expiry - now) <= threshold;
 };
 
-// 🛑 Avoid calling refresh if done recently
 const shouldRefreshToken = () => {
     const now = Date.now();
     const minInterval = 1 * 60 * 1000; // don't refresh again for 1 min

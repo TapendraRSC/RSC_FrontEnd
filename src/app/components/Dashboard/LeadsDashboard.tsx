@@ -2,15 +2,10 @@
 import React, { useEffect, useState } from "react";
 import {
     User,
-    Folder,
     Users,
-    MapPin,
     Globe,
     Facebook,
-    TrendingUp,
     Activity,
-    ArrowUp,
-    ArrowDown,
 } from "lucide-react";
 import axiosInstance from "@/libs/axios";
 
@@ -44,10 +39,7 @@ const SalesDashboard = () => {
             const data = res.data.data;
 
             const updatedStats: any = Object.entries(data).map(([key, value]) => {
-                // Convert camelCase key to Title Case
                 const title = key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase());
-
-                // Choose icon and color dynamically
                 let icon: React.ReactNode = <Users size={18} />;
                 let color = "blue";
 
@@ -83,10 +75,35 @@ const SalesDashboard = () => {
         return colors[color] || colors.blue;
     };
 
+    const renderSkeleton = (count: number) => {
+        return Array.from({ length: count }).map((_, idx) => (
+            <div
+                key={idx}
+                className="bg-white rounded-xl shadow-lg p-4 animate-pulse"
+            >
+                <div className="w-10 h-10 bg-slate-300 rounded-xl mb-3"></div>
+                <div className="h-4 bg-slate-300 rounded w-3/4 mb-2"></div>
+                <div className="h-6 bg-slate-300 rounded w-1/2"></div>
+            </div>
+        ));
+    };
+
+    const renderSourceSkeleton = (count: number) => {
+        return Array.from({ length: count }).map((_, idx) => (
+            <div
+                key={idx}
+                className="text-center bg-slate-50 rounded-xl p-3 animate-pulse"
+            >
+                <div className="inline-flex w-10 h-10 bg-slate-300 rounded-xl mb-2"></div>
+                <div className="h-3 bg-slate-300 rounded w-3/4 mx-auto mb-1"></div>
+                <div className="h-4 bg-slate-300 rounded w-1/2 mx-auto"></div>
+            </div>
+        ));
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 p-3 sm:p-4 lg:p-6">
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-6 lg:space-y-8">
-                {/* HEADER */}
                 <div className="text-center lg:text-left">
                     <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-md px-4 py-2 rounded-2xl shadow-md border border-white/20">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -101,9 +118,8 @@ const SalesDashboard = () => {
                     </div>
                 </div>
 
-                {/* STATS GRID */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-                    {statsData.map((item, idx) => (
+                    {isLoading ? renderSkeleton(5) : statsData.map((item, idx) => (
                         <div
                             key={idx}
                             className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-transform hover:-translate-y-1"
@@ -119,14 +135,13 @@ const SalesDashboard = () => {
                     ))}
                 </div>
 
-                {/* LEAD SOURCES */}
                 <div className="bg-white rounded-xl shadow-lg p-4">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <Globe className="text-blue-500" size={18} />
                         Lead Sources
                     </h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                        {sourceData.map((item, idx) => (
+                        {isLoading ? renderSourceSkeleton(sourceData.length) : sourceData.map((item, idx) => (
                             <div
                                 key={idx}
                                 className="text-center bg-slate-50 rounded-xl p-3 hover:shadow-lg transition-transform hover:-translate-y-1"

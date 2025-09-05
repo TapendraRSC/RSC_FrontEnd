@@ -175,7 +175,6 @@ const CustomTable = <T extends { id: number | string }>({
     const [localFilterValues, setLocalFilterValues] = useState<FilterValue>(filterValues);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-    // Memoize filtered data to avoid unnecessary recalculations
     const filteredData = useMemo(() => {
         if (!showFilters || !filters.length) {
             return data;
@@ -183,7 +182,6 @@ const CustomTable = <T extends { id: number | string }>({
         return applyFilters(data, localFilterValues, filters);
     }, [data, localFilterValues, filters, showFilters]);
 
-    // Memoize display data to avoid recalculating column widths unnecessarily
     const displayData = useMemo(() => filteredData, [filteredData]);
 
     // Memoize visible columns
@@ -192,7 +190,6 @@ const CustomTable = <T extends { id: number | string }>({
         [columns, hiddenCols]
     );
 
-    // Memoize column widths, only recalculate if displayData or visibleColumns change
     const columnWidths = useMemo(() => {
         if (!dynamicWidth) return {};
         const widths: { [key: string]: number } = {};
@@ -205,7 +202,6 @@ const CustomTable = <T extends { id: number | string }>({
         return widths;
     }, [displayData, visibleColumns, dynamicWidth]);
 
-    // Update localFilterValues when filterValues prop changes
     useEffect(() => {
         setLocalFilterValues(filterValues);
     }, []);
@@ -293,7 +289,7 @@ const CustomTable = <T extends { id: number | string }>({
                     <div className="min-w-0">
                         <h2 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {displayData.length > 0 ? `${displayData.length} total records` : 'No records available'}
+                            {totalRecords ? `${totalRecords} total records` : 'No records available'}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -440,7 +436,7 @@ const CustomTable = <T extends { id: number | string }>({
                                     const finalClassName = `hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 ${customRowClass}`;
                                     return row && row.id ? (
                                         <tr key={row.id} className={finalClassName}>
-                                            {visibleColumns.map((col: any) => {
+                                            {visibleColumns?.map((col: any) => {
                                                 const accessor = String(col.accessor);
                                                 const cellValue = String(row[col.accessor] || '');
                                                 const maxLength = col.maxLength || globalMaxLength;
@@ -519,7 +515,7 @@ const CustomTable = <T extends { id: number | string }>({
                             </div>
                         )}
                         <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-center">
-                            {displayData.length > 0 ? `${startRecord}-${endRecord} of ${displayData.length}` : 'No results'}
+                            {totalRecords ? `${startRecord}-${endRecord} of ${totalRecords}` : 'No results'}
                         </div>
                         {onPageChange && totalPages > 1 && (
                             <div className="flex items-center justify-center gap-1">

@@ -236,7 +236,7 @@ const Users: React.FC = () => {
                 const res = await dispatch(deleteUser(userToDelete.id));
 
                 if (res.meta.requestStatus === "fulfilled") {
-                    toast.success("User deleted successfully ");
+                    // toast.success("User deleted successfully ");
                     await dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
                     setIsDeleteModalOpen(false);
                 } else {

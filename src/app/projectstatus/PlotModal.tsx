@@ -251,13 +251,13 @@ export default function PlotModal({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Facing <span className="text-red-500">*</span>
+                                    Facing
                                 </label>
 
                                 <Controller
                                     name="facing"
                                     control={control}
-                                    rules={{ required: "Facing is required" }}
+                                    // rules={{ required: "Facing is required" }}
                                     render={({ field }) => (
                                         <CommonDropdown
                                             options={facingOptions}
@@ -269,11 +269,11 @@ export default function PlotModal({
                                     )}
                                 />
 
-                                {errors.facing && (
+                                {/* {errors.facing && (
                                     <p className="mt-1 text-sm text-red-600">
                                         {errors.facing.message as string}
                                     </p>
-                                )}
+                                )} */}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
