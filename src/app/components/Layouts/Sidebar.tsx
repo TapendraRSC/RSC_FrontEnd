@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChevronDown, X } from 'lucide-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import 'react-perfect-scrollbar/dist/css/styles.css'; // ✅ Import CSS
 import AnimateHeight from 'react-animate-height';
 
 import { AppDispatch, RootState } from '../../../../store/store';
@@ -51,19 +52,16 @@ const Sidebar = () => {
     const { sidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
     const [currentMenu, setCurrentMenu] = useState<string>('');
 
-    const { permissions: rolePermissions, loading: rolePermissionsLoading } = useSelector((state: RootState) => state.sidebarPermissions);
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } = useSelector(
+        (state: RootState) => state.sidebarPermissions
+    );
 
     useEffect(() => {
         dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     const menuStructure = {
-        dashboard: {
-            pageName: 'Dashboard',
-            title: 'Dashboard',
-            href: '/',
-            type: 'single'
-        },
+        dashboard: { pageName: 'Dashboard', title: 'Dashboard', href: '/', type: 'single' },
         allMasters: {
             title: 'All Masters',
             type: 'dropdown',
@@ -76,45 +74,18 @@ const Sidebar = () => {
                 { pageName: 'User Permissions', title: 'User Permissions', href: '/rolebasedpermissions' },
                 { pageName: 'Lead Stage Master View', title: 'Lead Stage Master View', href: '/leadstagemasterpage' },
                 { pageName: 'Status Master View', title: 'Status Master View', href: '/statusmasterview' },
+                { pageName: 'Land', title: 'Land', href: '/land', },
+                { pageName: 'Lead Platform', title: 'Lead Platform', href: '/leadplatform', },
             ]
         },
-        // plotStatus: {
-        //     pageName: 'Plot Status',
-        //     title: 'Plot Status',
-        //     href: '/plotstatus',
-        //     type: 'single'
-        // },
-        projectstatus: {
-            pageName: 'Project Status',
-            title: 'Project Status',
-            href: '/projectstatus',
-            type: 'single'
-        },
-        Lead: {
-            pageName: 'Lead',
-            title: 'Lead',
-            href: '/lead',
-            type: 'single'
-        },
-        Land: {
-            pageName: 'Land',
-            title: 'Land',
-            href: '/land',
-            type: 'single'
-        },
-        LeadPlateform: {
-            pageName: 'Lead Platform',
-            title: 'Lead Platform',
-            href: '/leadplatform',
-            type: 'single'
-        }
+        projectstatus: { pageName: 'Project Status', title: 'Project Status', href: '/projectstatus', type: 'single' },
+        Lead: { pageName: 'Lead', title: 'Lead', href: '/lead', type: 'single' },
     };
 
     const isViewPermissionValid = (ids: number[]) => ids.includes(17);
 
     const getFilteredMenu = () => {
         if (!rolePermissions?.permissions) return {};
-
         const filtered: any = {};
 
         Object.entries(menuStructure).forEach(([key, item]: any) => {
@@ -122,7 +93,6 @@ const Sidebar = () => {
                 const permission = rolePermissions.permissions.find(
                     (perm: any) => perm.pageName === item.pageName && isViewPermissionValid(perm.permissionIds)
                 );
-
                 if (permission) filtered[key] = item;
             }
 
@@ -134,9 +104,7 @@ const Sidebar = () => {
                     return permission;
                 });
 
-                if (children.length > 0) {
-                    filtered[key] = { ...item, children };
-                }
+                if (children.length > 0) filtered[key] = { ...item, children };
             }
         });
 
@@ -146,9 +114,7 @@ const Sidebar = () => {
     const filteredMenuItems = getFilteredMenu();
 
     useEffect(() => {
-        if (window.innerWidth < 1024) {
-            setSidebarOpen(false);
-        }
+        if (window.innerWidth < 1024) setSidebarOpen(false);
     }, [pathname]);
 
     useEffect(() => {
@@ -165,10 +131,7 @@ const Sidebar = () => {
             }
         };
 
-        if (sidebarOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
+        if (sidebarOpen) document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [sidebarOpen]);
 
@@ -185,101 +148,131 @@ const Sidebar = () => {
 
     return (
         <>
-            {sidebarOpen && <div onClick={toggleSidebar} className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" />}
-            <nav className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-                <div className="h-full">
+            {sidebarOpen && (
+                <div onClick={toggleSidebar} className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" />
+            )}
+
+            <nav
+                className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    } lg:translate-x-0`}
+            >
+                <div className="flex flex-col h-full">
+                    {/* ---------- Header ---------- */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <Link href="/" className="main-logo flex items-center gap-2">
                             <span className="text-2xl font-semibold text-black dark:text-white">RSC Group</span>
                         </Link>
-                        <button onClick={toggleSidebar} className="lg:hidden h-8 w-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+                        <button
+                            onClick={toggleSidebar}
+                            className="lg:hidden h-8 w-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+                        >
                             <X className="w-5 h-5 text-black dark:text-white" />
                         </button>
                     </div>
 
-                    <PerfectScrollbar className="relative h-[calc(100vh-80px)]">
-                        <ul className="space-y-0.5 p-4 font-semibold">
-                            {filteredMenuItems.dashboard && (
-                                <li className="menu nav-item">
-                                    <Link href={filteredMenuItems.dashboard.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                        <span className="text-black dark:text-white">
-                                            {filteredMenuItems.dashboard.title}
-                                        </span>
-                                    </Link>
-                                </li>
-                            )}
+                    {/* ---------- Scrollable Menu ---------- */}
+                    <div className="flex-1 overflow-hidden">
+                        <PerfectScrollbar
+                            className="h-full"
+                            options={{
+                                wheelSpeed: 2,
+                                wheelPropagation: false,
+                                minScrollbarLength: 20,
+                                suppressScrollX: true,
+                            }}
+                        >
+                            <ul className="space-y-0.5 p-4 font-semibold">
+                                {filteredMenuItems.dashboard && (
+                                    <li className="menu nav-item">
+                                        <Link
+                                            href={filteredMenuItems.dashboard.href}
+                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                        >
+                                            <span className="text-black dark:text-white">
+                                                {filteredMenuItems.dashboard.title}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                )}
 
-                            {filteredMenuItems.allMasters && (
-                                <li className="menu nav-item">
-                                    <button
-                                        onClick={() => setCurrentMenu(currentMenu === filteredMenuItems.allMasters.key ? '' : filteredMenuItems.allMasters.key)}
-                                        className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition ${currentMenu === filteredMenuItems.allMasters.key ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
-                                    >
-                                        <span className="text-black dark:text-white">{filteredMenuItems.allMasters.title}</span>
-                                        <ChevronDown className={`w-5 h-5 text-black dark:text-white transition-transform ${currentMenu === filteredMenuItems.allMasters.key ? 'rotate-0' : '-rotate-90'}`} />
-                                    </button>
+                                {filteredMenuItems.allMasters && (
+                                    <li className="menu nav-item">
+                                        <button
+                                            onClick={() =>
+                                                setCurrentMenu(
+                                                    currentMenu === filteredMenuItems.allMasters.key
+                                                        ? ''
+                                                        : filteredMenuItems.allMasters.key
+                                                )
+                                            }
+                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition ${currentMenu === filteredMenuItems.allMasters.key
+                                                ? 'bg-gray-100 dark:bg-gray-800'
+                                                : ''
+                                                }`}
+                                        >
+                                            <span className="text-black dark:text-white">
+                                                {filteredMenuItems.allMasters.title}
+                                            </span>
+                                            <ChevronDown
+                                                className={`w-5 h-5 text-black dark:text-white transition-transform ${currentMenu === filteredMenuItems.allMasters.key
+                                                    ? 'rotate-0'
+                                                    : '-rotate-90'
+                                                    }`}
+                                            />
+                                        </button>
 
-                                    <AnimateHeight duration={300} height={currentMenu === filteredMenuItems.allMasters.key ? 'auto' : 0}>
-                                        <ul className="sub-menu pl-6 py-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                                            {filteredMenuItems.allMasters.children.map((child: any, index: number) => (
-                                                <li key={index}>
-                                                    <Link href={child.href} className="hover:text-black dark:hover:text-white transition">
-                                                        {child.title}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </AnimateHeight>
-                                </li>
-                            )}
+                                        <AnimateHeight
+                                            duration={300}
+                                            height={
+                                                currentMenu === filteredMenuItems.allMasters.key ? 'auto' : 0
+                                            }
+                                        >
+                                            <ul className="sub-menu pl-6 py-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                {filteredMenuItems.allMasters.children.map(
+                                                    (child: any, index: number) => (
+                                                        <li key={index}>
+                                                            <Link
+                                                                href={child.href}
+                                                                className="hover:text-black dark:hover:text-white transition"
+                                                            >
+                                                                {child.title}
+                                                            </Link>
+                                                        </li>
+                                                    )
+                                                )}
+                                            </ul>
+                                        </AnimateHeight>
+                                    </li>
+                                )}
 
-                            {/* {filteredMenuItems.plotStatus && (
-                                <li className="menu nav-item">
-                                    <Link href={filteredMenuItems.plotStatus.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                        <span className="text-black dark:text-white">
-                                            {filteredMenuItems.plotStatus.title}
-                                        </span>
-                                    </Link>
-                                </li>
-                            )} */}
-                            {filteredMenuItems.projectstatus && (
-                                <li className="menu nav-item">
-                                    <Link href={filteredMenuItems.projectstatus.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                        <span className="text-black dark:text-white">
-                                            {filteredMenuItems.projectstatus.title}
-                                        </span>
-                                    </Link>
-                                </li>
-                            )}
-                            {filteredMenuItems.Lead && (
-                                <li className="menu nav-item">
-                                    <Link href={filteredMenuItems.Lead.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                        <span className="text-black dark:text-white">
-                                            {filteredMenuItems.Lead.title}
-                                        </span>
-                                    </Link>
-                                </li>
-                            )}
-                            {filteredMenuItems.Land && (
-                                <li className="menu nav-item">
-                                    <Link href={filteredMenuItems.Land.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                        <span className="text-black dark:text-white">
-                                            {filteredMenuItems.Land.title}
-                                        </span>
-                                    </Link>
-                                </li>
-                            )}
-                            {filteredMenuItems.LeadPlateform && (
-                                <li className="menu nav-item">
-                                    <Link href={filteredMenuItems.LeadPlateform.href} className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                        <span className="text-black dark:text-white">
-                                            {filteredMenuItems.LeadPlateform.title}
-                                        </span>
-                                    </Link>
-                                </li>
-                            )}
-                        </ul>
-                    </PerfectScrollbar>
+                                {filteredMenuItems.projectstatus && (
+                                    <li className="menu nav-item">
+                                        <Link
+                                            href={filteredMenuItems.projectstatus.href}
+                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                        >
+                                            <span className="text-black dark:text-white">
+                                                {filteredMenuItems.projectstatus.title}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                )}
+
+                                {filteredMenuItems.Lead && (
+                                    <li className="menu nav-item">
+                                        <Link
+                                            href={filteredMenuItems.Lead.href}
+                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                        >
+                                            <span className="text-black dark:text-white">
+                                                {filteredMenuItems.Lead.title}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                )}
+                            </ul>
+                        </PerfectScrollbar>
+                    </div>
                 </div>
             </nav>
         </>

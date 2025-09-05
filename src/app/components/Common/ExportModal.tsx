@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import {
-    X, FileText, Download, Loader2, CheckCircle2, Info, AlertCircle
+    X, FileText, Download, Loader2, CheckCircle2, Info, AlertCircle, Table, FileSpreadsheet
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -9,12 +9,13 @@ import {
     Document,
     Packer,
     Paragraph,
-    Table,
+    Table as DocxTable,
     TableCell,
     TableRow,
     WidthType,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
 
 interface ExportModalProps {
     isOpen: boolean;
@@ -32,7 +33,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
     columns,
 }) => {
     const [isExporting, setIsExporting] = useState(false);
-    const [exportType, setExportType] = useState<'pdf' | 'word'>('pdf');
+    const [exportType, setExportType] = useState<'pdf' | 'word' | 'excel' | 'csv'>('pdf');
     const [error, setError] = useState<string | null>(null);
 
     if (!isOpen) return null;
@@ -53,35 +54,38 @@ const ExportModal: React.FC<ExportModalProps> = ({
         setError(null);
         try {
             const pdf = new jsPDF('l', 'mm', 'a4');
-            pdf.setFontSize(18);
+            pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('Leads Export Report', 14, 15);
-            pdf.setFontSize(11);
+            pdf.text('Leads Export Report', 14, 20);
+            pdf.setFontSize(10);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(`Generated on: ${new Date().toLocaleString()}`, 14, 25);
-            pdf.text(`Total Records: ${data.length}`, 14, 32);
-
+            pdf.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+            pdf.text(`Total Records: ${data.length}`, 14, 38);
             const tableColumns = exportableColumns.map((col) => col.label);
             const tableRows = data.map((row) =>
                 exportableColumns.map((col) => formatDataForExport(row, col.accessor))
             );
-
             autoTable(pdf, {
                 head: [tableColumns],
                 body: tableRows,
-                startY: 42,
-                styles: { fontSize: 9, cellPadding: 2, font: 'helvetica' },
+                startY: 50,
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2,
+                    font: 'helvetica',
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                },
                 headStyles: {
-                    fillColor: [37, 99, 235],
+                    fillColor: [59, 130, 246],
                     textColor: 255,
                     fontStyle: 'bold',
                     font: 'helvetica',
                 },
-                alternateRowStyles: { fillColor: [245, 245, 245] },
-                margin: { top: 42, right: 14, bottom: 14, left: 14 },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                margin: { top: 50, right: 10, bottom: 10, left: 10 },
                 tableWidth: 'auto',
             });
-
             pdf.save(`${fileName}.pdf`);
         } catch (error) {
             console.error(error);
@@ -130,7 +134,6 @@ const ExportModal: React.FC<ExportModalProps> = ({
                         })
                 ),
             ];
-
             const doc = new Document({
                 styles: {
                     paragraphStyles: [
@@ -150,7 +153,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                             new Paragraph({ text: `Generated on: ${new Date().toLocaleString()}` }),
                             new Paragraph({ text: `Total Records: ${data.length}` }),
                             new Paragraph({ text: '' }),
-                            new Table({
+                            new DocxTable({
                                 rows: tableRows,
                                 width: { size: 100, type: WidthType.PERCENTAGE },
                             }),
@@ -158,7 +161,6 @@ const ExportModal: React.FC<ExportModalProps> = ({
                     },
                 ],
             });
-
             const blob = await Packer.toBlob(doc);
             saveAs(blob, `${fileName}.docx`);
         } catch (error) {
@@ -170,77 +172,176 @@ const ExportModal: React.FC<ExportModalProps> = ({
         }
     };
 
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        setError(null);
+        try {
+            const workbook = XLSX.utils.book_new();
+            const excelData = data.map(row => {
+                const excelRow: any = {};
+                exportableColumns.forEach(col => {
+                    excelRow[col.label] = formatDataForExport(row, col.accessor);
+                });
+                return excelRow;
+            });
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const colWidths = exportableColumns.map(col => ({
+                wch: Math.max(col.label.length, 15)
+            }));
+            worksheet['!cols'] = colWidths;
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Leads Data');
+            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        } catch (error) {
+            console.error(error);
+            setError('Error generating Excel file. Please try again.');
+        } finally {
+            setIsExporting(false);
+            onClose();
+        }
+    };
+
+    const exportToCSV = async () => {
+        setIsExporting(true);
+        setError(null);
+        try {
+            const csvHeaders = exportableColumns.map(col => col.label).join(',');
+            const csvRows = data.map(row =>
+                exportableColumns.map(col => {
+                    const value = formatDataForExport(row, col.accessor);
+                    return value.includes(',') || value.includes('"')
+                        ? `"${value.replace(/"/g, '""')}"`
+                        : value;
+                }).join(',')
+            );
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            saveAs(blob, `${fileName}.csv`);
+        } catch (error) {
+            console.error(error);
+            setError('Error generating CSV file. Please try again.');
+        } finally {
+            setIsExporting(false);
+            onClose();
+        }
+    };
+
     const handleExport = () => {
         if (data.length === 0) {
             setError('No data to export.');
             return;
         }
-        if (exportType === 'pdf') exportToPDF();
-        else exportToWord();
+        switch (exportType) {
+            case 'pdf':
+                exportToPDF();
+                break;
+            case 'word':
+                exportToWord();
+                break;
+            case 'excel':
+                exportToExcel();
+                break;
+            case 'csv':
+                exportToCSV();
+                break;
+        }
     };
 
+    const exportOptions = [
+        {
+            type: 'pdf',
+            label: 'PDF',
+            color: 'text-red-500',
+            bgColor: 'bg-red-50 border-red-200',
+            icon: <FileText className="w-4 h-4 sm:w-5 sm:h-5" />,
+            gradient: 'from-red-500 to-red-600'
+        },
+        {
+            type: 'word',
+            label: 'Word',
+            color: 'text-blue-500',
+            bgColor: 'bg-blue-50 border-blue-200',
+            icon: <FileText className="w-4 h-4 sm:w-5 sm:h-5" />,
+            gradient: 'from-blue-500 to-blue-600'
+        },
+        {
+            type: 'excel',
+            label: 'Excel',
+            color: 'text-green-500',
+            bgColor: 'bg-green-50 border-green-200',
+            icon: <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />,
+            gradient: 'from-green-500 to-green-600'
+        },
+        // {
+        //     type: 'csv',
+        //     label: 'CSV',
+        //     color: 'text-orange-500',
+        //     bgColor: 'bg-orange-50 border-orange-200',
+        //     icon: <Table className="w-4 h-4 sm:w-5 sm:h-5" />,
+        //     gradient: 'from-orange-500 to-orange-600'
+        // },
+    ];
+
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{ margin: "0px" }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 animate-fade-in scale-98 hover:scale-100 transition-all duration-300">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4" style={{ margin: "0px" }}>
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md sm:max-w-2xl mx-2 sm:mx-0 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-start justify-between mb-6">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                            <Download className="w-6 h-6 text-blue-600" />
-                            Export Data
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Export your leads data as a professional PDF or Word document.
-                        </p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-1.5 rounded-lg">
+                            <Download className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                        </div>
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-800">Export Data</h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1.5 rounded-lg transition-colors"
                         disabled={isExporting}
                     >
-                        <X className="w-7 h-7" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded flex items-center gap-2">
-                        <AlertCircle className="w-5 h-5" />
-                        <span className="text-sm">{error}</span>
+                    <div className="p-2 sm:p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg mx-3 sm:mx-4 mb-3 text-xs sm:text-sm">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span>{error}</span>
+                        </div>
                     </div>
                 )}
 
                 {/* Export Options */}
-                <div className="space-y-4 mb-6">
-                    <label className="block text-sm font-medium text-gray-700">
+                <div className="px-3 sm:px-4 pb-3">
+                    <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
                         Select Export Format
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                        {[
-                            { type: 'pdf', label: 'PDF Document', desc: 'Best for printing and sharing.', color: 'text-red-500', icon: <FileText className="w-6 h-6" /> },
-                            { type: 'word', label: 'Word Document', desc: 'Editable format for reports.', color: 'text-blue-500', icon: <FileText className="w-6 h-6" /> },
-                        ].map((opt) => (
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                        {exportOptions.map((opt) => (
                             <label
                                 key={opt.type}
-                                className={`flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-all ${exportType === opt.type
-                                    ? 'border-blue-500 bg-blue-50 shadow-md'
+                                className={`group relative flex flex-col p-2 sm:p-3 border rounded-lg cursor-pointer transition-all ${exportType === opt.type
+                                    ? `${opt.bgColor} shadow-sm`
                                     : 'border-gray-200 hover:bg-gray-50'
                                     }`}
                             >
-                                <div className="flex items-center mb-2">
-                                    {opt.icon && <div className={`mr-2 ${opt.color}`}>{opt.icon}</div>}
-                                    <span className="font-medium">{opt.label}</span>
+                                <div className="flex items-center justify-between mb-1">
+                                    <div className={`${opt.color} transition-transform group-hover:scale-110`}>
+                                        {opt.icon}
+                                    </div>
                                     {exportType === opt.type && (
-                                        <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto" />
+                                        <div className="bg-green-500 rounded-full p-0.5">
+                                            <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                                        </div>
                                     )}
                                 </div>
-                                <p className="text-xs text-gray-500">{opt.desc}</p>
+                                <h3 className="font-medium text-xs sm:text-sm text-gray-800">{opt.label}</h3>
                                 <input
                                     type="radio"
                                     name="exportType"
                                     value={opt.type}
                                     checked={exportType === opt.type}
-                                    onChange={(e) => setExportType(e.target.value as 'pdf' | 'word')}
+                                    onChange={(e) => setExportType(e.target.value as 'pdf' | 'word' | 'excel' | 'csv')}
                                     className="hidden"
                                     disabled={isExporting}
                                 />
@@ -249,43 +350,57 @@ const ExportModal: React.FC<ExportModalProps> = ({
                     </div>
 
                     {/* Export Details */}
-                    <div className="bg-gray-50 p-5 rounded-xl text-sm text-gray-700 shadow-inner">
-                        <p className="font-medium mb-3 flex items-center gap-2">
-                            <Info className="w-4 h-4 text-blue-500" /> Export Details
-                        </p>
-                        <ul className="space-y-1 pl-2">
-                            <li>• Total Records: <span className="font-semibold">{data.length}</span></li>
-                            <li>• Columns: <span className="font-semibold">{exportableColumns.length}</span></li>
-                            <li>• Selected Format: <span className="font-semibold">{exportType.toUpperCase()}</span></li>
-                        </ul>
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mx-3 sm:mx-4 my-3">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" />
+                            <h3 className="font-medium text-xs sm:text-sm">Export Summary</h3>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="text-center">
+                                <div className="text-sm sm:text-base font-bold text-blue-600">{data.length}</div>
+                                <div className="text-xs text-gray-600">Records</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-sm sm:text-base font-bold text-green-600">{exportableColumns.length}</div>
+                                <div className="text-xs text-gray-600">Columns</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-sm sm:text-base font-bold text-purple-600">{exportType.toUpperCase()}</div>
+                                <div className="text-xs text-gray-600">Format</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div className="flex gap-4">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
-                        disabled={isExporting}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleExport}
-                        disabled={isExporting || data.length === 0}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg shadow-md transition-colors font-medium ${isExporting || data.length === 0 ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-                    >
-                        {isExporting ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Exporting...
-                            </>
-                        ) : (
-                            <>
-                                <Download className="w-5 h-5" />
-                                Export {exportType.toUpperCase()}
-                            </>
-                        )}
-                    </button>
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2 p-3 sm:p-4">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs sm:text-sm font-medium"
+                            disabled={isExporting}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleExport}
+                            disabled={isExporting || data.length === 0}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs sm:text-sm font-medium ${isExporting || data.length === 0
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-md'
+                                }`}
+                        >
+                            {isExporting ? (
+                                <>
+                                    <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                                    Exporting...
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                    Export
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

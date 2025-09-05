@@ -487,13 +487,11 @@ const LeadComponent: React.FC = () => {
         setCurrentPage(1);
     };
 
-    // Filter data based on filterValues
     const filteredData = useMemo(() => {
         return normalizedLeads.filter((lead) => {
             return Object.entries(filterValues).every(([key, value]) => {
                 if (!value) return true;
                 if (key === 'createdAt') {
-                    // Handle date range filter
                     return true; // Placeholder: Implement your date range logic here
                 }
                 if (Array.isArray(value)) {
@@ -504,7 +502,6 @@ const LeadComponent: React.FC = () => {
         });
     }, [normalizedLeads, filterValues]);
 
-    // Sort filtered data
     const sortedData = useMemo(() => {
         const dataArray = Array.isArray(filteredData) ? filteredData : [];
         if (!sortConfig) return dataArray;
@@ -528,31 +525,30 @@ const LeadComponent: React.FC = () => {
                     <p className="text-sm text-gray-600">Manage leads with advanced filtering</p>
                 </div>
                 <div className="flex gap-3">
-                    {/* Add Export Button */}
-                    {hasPermission(24, 'export') && (
+                    {hasPermission(24, "export") && (
                         <label
                             onClick={handleExport}
-                            // disabled={sortedData.length === 0}
-                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base
-               bg-purple-500 hover:bg-purple-600 text-white font-medium
-               shadow-md hover:shadow-lg transition-all duration-200
-                cursor-pointer"
+                            className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base
+                 bg-purple-500 hover:bg-purple-600 text-white font-medium
+                 shadow-md hover:shadow-lg transition-all duration-200
+                 cursor-pointer"
                         >
                             <Download className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Export
+                            <span className="hidden sm:inline">Export</span>
                         </label>
                     )}
-                    {hasPermission(20, 'upload') && (
+
+                    {hasPermission(20, "upload") && (
                         <label
-                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
-                     bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                            className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                   bg-green-500 hover:bg-green-600 text-white cursor-pointer"
                         >
                             {uploadLoading ? (
                                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                             ) : (
                                 <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                             )}
-                            Upload
+                            <span className="hidden sm:inline">Upload</span>
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -562,14 +558,15 @@ const LeadComponent: React.FC = () => {
                             />
                         </label>
                     )}
+
                     <div data-tooltip-id="add-permission-tooltip">
-                        {hasPermission(21, 'add') && (
+                        {hasPermission(21, "add") && (
                             <button
                                 onClick={handleAdd}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
+                                className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
                             >
-                                <Plus className="w-5 h-5" />
-                                Add New
+                                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="hidden sm:inline">Add New</span>
                             </button>
                         )}
                     </div>
