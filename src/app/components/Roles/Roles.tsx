@@ -8,6 +8,8 @@ import RolesModal from './RolesModal';
 import { getRoles, addRole, updateRole, deleteRole } from '../../../../store/roleSlice';
 import { toast } from 'react-toastify';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
+import { fetchPermissions } from '../../../../store/permissionSlice';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 type Role = {
     id: number;
@@ -147,6 +149,36 @@ export default function RolesPage() {
         },
     ];
 
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
+        useSelector((state: RootState) => state.sidebarPermissions);
+
+    const { list: allPermissions } = useSelector(
+        (state: RootState) => state.permissions
+    );
+
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar());
+    }, [dispatch]);
+
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Roles'
+        );
+        return leadPerm?.permissionIds || [];
+    };
+
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        if (!leadPermissionIds.includes(permId)) return false;
+
+        const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
+        if (!matched) return false;
+
+        return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
+    };
+
     const RoleCard = ({ role }: { role: Role }) => (
         <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
@@ -167,20 +199,24 @@ export default function RolesPage() {
             </div>
 
             <div className="flex gap-2 pt-3 border-t border-gray-100">
-                <button
-                    onClick={() => handleEdit(role)}
-                    className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                </button>
-                <button
-                    onClick={() => handleDelete(role)}
-                    className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                </button>
+                {hasPermission(22, "edit") && (
+                    <button
+                        onClick={() => handleEdit(role)}
+                        className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Pencil className="w-4 h-4" />
+                        Edit
+                    </button>
+                )}
+                {hasPermission(4, "delete") && (
+                    <button
+                        onClick={() => handleDelete(role)}
+                        className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -202,25 +238,27 @@ export default function RolesPage() {
                         >
                             {viewMode === 'table' ? <Grid3X3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
                         </button>
-                        <button
+                        {/* <button
                             onClick={() => setShowMobileFilters(!showMobileFilters)}
                             className="p-2 text-gray-500 hover:text-gray-700"
                             title="Menu"
                         >
                             <Menu className="w-5 h-5" />
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             </div>
 
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
-                <button
-                    onClick={handleAdd}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add New Role
-                </button>
+                {hasPermission(21, "add") && (
+                    <button
+                        onClick={handleAdd}
+                        className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add New Role
+                    </button>
+                )}
             </div>
 
             <div className="hidden lg:block p-6">
@@ -234,13 +272,15 @@ export default function RolesPage() {
                         </p>
                     </div>
                     <div>
-                        <button
-                            onClick={handleAdd}
-                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Role
-                        </button>
+                        {hasPermission(21, "add") && (
+                            <button
+                                onClick={handleAdd}
+                                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Role
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -335,20 +375,24 @@ export default function RolesPage() {
                             columns={columns}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    <button
-                                        onClick={() => handleEdit(row)}
-                                        className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
-                                        title="Edit"
-                                    >
-                                        <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(row)}
-                                        className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {hasPermission(22, "edit") && (
+                                        <button
+                                            onClick={() => handleEdit(row)}
+                                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
+                                    {hasPermission(4, "delete") && (
+                                        <button
+                                            onClick={() => handleDelete(row)}
+                                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             )}
                             searchValue={searchValue}

@@ -3,7 +3,7 @@
 import { use } from "react";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Loader2, Pencil, Plus, Trash2, Upload, Filter, Grid3X3, List, Menu } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Upload, Filter, Grid3X3, List, Menu, Download } from "lucide-react";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { addPlot, deletePlot, fetchPlots, updatePlot, uploadPlotData } from "../../../../store/plotSlice";
 import PlotModal from "../PlotModal";
@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 import { fetchPermissions } from "../../../../store/permissionSlice";
 import { fetchRolePermissionsSidebar } from "../../../../store/sidebarPermissionSlice";
+import ExportModal from "../../components/Common/ExportModal";
 
 export default function ProjectStatusDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -42,6 +43,7 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [fileName, setFileName] = useState("");
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     useEffect(() => {
         if (!id) return; // wait for id
@@ -427,7 +429,13 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                             Add New
                         </button>
                     )}
-
+                    <button
+                        onClick={() => setIsExportModalOpen(true)}
+                        className="flex items-center justify-center p-2.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+                        title="Export"
+                    >
+                        <Download className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
 
@@ -442,6 +450,15 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                         </p>
                     </div>
                     <div className="flex gap-2">
+                        <button
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                   bg-purple-500 hover:bg-purple-600 text-white cursor-pointer"
+                            title="Export"
+                        >
+                            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Export
+                        </button>
                         {hasPermission(20, "upload") && (
                             <button
                                 onClick={handleUploadClick}
@@ -637,6 +654,14 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                 previewData={previewData}
                 isLoading={uploadLoading}
                 totalRows={previewData.length}
+            />
+
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                data={plots}
+                fileName={`plots_export_${new Date().toISOString().split('T')[0]}`}
+                columns={columns}
             />
         </div>
     );

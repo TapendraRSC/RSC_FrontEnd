@@ -2,13 +2,16 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTable from '../Common/CustomTable';
-import { Plus, Pencil, Trash2, Grid3X3, List, Menu, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Grid3X3, List, Menu, Search, Download } from 'lucide-react';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { exportUsers, deleteUser, updateUser, addUser } from '../../../../store/userSlice';
 import { getRoles } from '../../../../store/roleSlice';
 import UsersModal from './UsersModal';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import { toast } from 'react-toastify';
+import ExportModal from '../Common/ExportModal';
+import { fetchPermissions } from '../../../../store/permissionSlice';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 interface User {
     id: number;
@@ -53,9 +56,9 @@ const Users: React.FC = () => {
     const [editingUser, setEditingUser] = useState<User | any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     useEffect(() => {
         dispatch(getRoles({ page: 1, limit: 100, searchValue: '' }));
@@ -271,6 +274,14 @@ const Users: React.FC = () => {
         return foundRole ? foundRole.roleType : `Role ${roleId}`;
     };
 
+    const handleExport = () => {
+        if (sortedData.length === 0) {
+            toast.error('No data to export');
+            return;
+        }
+        setIsExportModalOpen(true);
+    };
+
     const columns: any = [
         {
             label: 'ID',
@@ -362,6 +373,38 @@ const Users: React.FC = () => {
         },
     ];
 
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
+        useSelector((state: RootState) => state.sidebarPermissions);
+
+    const { list: allPermissions } = useSelector(
+        (state: RootState) => state.permissions
+    );
+
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar());
+    }, [dispatch]);
+
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'User Management'
+        );
+        return leadPerm?.permissionIds || [];
+    };
+
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        // rolePermissions se id check
+        if (!leadPermissionIds.includes(permId)) return false;
+
+        // master list se naam check
+        const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
+        if (!matched) return false;
+
+        return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
+    };
+
     // Mobile card component for user items
     const UserCard = ({ user }: { user: User }) => (
         <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
@@ -403,20 +446,24 @@ const Users: React.FC = () => {
             )}
 
             <div className="flex gap-2 pt-3 border-t border-gray-100">
-                <button
-                    onClick={() => handleEdit(user)}
-                    className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                </button>
-                <button
-                    onClick={() => handleDelete(user)}
-                    className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                </button>
+                {hasPermission(22, "edit") && (
+                    <button
+                        onClick={() => handleEdit(user)}
+                        className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Pencil className="w-4 h-4" />
+                        Edit
+                    </button>
+                )}
+                {hasPermission(4, "delete") && (
+                    <button
+                        onClick={() => handleDelete(user)}
+                        className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -451,13 +498,29 @@ const Users: React.FC = () => {
 
             {/* Mobile Action Button */}
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
-                <button
-                    onClick={handleAdd}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add New User
-                </button>
+                <div className="flex items-center gap-2">
+                    {/* Add User Button */}
+                    {hasPermission(21, "add") && (
+                        <button
+                            onClick={handleAdd}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
+                bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg duration-200"
+                        >
+                            <Plus className="w-5 h-5" />
+                            <span>Add New User</span>
+                        </button>
+                    )}
+
+                    {hasPermission(24, "export") && (
+                        <button
+                            onClick={handleExport}
+                            className="flex items-center justify-center gap-2 p-2.5 rounded-lg 
+                bg-purple-500 hover:bg-purple-600 text-white transition-colors shadow-md hover:shadow-lg duration-200"
+                        >
+                            <Download className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Desktop Header */}
@@ -471,24 +534,37 @@ const Users: React.FC = () => {
                             Manage system users and permissions
                         </p>
                     </div>
-                    <div>
-                        <button
-                            onClick={handleAdd}
-                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add User
-                        </button>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        {hasPermission(24, "export") && (
+
+                            <button
+                                onClick={handleExport}
+                                className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base
+            bg-purple-500 hover:bg-purple-600 text-white font-medium
+            shadow-md hover:shadow-lg transition-all duration-200"
+                            >
+                                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="hidden sm:inline">Export</span>
+                            </button>
+                        )}
+
+                        {hasPermission(21, "add") && (
+                            <button
+                                onClick={handleAdd}
+                                className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white 
+            px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg duration-200"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline">Add User</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Content Area */}
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
-                {/* Mobile Grid View */}
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
-                        {/* Mobile Search */}
                         <div className="relative">
                             <input
                                 type="text"
@@ -569,7 +645,6 @@ const Users: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Table View - Mobile & Desktop */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                         <CustomTable<User>
@@ -597,20 +672,25 @@ const Users: React.FC = () => {
                             onColumnVisibilityChange={handleColumnVisibilityChange}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    <button
-                                        onClick={() => handleEdit(row)}
-                                        className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
-                                        title="Edit"
-                                    >
-                                        <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(row)}
-                                        className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </button>
+                                    {hasPermission(22, "edit") && (
+                                        <button
+                                            onClick={() => handleEdit(row)}
+                                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
+
+                                    {hasPermission(4, "delete") && (
+                                        <button
+                                            onClick={() => handleDelete(row)}
+                                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         />
@@ -632,6 +712,14 @@ const Users: React.FC = () => {
                 title="Confirm Deletion"
                 message={`Are you sure you want to delete the user "${userToDelete?.name}"?`}
                 Icon={Trash2}
+            />
+
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                data={sortedData}
+                fileName={`leads_export_${new Date().toISOString().split('T')[0]}`}
+                columns={columns}
             />
         </div>
     );

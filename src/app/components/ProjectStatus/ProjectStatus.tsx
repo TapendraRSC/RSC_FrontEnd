@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState, useMemo } from 'react'
-import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, FileText, Eye } from 'lucide-react'
+import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, FileText, Eye, Download } from 'lucide-react'
 import CustomTable from '../Common/CustomTable'
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal'
 import ProjectStatusModal from './ProjectStatusModal'
@@ -17,6 +17,7 @@ import {
 import Link from 'next/link'
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice'
 import { fetchPermissions } from '../../../../store/permissionSlice'
+import ExportModal from '../Common/ExportModal'
 
 type SortConfig = {
     key: string;
@@ -37,6 +38,7 @@ const ProjectStatusComponent: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false); // State for ExportModal
 
     const { list, loading, error } = useSelector((state: RootState) => state.projectStatus);
     const projectStatusList: ProjectStatus[] = list?.projects || [];
@@ -113,15 +115,12 @@ const ProjectStatusComponent: React.FC = () => {
 
     const sortedData = useMemo(() => {
         if (!sortConfig) return projectStatusList;
-
         return [...projectStatusList].sort((a, b) => {
             const aVal = a[sortConfig.key as keyof ProjectStatus];
             const bVal = b[sortConfig.key as keyof ProjectStatus];
-
             if (typeof aVal === 'number' && typeof bVal === 'number') {
                 return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
             }
-
             const comparison = String(aVal).localeCompare(String(bVal));
             return sortConfig.direction === 'asc' ? comparison : -comparison;
         });
@@ -325,21 +324,29 @@ const ProjectStatusComponent: React.FC = () => {
                 </div>
             </div>
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
-                {hasPermission(21, "add") && (
+                <div className="flex items-center gap-2">
+                    {hasPermission(21, "add") && (
+                        <button
+                            onClick={handleAdd}
+                            disabled={isSaving}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
+                    ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+                        >
+                            {isSaving ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Plus className="w-5 h-5" />
+                            )}
+                            Add New
+                        </button>
+                    )}
                     <button
-                        onClick={handleAdd}
-                        disabled={isSaving}
-                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
-                            ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+                        onClick={() => setIsExportModalOpen(true)}
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
                     >
-                        {isSaving ? (
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <Plus className="w-5 h-5" />
-                        )}
-                        Add New Project
+                        <Download className="w-5 h-5" />
                     </button>
-                )}
+                </div>
             </div>
             <div className="hidden lg:block p-6">
                 <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -349,21 +356,30 @@ const ProjectStatusComponent: React.FC = () => {
                         </h1>
                         <p className="text-sm sm:text-base text-gray-600">Manage project statuses</p>
                     </div>
-                    {hasPermission(21, "add") && (
+                    <div className="flex gap-2">
                         <button
-                            onClick={handleAdd}
-                            disabled={isSaving}
-                            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
-                                ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors text-sm sm:text-base"
                         >
-                            {isSaving ? (
-                                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                            )}
-                            Add New
+                            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Export
                         </button>
-                    )}
+                        {hasPermission(21, "add") && (
+                            <button
+                                onClick={handleAdd}
+                                disabled={isSaving}
+                                className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                                    ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+                            >
+                                {isSaving ? (
+                                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                                )}
+                                Add New
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
@@ -519,6 +535,13 @@ const ProjectStatusComponent: React.FC = () => {
                 title="Confirm Deletion"
                 message={`Are you sure you want to delete "${statusToDelete?.title}"?`}
                 Icon={Trash2}
+            />
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                data={sortedData}
+                fileName={`project_status_export_${new Date().toISOString().split('T')[0]}`}
+                columns={columns}
             />
         </div>
     );

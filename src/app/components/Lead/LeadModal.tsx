@@ -217,7 +217,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               register={register}
               errors={errors}
               clearErrors={clearErrors}
-            // rules={{ required: "Name is required" }}
             />
             <FormInput
               name="email"
@@ -231,13 +230,21 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             <FormInput
               name="phone"
               label="Phone"
-              type="tel"
+              type="number"
               required
               placeholder="Enter Phone"
               register={register}
               errors={errors}
               clearErrors={clearErrors}
-            // rules={{ required: "Phone is required" }}
+              maxLength={10}
+              validation={{
+                required: "Phone number is required",
+                validate: {
+                  is10Digits: (value) =>
+                    (value && value.toString().length === 10) ||
+                    "Phone number must be exactly 10 digits",
+                },
+              }}
             />
             <FormInput
               name="city"
@@ -257,9 +264,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             />
           </div>
 
-          {/* Dropdowns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Assigned To */}
             <div>
               <label className="block text-sm font-medium mb-1">
                 Assigned To <span className="text-red-500">*</span>
@@ -285,7 +290,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               )}
             </div>
 
-            {/* Platform */}
             <div>
               <label className="block text-sm font-medium mb-1">
                 Platform <span className="text-red-500">*</span>
@@ -311,7 +315,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               )}
             </div>
 
-            {/* Project */}
             <div>
               <label className="block text-sm font-medium mb-1">
                 Project <span className="text-red-500">*</span>
@@ -337,7 +340,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               )}
             </div>
 
-            {/* Plot */}
             <div>
               <label className="block text-sm font-medium mb-1">Plot</label>
               <CommonDropdown
@@ -349,7 +351,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
             </div>
 
-            {/* Lead Stage */}
             <div>
               <label className="block text-sm font-medium mb-1">
                 Lead Stage <span className="text-red-500">*</span>
