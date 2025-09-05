@@ -1,7 +1,6 @@
 'use client';
-
 import React, { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import CommonDropdown from "../Common/CommonDropdown";
 import FormInput from "../Common/FormInput";
@@ -32,7 +31,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { data: users = [], loading: usersLoading } = useSelector(
     (state: RootState) => state.users
   );
-
   const actualUsersData = useMemo(() => {
     if (Array.isArray(users)) return users;
     if (users?.data) {
@@ -45,7 +43,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { leadPlatforms, loading: platformLoading } = useSelector(
     (state: RootState) => state.leadPlateform
   );
-
   const actualPlatformOptions = useMemo(() => {
     return leadPlatforms.map((platform: any) => ({
       label: platform.platformType,
@@ -56,7 +53,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { list: projectList, loading: statusLoading } = useSelector(
     (state: RootState) => state.projectStatus
   );
-
   const projectStatusOptions = useMemo(() => {
     const projects = projectList?.projects || [];
     return projects.map((p: any) => ({
@@ -68,7 +64,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { plots, loading: plotsLoading } = useSelector(
     (state: RootState) => state.plotSlice
   );
-
   const plotOptions = useMemo(() => {
     return plots.map((plot: any) => ({
       label: plot.plotNumber,
@@ -79,7 +74,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { list: stageList, loading: stageLoading } = useSelector(
     (state: RootState) => state.leadStages
   );
-
   const leadStageOptions = useMemo(() => {
     const stages = stageList || [];
     return stages.map((s: any) => ({
@@ -91,7 +85,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { list: statusList, loading: leadStatusLoading } = useSelector(
     (state: RootState) => state.statuses
   );
-
   const leadStatusOptions = useMemo(() => {
     const statuses = statusList || [];
     return statuses.map((s: any) => ({
@@ -117,7 +110,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }));
   }, [actualUsersData]);
 
-  // Get logged-in user from localStorage
   const currentUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "{}");
@@ -126,7 +118,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, []);
 
-  // Filter AssignedTo options based on roleId
   const filteredAssignedToOptions = useMemo(() => {
     if (currentUser.roleId === 36) {
       const userOption = assignedToOptions.find(
@@ -145,6 +136,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     clearErrors,
     setValue,
     watch,
+    control,
   } = useForm({
     defaultValues: {
       name: "",
@@ -161,7 +153,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     },
   });
 
-  // Set default AssignedTo if roleId is 36
   useEffect(() => {
     if (currentUser.roleId === 36) {
       setValue("assignedTo", currentUser.id);
@@ -181,7 +172,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   }, [initialData, isOpen, reset]);
 
   const selectedProjectId = watch("projectStatusId");
-
   useEffect(() => {
     if (selectedProjectId) {
       dispatch(
@@ -216,84 +206,143 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             ×
           </button>
         </div>
-
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormInput name="name" label="Name" required placeholder="Enter Name"
-              register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput name="email" label="Email" type="email" placeholder="Enter Email"
-              register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput name="phone" label="Phone" type="tel" required placeholder="Enter Phone"
-              register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput name="city" label="City" placeholder="Enter City"
-              register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput name="state" label="State" placeholder="Enter State"
-              register={register} errors={errors} clearErrors={clearErrors} />
+            <FormInput
+              name="name"
+              label="Name"
+              required
+              placeholder="Enter Name"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            // rules={{ required: "Name is required" }}
+            />
+            <FormInput
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="Enter Email"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+            <FormInput
+              name="phone"
+              label="Phone"
+              type="tel"
+              required
+              placeholder="Enter Phone"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            // rules={{ required: "Phone is required" }}
+            />
+            <FormInput
+              name="city"
+              label="City"
+              placeholder="Enter City"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+            <FormInput
+              name="state"
+              label="State"
+              placeholder="Enter State"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
           </div>
 
           {/* Dropdowns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Assigned To */}
             <div>
-              <label className="block text-sm font-medium mb-1">Assigned To *</label>
-              <CommonDropdown
-                options={filteredAssignedToOptions}
-                selected={
-                  watch("assignedTo")
-                    ? filteredAssignedToOptions.find(
-                      (opt: any) => opt.value === watch("assignedTo")
-                    ) || null
-                    : null
-                }
-                onChange={(val: any) => setValue("assignedTo", val?.value || null)}
-                placeholder={usersLoading ? "Loading..." : "Select Assignee"}
-                error={!!errors.assignedTo}
+              <label className="block text-sm font-medium mb-1">
+                Assigned To <span className="text-red-500">*</span>
+              </label>
+              <Controller
+                name="assignedTo"
+                control={control}
+                rules={{ required: "Assigned To is required" }}
+                render={({ field }) => (
+                  <CommonDropdown
+                    options={filteredAssignedToOptions}
+                    selected={filteredAssignedToOptions.find((opt: any) => opt.value === field.value) || null}
+                    onChange={(value: any) => field.onChange(value?.value || null)}
+                    placeholder={usersLoading ? "Loading..." : "Select Assignee"}
+                    error={!!errors.assignedTo}
+                  />
+                )}
               />
+              {errors.assignedTo && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.assignedTo.message as string}
+                </p>
+              )}
             </div>
 
             {/* Platform */}
             <div>
-              <label className="block text-sm font-medium mb-1">Platform *</label>
-              <CommonDropdown
-                options={actualPlatformOptions}
-                selected={
-                  watch("platformId")
-                    ? actualPlatformOptions.find((opt) => opt.value === watch("platformId")) || null
-                    : null
-                }
-                onChange={(val: any) => setValue("platformId", val?.value || null)}
-                placeholder={platformLoading ? "Loading..." : "Select Platform"}
-                error={!!errors.platformId}
+              <label className="block text-sm font-medium mb-1">
+                Platform <span className="text-red-500">*</span>
+              </label>
+              <Controller
+                name="platformId"
+                control={control}
+                rules={{ required: "Platform is required" }}
+                render={({ field }) => (
+                  <CommonDropdown
+                    options={actualPlatformOptions}
+                    selected={actualPlatformOptions.find((opt: any) => opt.value === field.value) || null}
+                    onChange={(value: any) => field.onChange(value?.value || null)}
+                    placeholder={platformLoading ? "Loading..." : "Select Platform"}
+                    error={!!errors.platformId}
+                  />
+                )}
               />
+              {errors.platformId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.platformId.message as string}
+                </p>
+              )}
             </div>
 
             {/* Project */}
             <div>
-              <label className="block text-sm font-medium mb-1">Project *</label>
-              <CommonDropdown
-                options={projectStatusOptions}
-                selected={
-                  watch("projectStatusId")
-                    ? projectStatusOptions.find((opt) => opt.value === watch("projectStatusId")) || null
-                    : null
-                }
-                onChange={(val: any) => setValue("projectStatusId", val?.value || null)}
-                placeholder={statusLoading ? "Loading..." : "Select Project"}
-                error={!!errors.projectStatusId}
+              <label className="block text-sm font-medium mb-1">
+                Project <span className="text-red-500">*</span>
+              </label>
+              <Controller
+                name="projectStatusId"
+                control={control}
+                rules={{ required: "Project is required" }}
+                render={({ field }) => (
+                  <CommonDropdown
+                    options={projectStatusOptions}
+                    selected={projectStatusOptions.find((opt: any) => opt.value === field.value) || null}
+                    onChange={(value: any) => field.onChange(value?.value || null)}
+                    placeholder={statusLoading ? "Loading..." : "Select Project"}
+                    error={!!errors.projectStatusId}
+                  />
+                )}
               />
+              {errors.projectStatusId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.projectStatusId.message as string}
+                </p>
+              )}
             </div>
 
             {/* Plot */}
             <div>
-              <label className="block text-sm font-medium mb-1">Plot *</label>
+              <label className="block text-sm font-medium mb-1">Plot</label>
               <CommonDropdown
                 options={plotOptions}
-                selected={
-                  watch("plotId")
-                    ? plotOptions.find((opt) => opt.value === watch("plotId")) || null
-                    : null
-                }
+                selected={plotOptions.find((opt: any) => opt.value === watch("plotId")) || null}
                 onChange={(val: any) => setValue("plotId", val?.value || null)}
                 placeholder={plotsLoading ? "Loading..." : "Select Plot"}
                 error={!!errors.plotId}
@@ -302,47 +351,72 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
             {/* Lead Stage */}
             <div>
-              <label className="block text-sm font-medium mb-1">Lead Stage *</label>
-              <CommonDropdown
-                options={leadStageOptions}
-                selected={
-                  watch("leadStageId")
-                    ? leadStageOptions.find((opt) => opt.value === watch("leadStageId")) || null
-                    : null
-                }
-                onChange={(val: any) => setValue("leadStageId", val?.value || null)}
-                placeholder={stageLoading ? "Loading..." : "Select Lead Stage"}
-                error={!!errors.leadStageId}
+              <label className="block text-sm font-medium mb-1">
+                Lead Stage <span className="text-red-500">*</span>
+              </label>
+              <Controller
+                name="leadStageId"
+                control={control}
+                rules={{ required: "Lead Stage is required" }}
+                render={({ field }) => (
+                  <CommonDropdown
+                    options={leadStageOptions}
+                    selected={leadStageOptions.find((opt: any) => opt.value === field.value) || null}
+                    onChange={(value: any) => field.onChange(value?.value || null)}
+                    placeholder={stageLoading ? "Loading..." : "Select Lead Stage"}
+                    error={!!errors.leadStageId}
+                  />
+                )}
               />
+              {errors.leadStageId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.leadStageId.message as string}
+                </p>
+              )}
             </div>
 
             {/* Lead Status */}
             <div>
-              <label className="block text-sm font-medium mb-1">Lead Status *</label>
-              <CommonDropdown
-                options={leadStatusOptions}
-                selected={
-                  watch("leadStatusId")
-                    ? leadStatusOptions.find((opt) => opt.value === watch("leadStatusId")) || null
-                    : null
-                }
-                onChange={(val: any) => setValue("leadStatusId", val?.value || null)}
-                placeholder={leadStatusLoading ? "Loading..." : "Select Lead Status"}
-                error={!!errors.leadStatusId}
+              <label className="block text-sm font-medium mb-1">
+                Lead Status <span className="text-red-500">*</span>
+              </label>
+              <Controller
+                name="leadStatusId"
+                control={control}
+                rules={{ required: "Lead Status is required" }}
+                render={({ field }) => (
+                  <CommonDropdown
+                    options={leadStatusOptions}
+                    selected={leadStatusOptions.find((opt: any) => opt.value === field.value) || null}
+                    onChange={(value: any) => field.onChange(value?.value || null)}
+                    placeholder={leadStatusLoading ? "Loading..." : "Select Lead Status"}
+                    error={!!errors.leadStatusId}
+                  />
+                )}
               />
+              {errors.leadStatusId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.leadStatusId.message as string}
+                </p>
+              )}
             </div>
           </div>
 
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-6 border-t">
-            <button type="button" onClick={onClose}
+            <button
+              type="button"
+              onClick={onClose}
               className="px-6 py-2 border rounded-lg"
-              disabled={isLoading}>
+              disabled={isLoading}
+            >
               Cancel
             </button>
-            <button type="submit"
+            <button
+              type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg"
-              disabled={isLoading}>
+              disabled={isLoading}
+            >
               {isLoading ? "Saving..." : initialData ? "Update Lead" : "Save Lead"}
             </button>
           </div>

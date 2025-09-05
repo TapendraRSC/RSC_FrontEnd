@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Pencil, Trash2, Plus, Upload, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, Upload, Loader2, Download } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import { FilterConfig, FilterValue } from '../Common/TableFilter';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
@@ -20,26 +20,29 @@ import {
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { RootState } from '../../../../store/store';
+import ExportModal from '../Common/ExportModal';
+
+type SortConfig = {
+    key: string;
+    direction: 'asc' | 'desc';
+} | null;
 
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
     const fileInputRef = useRef<HTMLInputElement>(null);
-
     const { list: leadList, loading, totalPages, total } = useSelector(
         (state: RootState) => state.leads
     );
-
-    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
-        useSelector((state: RootState) => state.sidebarPermissions);
-
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } = useSelector(
+        (state: RootState) => state.sidebarPermissions
+    );
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
-
     const [searchValue, setSearchValue] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const [sortConfig, setSortConfig] = useState<any>(null);
+    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState<any>(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -55,9 +58,8 @@ const LeadComponent: React.FC = () => {
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
-
-    // Filter state
     const [filterValues, setFilterValues] = useState<FilterValue>({});
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     useEffect(() => {
         dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
@@ -88,89 +90,87 @@ const LeadComponent: React.FC = () => {
         return (leadList || [])?.map((lead: any, index: number) => ({
             ...lead,
             sr: index + 1 + (currentPage - 1) * pageSize,
-            leadStatus: lead?.leadStatus || "N/A",
-            platformType: lead?.platformType || "N/A",
-            plotNumber: lead?.plotNumber || "N/A",
-            plotPrice: lead?.plotPrice || "N/A",
+            leadStatus: lead?.leadStatus || 'N/A',
+            platformType: lead?.platformType || 'N/A',
+            plotNumber: lead?.plotNumber || 'N/A',
+            plotPrice: lead?.plotPrice || 'N/A',
             plotProjectId: lead?.plotProjectId || null,
-            plotProjectTitle: lead?.plotProjectTitle || "N/A",
+            plotProjectTitle: lead?.plotProjectTitle || 'N/A',
         }));
     }, [leadList, currentPage, pageSize]);
 
-    // Define filter configurations based on your lead data structure
     const filters: FilterConfig<any>[] = [
         {
             key: 'name',
             label: 'Name',
             type: 'text',
-            placeholder: 'Search by name...'
+            placeholder: 'Search by name...',
         },
         {
             key: 'email',
             label: 'Email',
             type: 'text',
-            placeholder: 'Search by email...'
+            placeholder: 'Search by email...',
         },
         {
             key: 'phone',
             label: 'Phone',
             type: 'text',
-            placeholder: 'Search by phone...'
+            placeholder: 'Search by phone...',
         },
         {
             key: 'leadStatus',
             label: 'Lead Status',
             type: 'multiSelect',
-            placeholder: 'Select lead status...'
-            // Options will be auto-generated from data
+            placeholder: 'Select lead status...',
         },
         {
             key: 'leadStage',
             label: 'Lead Stage',
             type: 'multiSelect',
-            placeholder: 'Select lead stage...'
+            placeholder: 'Select lead stage...',
         },
         {
             key: 'platformType',
             label: 'Platform Type',
             type: 'multiSelect',
-            placeholder: 'Select platform type...'
+            placeholder: 'Select platform type...',
         },
         {
             key: 'assignedUserName',
             label: 'Assigned Person',
             type: 'select',
-            placeholder: 'Select assigned person...'
+            placeholder: 'Select assigned person...',
         },
         {
             key: 'city',
             label: 'City',
             type: 'multiSelect',
-            placeholder: 'Select cities...'
+            placeholder: 'Select cities...',
         },
         {
             key: 'state',
             label: 'State',
             type: 'multiSelect',
-            placeholder: 'Select states...'
+            placeholder: 'Select states...',
         },
         {
             key: 'plotNumber',
             label: 'Plot Number',
             type: 'text',
-            placeholder: 'Search by plot number...'
+            placeholder: 'Search by plot number...',
         },
         {
             key: 'plotPrice',
             label: 'Plot Price',
             type: 'text',
-            placeholder: 'Search by plot price...'
+            placeholder: 'Search by plot price...',
         },
         {
             key: 'createdAt',
             label: 'Created Date',
-            type: 'dateRange'
-        }
+            type: 'dateRange',
+        },
     ];
 
     const resetUploadStates = () => {
@@ -186,27 +186,25 @@ const LeadComponent: React.FC = () => {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         setFileName(file.name);
         setSelectedFile(file);
-
         const reader = new FileReader();
         reader.onload = (event: any) => {
             try {
                 const text = event.target.result as string;
-                const rows = text.split("\n").map((row: string) => row.split(","));
+                const rows = text.split('\n').map((row: string) => row.split(','));
                 const preview = rows.map((cols: string[], i: number) => ({
                     id: i + 1,
-                    name: cols[0] || "",
-                    email: cols[1] || "",
-                    phone: cols[2] || "",
-                    city: cols[3] || "",
-                    state: cols[4] || "",
+                    name: cols[0] || '',
+                    email: cols[1] || '',
+                    phone: cols[2] || '',
+                    city: cols[3] || '',
+                    state: cols[4] || '',
                 }));
-                setPreviewData(preview.filter(r => r.name));
+                setPreviewData(preview.filter((r) => r.name));
                 setIsUploadPreviewOpen(true);
             } catch (err) {
-                toast.error("Failed to parse file");
+                toast.error('Failed to parse file');
                 resetUploadStates();
             }
         };
@@ -219,19 +217,18 @@ const LeadComponent: React.FC = () => {
 
     const handleConfirmUpload = async () => {
         if (!selectedFile) {
-            toast.error("No file selected");
+            toast.error('No file selected');
             return;
         }
-
         setUploadLoading(true);
         try {
             await dispatch(uploadLeads(selectedFile)).unwrap();
-            toast.success("Leads uploaded successfully");
+            toast.success('Leads uploaded successfully');
             resetUploadStates();
             dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
         } catch (err: any) {
             console.error('Upload error:', err);
-            toast.error(err?.message || "Failed to upload leads");
+            toast.error(err?.message || 'Failed to upload leads');
         } finally {
             setUploadLoading(false);
         }
@@ -290,6 +287,14 @@ const LeadComponent: React.FC = () => {
         }
     };
 
+    const handleExport = () => {
+        if (sortedData.length === 0) {
+            toast.error('No data to export');
+            return;
+        }
+        setIsExportModalOpen(true);
+    };
+
     const stringToColor = (str: string) => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -323,92 +328,196 @@ const LeadComponent: React.FC = () => {
         );
     };
 
-    const columns: any = [
-        {
-            label: 'Name',
-            accessor: 'name',
-            sortable: true,
-            minWidth: 200,
-            maxWidth: 300,
-            showTooltip: true
-        },
-        {
-            label: 'Email',
-            accessor: 'email',
-            sortable: true,
-            showTooltip: true
-        },
-        {
-            label: 'Phone',
-            accessor: 'phone',
-            sortable: true,
-            minWidth: 200,
-            maxWidth: 500,
-            showTooltip: true
-        },
-        {
-            label: 'Assigned Person',
-            accessor: 'assignedUserName',
-            sortable: true,
-            render: (row: any) => renderBadge(row.assignedUserName),
-            showTooltip: true
-        },
-        {
-            label: 'Lead Status',
-            accessor: 'leadStatus',
-            sortable: true,
-            render: (row: any) => renderBadge(row.leadStatus),
-            minWidth: 200,
-            maxWidth: 500,
-            showTooltip: true
-        },
-        {
-            label: 'Lead Stage',
-            accessor: 'leadStage',
-            sortable: true,
-            render: (row: any) => renderBadge(row.leadStage),
-            minWidth: 200,
-            maxWidth: 500,
-            showTooltip: true
-        },
-        {
-            label: 'Platform Type',
-            accessor: 'platformType',
-            sortable: true,
-            render: (row: any) => renderBadge(row.platformType),
-            showTooltip: true
-        },
+    const storedUser = localStorage.getItem('user');
+    const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
-        {
-            label: 'Plot Number',
-            accessor: 'plotNumber',
-            sortable: true,
-            render: (row: any) => renderBadge(row.plotNumber),
-            showTooltip: true
-        },
-        {
-            label: 'Plot Price',
-            accessor: 'plotPrice',
-            sortable: true,
-            render: (row: any) => renderBadge(row.plotPrice),
-            showTooltip: true
-        },
+    const getColumnsBasedOnRole = (roleId: any) => {
+        if (roleId === 36) {
+            return [
+                {
+                    label: 'Name',
+                    accessor: 'name',
+                    sortable: true,
+                    minWidth: 200,
+                    maxWidth: 300,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Phone',
+                    accessor: 'phone',
+                    sortable: true,
+                    minWidth: 200,
+                    maxWidth: 500,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Email',
+                    accessor: 'email',
+                    sortable: true,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Assigned Person',
+                    accessor: 'assignedUserName',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.assignedUserName),
+                    showTooltip: true,
+                },
+                {
+                    label: 'Lead Status',
+                    accessor: 'leadStatus',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.leadStatus),
+                    minWidth: 200,
+                    maxWidth: 500,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Lead Stage',
+                    accessor: 'leadStage',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.leadStage),
+                    minWidth: 200,
+                    maxWidth: 500,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Remark',
+                    accessor: 'remark',
+                    sortable: true,
+                    showTooltip: true,
+                },
+            ];
+        } else {
+            return [
+                {
+                    label: 'Name',
+                    accessor: 'name',
+                    sortable: true,
+                    minWidth: 200,
+                    maxWidth: 300,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Email',
+                    accessor: 'email',
+                    sortable: true,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Phone',
+                    accessor: 'phone',
+                    sortable: true,
+                    minWidth: 200,
+                    maxWidth: 500,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Assigned Person',
+                    accessor: 'assignedUserName',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.assignedUserName),
+                    showTooltip: true,
+                },
+                {
+                    label: 'Lead Status',
+                    accessor: 'leadStatus',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.leadStatus),
+                    minWidth: 200,
+                    maxWidth: 500,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Lead Stage',
+                    accessor: 'leadStage',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.leadStage),
+                    minWidth: 200,
+                    maxWidth: 500,
+                    showTooltip: true,
+                },
+                {
+                    label: 'Platform Type',
+                    accessor: 'platformType',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.platformType),
+                    showTooltip: true,
+                },
+                {
+                    label: 'Plot Number',
+                    accessor: 'plotNumber',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.plotNumber),
+                    showTooltip: true,
+                },
+                {
+                    label: 'Plot Price',
+                    accessor: 'plotPrice',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.plotPrice),
+                    showTooltip: true,
+                },
+                {
+                    label: 'City',
+                    accessor: 'city',
+                    sortable: true,
+                    showTooltip: true,
+                },
+                {
+                    label: 'State',
+                    accessor: 'state',
+                    sortable: true,
+                    minWidth: 200,
+                    maxWidth: 500,
+                    showTooltip: true,
+                },
+            ];
+        }
+    };
 
-        {
-            label: 'City',
-            accessor: 'city',
-            sortable: true,
-            showTooltip: true
-        },
-        {
-            label: 'State',
-            accessor: 'state',
-            sortable: true,
-            minWidth: 200,
-            maxWidth: 500,
-            showTooltip: true
-        },
-    ];
+    const columns = getColumnsBasedOnRole(currentUser?.roleId);
+
+    const handleSort = (config: any) => setSortConfig(config);
+
+    const handlePageChange = (page: number) => setCurrentPage(page);
+
+    const handlePageSizeChange = (size: number) => {
+        setPageSize(size);
+        setCurrentPage(1);
+    };
+
+    // Filter data based on filterValues
+    const filteredData = useMemo(() => {
+        return normalizedLeads.filter((lead) => {
+            return Object.entries(filterValues).every(([key, value]) => {
+                if (!value) return true;
+                if (key === 'createdAt') {
+                    // Handle date range filter
+                    return true; // Placeholder: Implement your date range logic here
+                }
+                if (Array.isArray(value)) {
+                    return value.includes(lead[key]);
+                }
+                return String(lead[key]).toLowerCase().includes(String(value).toLowerCase());
+            });
+        });
+    }, [normalizedLeads, filterValues]);
+
+    // Sort filtered data
+    const sortedData = useMemo(() => {
+        const dataArray = Array.isArray(filteredData) ? filteredData : [];
+        if (!sortConfig) return dataArray;
+        return [...dataArray].sort((a, b) => {
+            const aVal = a[sortConfig.key];
+            const bVal = b[sortConfig.key];
+            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            }
+            const comparison = String(aVal).localeCompare(String(bVal));
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    }, [filteredData, sortConfig]);
 
     return (
         <div className="space-y-8 p-3 sm:p-6">
@@ -419,10 +528,24 @@ const LeadComponent: React.FC = () => {
                     <p className="text-sm text-gray-600">Manage leads with advanced filtering</p>
                 </div>
                 <div className="flex gap-3">
-                    {hasPermission(20, "upload") && (
+                    {/* Add Export Button */}
+                    {hasPermission(24, 'export') && (
+                        <label
+                            onClick={handleExport}
+                            // disabled={sortedData.length === 0}
+                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base
+               bg-purple-500 hover:bg-purple-600 text-white font-medium
+               shadow-md hover:shadow-lg transition-all duration-200
+                cursor-pointer"
+                        >
+                            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Export
+                        </label>
+                    )}
+                    {hasPermission(20, 'upload') && (
                         <label
                             className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
-                   bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                     bg-green-500 hover:bg-green-600 text-white cursor-pointer"
                         >
                             {uploadLoading ? (
                                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
@@ -440,7 +563,7 @@ const LeadComponent: React.FC = () => {
                         </label>
                     )}
                     <div data-tooltip-id="add-permission-tooltip">
-                        {hasPermission(21, "add") && (
+                        {hasPermission(21, 'add') && (
                             <button
                                 onClick={handleAdd}
                                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
@@ -452,30 +575,29 @@ const LeadComponent: React.FC = () => {
                     </div>
                 </div>
             </div>
-
             <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-                {/* Enhanced CSS Animation for Green Blinking */}
                 <style jsx>{`
                     @keyframes greenBlink {
-                        0%, 100% { 
-                            background-color: inherit; 
+                        0%,
+                        100% {
+                            background-color: inherit;
                         }
-                        50% { 
+                        50% {
                             background-color: rgba(34, 197, 94, 0.25);
                             box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
                         }
                     }
-                    
+
                     .fresh-lead-blink {
                         animation: greenBlink 2s infinite;
                         transition: all 0.3s ease;
                     }
-                    
+
                     .fresh-lead-blink:hover {
                         animation-play-state: paused;
                         background-color: rgba(34, 197, 94, 0.15) !important;
                     }
-                    
+
                     /* Alternative faster blink */
                     .fresh-lead-blink-fast {
                         animation: greenBlink 1s infinite;
@@ -483,7 +605,7 @@ const LeadComponent: React.FC = () => {
                 `}</style>
 
                 <CustomTable<any>
-                    data={normalizedLeads}
+                    data={sortedData}
                     columns={columns}
                     isLoading={loading}
                     title="Leads"
@@ -495,16 +617,12 @@ const LeadComponent: React.FC = () => {
                     searchPlaceholder="Search leads..."
                     showSearch
                     sortConfig={sortConfig}
-                    onSortChange={setSortConfig}
+                    onSortChange={handleSort}
                     currentPage={currentPage}
                     totalPages={totalPages}
                     pageSize={pageSize}
                     totalRecords={total}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={(size) => {
-                        setPageSize(size);
-                        setCurrentPage(1);
-                    }}
+                    onPageChange={handlePageChange}
                     pageSizeOptions={[10, 25, 50, 100]}
                     showPagination
                     emptyMessage="No leads found"
@@ -512,19 +630,19 @@ const LeadComponent: React.FC = () => {
                     hiddenColumns={hiddenColumns}
                     onColumnVisibilityChange={setHiddenColumns}
                     rowClassName={(row: any) => {
-                        if (row.leadStatus === "Fresh") {
-                            return "fresh-lead-blink";
+                        if (row.leadStatus === 'Fresh' || row.leadStatus === 'fresh') {
+                            return 'fresh-lead-blink';
                         }
-                        return "";
+                        return '';
                     }}
-                    // Filter props - Enable filters
                     showFilters={true}
                     filters={filters}
                     filterValues={filterValues}
                     onFilterChange={setFilterValues}
+                    onPageSizeChange={handlePageSizeChange}
                     actions={(row) => (
                         <div className="flex gap-2">
-                            {hasPermission(22, "edit") && (
+                            {hasPermission(22, 'edit') && (
                                 <button
                                     onClick={() => handleEdit(row)}
                                     className="p-1 rounded text-blue-500 hover:text-blue-700 cursor-pointer"
@@ -532,7 +650,7 @@ const LeadComponent: React.FC = () => {
                                     <Pencil className="w-4 h-4" />
                                 </button>
                             )}
-                            {hasPermission(4, "delete") && (
+                            {hasPermission(4, 'delete') && (
                                 <button
                                     onClick={() => handleDelete(row)}
                                     className="p-1 rounded text-red-500 hover:text-red-700 cursor-pointer"
@@ -553,7 +671,6 @@ const LeadComponent: React.FC = () => {
                     )}
                 />
             </div>
-
             {/* Modals */}
             <ComprehensiveLeadModal
                 isOpen={isModalOpen}
@@ -562,7 +679,6 @@ const LeadComponent: React.FC = () => {
                 initialData={currentLead}
                 isLoading={isSaving}
             />
-
             {selectedLeadId && (
                 <FollowUpLeadModal
                     isOpen={isFollowUpModalOpen}
@@ -570,13 +686,11 @@ const LeadComponent: React.FC = () => {
                     lead={selectedLeadId}
                 />
             )}
-
             <TimelineLeadModal
                 isOpen={isTimelineModalOpen}
                 onClose={() => setIsTimelineModalOpen(false)}
                 lead={currentTimelineLead}
             />
-
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
@@ -585,7 +699,6 @@ const LeadComponent: React.FC = () => {
                 message={`Are you sure you want to delete "${leadToDelete?.name}"?`}
                 Icon={Trash2}
             />
-
             <UploadPreviewModal
                 isOpen={isUploadPreviewOpen}
                 onClose={handleClosePreview}
@@ -594,6 +707,14 @@ const LeadComponent: React.FC = () => {
                 previewData={previewData}
                 isLoading={uploadLoading}
                 totalRows={previewData.length}
+            />
+            {/* Add Export Modal */}
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                data={sortedData}
+                fileName={`leads_export_${new Date().toISOString().split('T')[0]}`}
+                columns={columns}
             />
         </div>
     );
