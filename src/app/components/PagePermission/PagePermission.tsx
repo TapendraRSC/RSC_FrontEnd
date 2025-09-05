@@ -8,6 +8,8 @@ import { fetchPages, addPage, updatePage, deletePage } from '../../../../store/p
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { toast } from 'react-toastify';
+import { fetchPermissions } from '../../../../store/permissionSlice';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 interface PagePermission {
     id: number;
@@ -19,7 +21,7 @@ interface SortConfig {
     direction: 'asc' | 'desc';
 }
 
-const PageCard = ({ page, onEdit, onDelete }: { page: PagePermission; onEdit: () => void; onDelete: () => void }) => (
+const PageCard = ({ page, onEdit, onDelete, hasPermission }: { page: PagePermission; onEdit: () => void; onDelete: () => void, hasPermission: any }) => (
     <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3 flex-1">
@@ -33,20 +35,26 @@ const PageCard = ({ page, onEdit, onDelete }: { page: PagePermission; onEdit: ()
             </div>
         </div>
         <div className="flex gap-2 pt-3 border-t border-gray-100">
-            <button
-                onClick={onEdit}
-                className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
-            >
-                <Pencil className="w-4 h-4" />
-                Edit
-            </button>
-            <button
-                onClick={onDelete}
-                className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-            >
-                <Trash2 className="w-4 h-4" />
-                Delete
-            </button>
+            {hasPermission(22, "edit") && (
+                <button
+                    onClick={onEdit}
+                    className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                </button>
+            )}
+
+            {hasPermission(4, "delete") && (
+
+                <button
+                    onClick={onDelete}
+                    className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                </button>
+            )}
         </div>
     </div>
 );
@@ -161,6 +169,36 @@ const PagePermission: React.FC = () => {
         return <div>Error: {error}</div>;
     }
 
+    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
+        useSelector((state: RootState) => state.sidebarPermissions);
+
+    const { list: allPermissions } = useSelector(
+        (state: RootState) => state.permissions
+    );
+
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar());
+    }, [dispatch]);
+
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Page Permissions'
+        );
+        return leadPerm?.permissionIds || [];
+    };
+
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        if (!leadPermissionIds.includes(permId)) return false;
+
+        const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
+        if (!matched) return false;
+
+        return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white">
             {/* Desktop Header */}
@@ -170,13 +208,15 @@ const PagePermission: React.FC = () => {
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Page Permissions</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">Manage page permissions</p>
                     </div>
-                    <button
-                        onClick={handleAdd}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add Page Permission
-                    </button>
+                    {hasPermission(21, "add") && (
+                        <button
+                            onClick={handleAdd}
+                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add Page Permission
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -195,26 +235,28 @@ const PagePermission: React.FC = () => {
                         >
                             {viewMode === 'table' ? <Grid3X3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
                         </button>
-                        <button
+                        {/* <button
                             onClick={() => setShowMobileFilters(!showMobileFilters)}
                             className="p-2 text-gray-500 hover:text-gray-700"
                             title="Menu"
                         >
                             <Menu className="w-5 h-5" />
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             </div>
 
             {/* Sticky Add Button for Mobile */}
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
-                <button
-                    onClick={handleAdd}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add New Page Permission
-                </button>
+                {hasPermission(21, "add") && (
+                    <button
+                        onClick={handleAdd}
+                        className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add New Page Permission
+                    </button>
+                )}
             </div>
 
             {/* Main Content */}
@@ -241,12 +283,13 @@ const PagePermission: React.FC = () => {
                         ) : (
                             <>
                                 <div className="grid gap-4">
-                                    {filteredData.map((page: any) => (
+                                    {filteredData?.map((page: any) => (
                                         <PageCard
                                             key={page.id}
                                             page={page}
                                             onEdit={() => handleEdit(page)}
                                             onDelete={() => handleDelete(page)}
+                                            hasPermission={hasPermission}
                                         />
                                     ))}
                                 </div>
@@ -327,24 +370,29 @@ const PagePermission: React.FC = () => {
                             showColumnToggle={true}
                             hiddenColumns={hiddenColumns}
                             onColumnVisibilityChange={handleColumnVisibilityChange}
-                        // actions={(row: PagePermission) => (
-                        //     <div className="flex gap-2">
-                        //         <button
-                        //             onClick={() => handleEdit(row)}
-                        //             className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
-                        //             title="Edit"
-                        //         >
-                        //             <Pencil className="w-4 h-4" />
-                        //         </button>
-                        //         <button
-                        //             onClick={() => handleDelete(row)}
-                        //             className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                        //             title="Delete"
-                        //         >
-                        //             <Trash2 className="w-4 h-4" />
-                        //         </button>
-                        //     </div>
-                        // )}
+                            actions={(row: PagePermission) => (
+                                <div className="flex gap-2">
+                                    {hasPermission(22, "edit") && (
+                                        <button
+                                            onClick={() => handleEdit(row)}
+                                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                    )}
+
+                                    {hasPermission(4, "delete") && (
+                                        <button
+                                            onClick={() => handleDelete(row)}
+                                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         />
                     </div>
                 </div>

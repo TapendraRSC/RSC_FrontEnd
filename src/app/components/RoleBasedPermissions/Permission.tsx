@@ -8,6 +8,7 @@ import { fetchPages } from '../../../../store/pagePermissionSlice';
 import { getRoles } from '../../../../store/roleSlice';
 import { setRolePermissions, fetchRolePermissions } from '../../../../store/rolePermissionSlice';
 import { toast } from 'react-toastify';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 interface Permission {
     pageName: string;
@@ -129,7 +130,6 @@ const UserPermissions: React.FC = () => {
     };
 
     const headers = list?.data?.permissions || [];
-    // console.log(headers, "headers");
 
     return (
         <div className="w-full bg-white shadow-xl rounded-xl overflow-hidden">
