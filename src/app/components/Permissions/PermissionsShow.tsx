@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import PermissionModalShow from './PermissionModalShow';
@@ -29,7 +29,6 @@ const PermissionsShow: React.FC = () => {
     const [currentPermission, setCurrentPermission] = React.useState<Permission | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [permissionToDelete, setPermissionToDelete] = React.useState<Permission | null>(null);
-
     const dispatch = useDispatch<AppDispatch>();
     const { list, loading, error } = useSelector((state: RootState) => state.permissions);
 
@@ -37,21 +36,7 @@ const PermissionsShow: React.FC = () => {
         dispatch(fetchPermissions({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
 
-    const columns: any = [
-        {
-            label: 'ID',
-            accessor: 'id',
-            sortable: true,
-        },
-        {
-            label: 'Permission Name',
-            accessor: 'permissionName',
-            sortable: true,
-        },
-    ];
-
     const filteredData = list?.data?.permissions || [];
-
     const totalPages = list?.data?.totalPages || 1;
 
     const handleSearch = (value: string) => {
@@ -59,7 +44,7 @@ const PermissionsShow: React.FC = () => {
         setCurrentPage(1);
     };
 
-    const handleSort = (config: any) => {
+    const handleSort = (config: SortConfig | any) => {
         setSortConfig(config);
     };
 
@@ -122,6 +107,32 @@ const PermissionsShow: React.FC = () => {
         }
     };
 
+    // Sorting logic
+    const sortedData = useMemo(() => {
+        if (!sortConfig) return filteredData;
+        return [...filteredData].sort((a, b) => {
+            const aVal = a[sortConfig.key];
+            const bVal = b[sortConfig.key];
+            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            }
+            const comparison = String(aVal).localeCompare(String(bVal));
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    }, [filteredData, sortConfig]);
+
+    const columns: any = [
+        {
+            label: 'ID',
+            accessor: 'id',
+            sortable: true,
+        },
+        {
+            label: 'Permission Name',
+            accessor: 'permissionName',
+            sortable: true,
+        },
+    ];
 
     if (error) {
         return <div>Error: {error}</div>;
@@ -129,7 +140,7 @@ const PermissionsShow: React.FC = () => {
 
     return (
         <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
-            <div className="mb-6 flex justify-between items-center">
+            <div className="mb-6 flex justify-between items-center p-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Permissions</h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Manage permissions</p>
@@ -145,7 +156,7 @@ const PermissionsShow: React.FC = () => {
             <div className="p-6">
                 <div className="bg-white rounded-lg shadow-sm">
                     <CustomTable<Permission>
-                        data={filteredData}
+                        data={sortedData}
                         columns={columns}
                         isLoading={loading}
                         title="Permissions"

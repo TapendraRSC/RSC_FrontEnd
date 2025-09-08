@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, Shield } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import PagePermissionModal from './PagePermissionModal';
@@ -21,7 +21,12 @@ interface SortConfig {
     direction: 'asc' | 'desc';
 }
 
-const PageCard = ({ page, onEdit, onDelete, hasPermission }: { page: PagePermission; onEdit: () => void; onDelete: () => void, hasPermission: any }) => (
+const PageCard = ({ page, onEdit, onDelete, hasPermission }: {
+    page: PagePermission;
+    onEdit: () => void;
+    onDelete: () => void;
+    hasPermission: (permId: number, permName: string) => boolean
+}) => (
     <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3 flex-1">
@@ -44,9 +49,7 @@ const PageCard = ({ page, onEdit, onDelete, hasPermission }: { page: PagePermiss
                     Edit
                 </button>
             )}
-
             {hasPermission(4, "delete") && (
-
                 <button
                     onClick={onDelete}
                     className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
@@ -71,7 +74,6 @@ const PagePermission: React.FC = () => {
     const [permissionToDelete, setPermissionToDelete] = useState<PagePermission | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
-
     const dispatch = useDispatch<AppDispatch>();
     const { list, loading, error } = useSelector((state: RootState) => state.pages);
 
@@ -79,18 +81,37 @@ const PagePermission: React.FC = () => {
         dispatch(fetchPages({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
 
-    const filteredData = list?.data?.data?.filter((item: any) =>
-        item?.pageName.toLowerCase().includes(searchValue.toLowerCase())
-    ) || [];
+    const rawData = list?.data?.data || [];
     const totalPages = list?.data?.totalPages || 1;
     const totalRecords = list?.data?.total || 0;
+
+    // Filter and sort data
+    const filteredData = useMemo(() => {
+        const filtered = rawData.filter((item: PagePermission) =>
+            item.pageName.toLowerCase().includes(searchValue.toLowerCase())
+        );
+
+        if (!sortConfig) return filtered;
+
+        return [...filtered].sort((a, b) => {
+            const aVal = a[sortConfig.key];
+            const bVal = b[sortConfig.key];
+
+            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            }
+
+            const comparison = String(aVal).localeCompare(String(bVal));
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    }, [rawData, searchValue, sortConfig]);
 
     const handleSearch = (value: string) => {
         setSearchValue(value);
         setCurrentPage(1);
     };
 
-    const handleSort = (config: any) => {
+    const handleSort = (config: SortConfig | any) => {
         setSortConfig(config);
     };
 
@@ -171,7 +192,6 @@ const PagePermission: React.FC = () => {
 
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
-
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
@@ -192,10 +212,8 @@ const PagePermission: React.FC = () => {
 
     const hasPermission = (permId: number, permName: string) => {
         if (!leadPermissionIds.includes(permId)) return false;
-
         const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
         if (!matched) return false;
-
         return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
     };
 
@@ -235,13 +253,6 @@ const PagePermission: React.FC = () => {
                         >
                             {viewMode === 'table' ? <Grid3X3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
                         </button>
-                        {/* <button
-                            onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="p-2 text-gray-500 hover:text-gray-700"
-                            title="Menu"
-                        >
-                            <Menu className="w-5 h-5" />
-                        </button> */}
                     </div>
                 </div>
             </div>
@@ -283,7 +294,7 @@ const PagePermission: React.FC = () => {
                         ) : (
                             <>
                                 <div className="grid gap-4">
-                                    {filteredData?.map((page: any) => (
+                                    {filteredData.map((page: PagePermission) => (
                                         <PageCard
                                             key={page.id}
                                             page={page}
@@ -381,7 +392,6 @@ const PagePermission: React.FC = () => {
                                             <Pencil className="w-4 h-4" />
                                         </button>
                                     )}
-
                                     {hasPermission(4, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}

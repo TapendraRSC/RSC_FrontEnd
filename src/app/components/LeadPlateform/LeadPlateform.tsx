@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, Shield } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
@@ -19,6 +19,11 @@ import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermission
 interface LeadPlatform {
     id: number;
     platformType: string;
+}
+
+interface SortConfig {
+    key: keyof LeadPlatform;
+    direction: 'asc' | 'desc';
 }
 
 const LeadPlatformCard = ({
@@ -45,7 +50,6 @@ const LeadPlatformCard = ({
             </div>
         </div>
         <div className="flex gap-2 pt-3 border-t border-gray-100">
-            {/* Edit Button */}
             {hasPermission(22, "edit") && (
                 <button
                     onClick={onEdit}
@@ -57,8 +61,6 @@ const LeadPlatformCard = ({
                     Edit
                 </button>
             )}
-
-            {/* Delete Button */}
             {hasPermission(4, "delete") && (
                 <button
                     onClick={onDelete}
@@ -70,11 +72,9 @@ const LeadPlatformCard = ({
                     Delete
                 </button>
             )}
-
         </div>
     </div>
 );
-
 
 const LeadPlateform: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -84,7 +84,7 @@ const LeadPlateform: React.FC = () => {
     const [searchValue, setSearchValue] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const [sortConfig, setSortConfig] = useState<any>(null);
+    const [sortConfig, setSortConfig] = useState<SortConfig | any>(null);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -100,9 +100,9 @@ const LeadPlateform: React.FC = () => {
         );
     }, [dispatch, currentPage, pageSize, searchValue]);
 
-    const { permissions: rolePermissions, loading: rolePermissionsLoading } =
-        useSelector((state: RootState) => state.sidebarPermissions);
-
+    const { permissions: rolePermissions } = useSelector(
+        (state: RootState) => state.sidebarPermissions
+    );
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
@@ -111,6 +111,30 @@ const LeadPlateform: React.FC = () => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
         dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
+
+    // Sorting logic
+    const sortedData = useMemo(() => {
+        if (!leadPlatforms) return [];
+
+        let data = [...leadPlatforms];
+
+        // Apply sorting if sortConfig is set
+        if (sortConfig) {
+            data.sort((a: any, b: any) => {
+                const aVal = a[sortConfig.key];
+                const bVal = b[sortConfig.key];
+
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                const comparison = String(aVal).localeCompare(String(bVal));
+                return sortConfig.direction === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        return data;
+    }, [leadPlatforms, sortConfig]);
 
     const getLeadPermissions = () => {
         const leadPerm = rolePermissions?.permissions?.find(
@@ -122,13 +146,9 @@ const LeadPlateform: React.FC = () => {
     const leadPermissionIds = getLeadPermissions();
 
     const hasPermission = (permId: number, permName: string) => {
-        // rolePermissions se id check
         if (!leadPermissionIds.includes(permId)) return false;
-
-        // master list se naam check
         const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
         if (!matched) return false;
-
         return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
     };
 
@@ -186,8 +206,16 @@ const LeadPlateform: React.FC = () => {
     };
 
     const columns: any = [
-        { label: 'ID', accessor: 'id', sortable: true },
-        { label: 'Platform Type', accessor: 'platformType', sortable: true },
+        {
+            label: 'ID',
+            accessor: 'id',
+            sortable: true,
+        },
+        {
+            label: 'Platform Type',
+            accessor: 'platformType',
+            sortable: true,
+        },
     ];
 
     return (
@@ -209,7 +237,6 @@ const LeadPlateform: React.FC = () => {
                             Add New Platform
                         </button>
                     )}
-
                 </div>
             </div>
 
@@ -239,6 +266,7 @@ const LeadPlateform: React.FC = () => {
                 </div>
             </div>
 
+            {/* Sticky Add Button for Mobile */}
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
                 {hasPermission(21, "add") && (
                     <button
@@ -255,6 +283,7 @@ const LeadPlateform: React.FC = () => {
 
             {/* Main Content */}
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+                {/* Grid View (Mobile) */}
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
                         <div className="relative">
@@ -279,7 +308,7 @@ const LeadPlateform: React.FC = () => {
                         ) : (
                             <>
                                 <div className="grid gap-4">
-                                    {leadPlatforms?.map((platform: any) => (
+                                    {sortedData.map((platform: LeadPlatform) => (
                                         <LeadPlatformCard
                                             key={platform.id}
                                             platform={platform}
@@ -289,7 +318,7 @@ const LeadPlateform: React.FC = () => {
                                         />
                                     ))}
                                 </div>
-                                {leadPlatforms?.length === 0 && (
+                                {sortedData.length === 0 && (
                                     <div className="text-center py-12">
                                         <div className="text-gray-400 text-5xl mb-4">🖥️</div>
                                         <p className="text-gray-500 text-lg font-medium">No platforms found</p>
@@ -346,8 +375,8 @@ const LeadPlateform: React.FC = () => {
                 {/* Table View (Desktop + Mobile) */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                        <CustomTable<any>
-                            data={leadPlatforms}
+                        <CustomTable<LeadPlatform>
+                            data={sortedData}
                             columns={columns}
                             isLoading={loading}
                             title="Lead Platforms"
@@ -376,7 +405,6 @@ const LeadPlateform: React.FC = () => {
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row: LeadPlatform) => (
                                 <div className="flex gap-2">
-                                    {/* Edit Button */}
                                     {hasPermission(22, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
@@ -386,8 +414,6 @@ const LeadPlateform: React.FC = () => {
                                             <Pencil className="w-4 h-4" />
                                         </button>
                                     )}
-
-                                    {/* Delete Button */}
                                     {hasPermission(4, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
@@ -411,7 +437,6 @@ const LeadPlateform: React.FC = () => {
                 currentPlatform={currentLead}
                 isLoading={isSaving}
             />
-
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
