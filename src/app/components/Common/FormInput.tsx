@@ -22,7 +22,7 @@ interface FormInputProps<T extends Record<string, any>> {
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     disabled?: boolean;
     step?: string | number;
-    maxLength?: number; // Add maxLength prop
+    maxLength?: number;
 }
 
 const FormInput = <T extends Record<string, any>>({
@@ -77,8 +77,7 @@ const FormInput = <T extends Record<string, any>>({
     const inputProps: React.InputHTMLAttributes<HTMLInputElement> = {
         ...register(name, rules),
         type,
-        className: `w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${error ? 'border-red-500 focus:ring-red-500' : ''
-            } ${className}`,
+        className: `w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 transition-all ${error ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' : ''} ${className}`,
         placeholder,
         disabled,
         step,
@@ -95,13 +94,13 @@ const FormInput = <T extends Record<string, any>>({
 
     return (
         <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {label}
                 {required && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input {...inputProps} />
             {error && (
-                <p className="text-red-500 text-sm mt-1">{error.message as string}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1">{error.message as string}</p>
             )}
         </div>
     );

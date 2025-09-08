@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import CommonDropdown from "../Common/CommonDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../store/store";
-import { fetchFollowUps, FollowUp, saveFollowUp } from "../../../../store/followUpSlice";
+import { fetchFollowUps, saveFollowUp } from "../../../../store/followUpSlice";
 
 interface DropdownOption {
     label: string;
@@ -40,14 +40,14 @@ const Toast: React.FC<{
         <div className="fixed top-4 right-4 z-[60] animate-in slide-in-from-right duration-300">
             <div
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border max-w-sm ${type === "success"
-                        ? "bg-green-50 border-green-200 text-green-800"
-                        : "bg-red-50 border-red-200 text-red-800"
+                        ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900 dark:text-green-200 dark:border-green-700"
+                        : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
                     }`}
             >
                 {type === "success" ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                 ) : (
-                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 )}
                 <span className="text-sm font-medium">{message}</span>
                 <button onClick={onClose} className="ml-2 hover:opacity-70">
@@ -120,7 +120,6 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
     const inquiryValue = watch("inquiryStatus");
     const budgetValue = watch("budgetUpto");
 
-    // Map leadStatusId to readable status
     const statusMappingReverse: Record<number, string> = {
         1: "New Lead",
         2: "IN FOLLOWUP",
@@ -138,7 +137,6 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         14: "High Interested",
     };
 
-    // Map inquiryStatus.value to leadStatusId
     const statusValueToId: Record<string, number> = {
         "IN FOLLOWUP": 2,
         "Very Interested": 3,
@@ -155,12 +153,10 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         "High Interested": 14,
     };
 
-    // Save Follow-up
     const onSubmit = async (data: FollowUpFormData) => {
         try {
             if (!lead?.id) throw new Error("Lead ID not found");
 
-            // Get the correct leadStatusId based on inquiryStatus.value
             const leadStatusId = data.inquiryStatus?.value
                 ? statusValueToId[data.inquiryStatus.value] || 1
                 : 1;
@@ -183,15 +179,11 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                 nextFollowUpDate: new Date().toISOString().slice(0, 16),
                 remark: "",
             });
-        } catch (error) {
-            setToast({
-                message: "Failed to save follow-up. Please try again.",
-                type: "error",
-            });
+        } catch {
+            setToast({ message: "Failed to save follow-up. Please try again.", type: "error" });
         }
     };
 
-    // Reset form when modal is closed
     const handleClose = () => {
         reset({
             inquiryStatus: { label: "IN FOLLOWUP", value: "IN FOLLOWUP" },
@@ -204,13 +196,13 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
 
     return (
         <>
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4" style={{ margin: "0px" }}>
-                <div className="bg-white w-full max-w-md sm:max-w-2xl md:max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 max-h-[95vh] flex flex-col">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
+                <div className="bg-white dark:bg-gray-900 w-full max-w-md sm:max-w-2xl md:max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700 max-h-[95vh] flex flex-col">
                     {/* Header */}
-                    <div className="flex justify-between items-center bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-3 sm:py-5 shadow-sm">
+                    <div className="flex justify-between items-center bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white px-4 sm:px-6 py-3 sm:py-5 shadow-sm">
                         <div>
                             <h2 className="text-lg sm:text-xl font-semibold">Lead Follow-up</h2>
-                            <p className="text-blue-100 text-xs sm:text-sm mt-1">
+                            <p className="text-blue-100 dark:text-blue-200 text-xs sm:text-sm mt-1">
                                 Track and manage customer interactions
                             </p>
                         </div>
@@ -223,19 +215,19 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     </div>
 
                     {/* Customer Info */}
-                    <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 text-xs sm:text-sm">
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-700">
-                                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-700 dark:text-gray-300">
+                                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
                                 <span className="font-medium">Customer:</span>
-                                <span className="text-gray-900 font-semibold">
+                                <span className="text-gray-900 dark:text-gray-100 font-semibold">
                                     {lead.name || "N/A"}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-700">
-                                <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-700 dark:text-gray-300">
+                                <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
                                 <span className="font-medium">Phone:</span>
-                                <span className="text-gray-900 font-semibold">
+                                <span className="text-gray-900 dark:text-gray-100 font-semibold">
                                     {lead.phone || "N/A"}
                                 </span>
                             </div>
@@ -248,7 +240,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
                                 {/* Inquiry Status */}
                                 <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                                         Inquiry Status <span className="text-red-500">*</span>
                                     </label>
                                     <CommonDropdown
@@ -266,30 +258,26 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
 
                                 {/* Next Followup Date */}
                                 <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                                         Next Followup Date <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
                                             type="datetime-local"
-                                            {...register("nextFollowUpDate", {
-                                                required: "Next Followup Date is required",
-                                            })}
-                                            className={`w-full rounded-lg border px-2.5 py-2 text-xs sm:px-3 sm:py-2.5 sm:text-sm shadow-sm pr-8 sm:pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.nextFollowUpDate ? "border-red-300" : "border-gray-300"
+                                            {...register("nextFollowUpDate", { required: "Next Followup Date is required" })}
+                                            className={`w-full rounded-lg border px-2.5 py-2 text-xs sm:px-3 sm:py-2.5 sm:text-sm shadow-sm pr-8 sm:pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 transition-colors ${errors.nextFollowUpDate ? "border-red-300 dark:border-red-600" : "border-gray-300 dark:border-gray-600"
                                                 }`}
                                         />
-                                        <Calendar className="absolute right-2 sm:right-3 top-2.5 sm:top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+                                        <Calendar className="absolute right-2 sm:right-3 top-2.5 sm:top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 dark:text-gray-300" />
                                     </div>
                                     {errors.nextFollowUpDate && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                            {errors.nextFollowUpDate.message}
-                                        </p>
+                                        <p className="text-red-500 text-xs mt-1">{errors.nextFollowUpDate.message}</p>
                                     )}
                                 </div>
 
                                 {/* Budget Upto */}
                                 <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                                         Budget Upto
                                     </label>
                                     <div className="relative">
@@ -299,20 +287,20 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             onChange={(val: any) => setValue("budgetUpto", val)}
                                             placeholder="Select Budget"
                                         />
-                                        <IndianRupee className="absolute right-2 sm:right-3 top-2.5 sm:top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 pointer-events-none" />
+                                        <IndianRupee className="absolute right-2 sm:right-3 top-2.5 sm:top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 dark:text-gray-300 pointer-events-none" />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Remark */}
                             <div>
-                                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                                <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                                     Remark <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
                                     {...register("remark", { required: "Remark is required" })}
                                     rows={3}
-                                    className={`w-full rounded-lg border px-2.5 py-2 text-xs sm:px-3 sm:py-2.5 sm:text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ${errors.remark ? "border-red-300" : "border-gray-300"
+                                    className={`w-full rounded-lg border px-2.5 py-2 text-xs sm:px-3 sm:py-2.5 sm:text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 transition-colors resize-none ${errors.remark ? "border-red-300 dark:border-red-600" : "border-gray-300 dark:border-gray-600"
                                         }`}
                                     placeholder="Enter detailed remarks about the follow-up..."
                                 />
@@ -326,9 +314,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className={`px-6 sm:px-8 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-200 transition-all duration-200 ${loading
-                                            ? "opacity-70 cursor-not-allowed"
-                                            : "hover:shadow-xl transform hover:-translate-y-0.5"
+                                    className={`px-6 sm:px-8 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 dark:hover:from-blue-900 dark:hover:to-blue-950 focus:ring-4 focus:ring-blue-200 transition-all duration-200 ${loading ? "opacity-70 cursor-not-allowed" : "hover:shadow-xl transform hover:-translate-y-0.5"
                                         }`}
                                 >
                                     {loading ? (
@@ -344,41 +330,41 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                         </form>
 
                         {/* Follow-up Table */}
-                        <div className="border-t border-gray-200 mt-3 sm:mt-4">
-                            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 py-2.5 sm:py-3 border-b">
-                                <h3 className="font-semibold text-gray-800 text-xs sm:text-sm">
+                        <div className="border-t border-gray-200 dark:border-gray-700 mt-3 sm:mt-4">
+                            <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 px-4 sm:px-6 py-2.5 sm:py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-xs sm:text-sm">
                                     Recent Follow-up History
                                 </h3>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-xs sm:text-sm">
-                                    <thead className="bg-gray-50 border-b border-gray-200">
+                                    <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                                         <tr>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700">
+                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
                                                 S.No.
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700">
+                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
                                                 Next Follow-up Date
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700">
+                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
                                                 Remark
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700">
+                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
                                                 Budget
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700">
+                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
                                                 Status
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
+                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                         {followUps.length > 0 ? (
                                             followUps.map((f: any, index: number) => (
-                                                <tr key={f.id} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600">
+                                                <tr key={f.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 dark:text-gray-300">
                                                         {index + 1}
                                                     </td>
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-800 font-medium">
+                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-800 dark:text-gray-100 font-medium">
                                                         {new Date(f.followUpDate).toLocaleString("en-IN", {
                                                             day: "2-digit",
                                                             month: "short",
@@ -387,14 +373,14 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                                             minute: "2-digit",
                                                         })}
                                                     </td>
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 max-w-[120px] sm:max-w-xs truncate">
+                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 dark:text-gray-300 max-w-[120px] sm:max-w-xs truncate">
                                                         {f.remark}
                                                     </td>
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 font-medium">
+                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 dark:text-gray-300 font-medium">
                                                         {f.budget || "Not specified"}
                                                     </td>
                                                     <td className="px-3 sm:px-4 py-2.5 sm:py-3">
-                                                        <span className="inline-flex px-2 py-1 text-[10px] sm:text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                        <span className="inline-flex px-2 py-1 text-[10px] sm:text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200">
                                                             {statusMappingReverse[f.leadStatusId] || "N/A"}
                                                         </span>
                                                     </td>
@@ -402,12 +388,9 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             ))
                                         ) : (
                                             <tr>
-                                                <td
-                                                    colSpan={5}
-                                                    className="text-center py-6 sm:py-8 text-gray-500"
-                                                >
+                                                <td colSpan={5} className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
                                                     <div className="flex flex-col items-center gap-1.5 sm:gap-2">
-                                                        <Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300" />
+                                                        <Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300 dark:text-gray-500" />
                                                         <span className="text-xs sm:text-sm">No follow-ups found</span>
                                                     </div>
                                                 </td>
@@ -420,13 +403,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     </div>
                 </div>
             </div>
-            {toast && (
-                <Toast
-                    message={toast.message}
-                    type={toast.type}
-                    onClose={() => setToast(null)}
-                />
-            )}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </>
     );
 };

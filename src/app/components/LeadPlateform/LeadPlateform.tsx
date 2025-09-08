@@ -37,24 +37,24 @@ const LeadPlatformCard = ({
     onDelete: () => void;
     hasPermission: (permId: number, permName: string) => boolean;
 }) => (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3 flex-1">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-full flex items-center justify-center">
                     <Shield className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg text-gray-900 truncate">{platform.platformType}</h3>
-                    <p className="text-sm text-gray-500 mt-1">Platform ID: {platform.id}</p>
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white truncate">{platform.platformType}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Platform ID: {platform.id}</p>
                 </div>
             </div>
         </div>
-        <div className="flex gap-2 pt-3 border-t border-gray-100">
+        <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
             {hasPermission(22, "edit") && (
                 <button
                     onClick={onEdit}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium
-                   transition-colors bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                   transition-colors bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-gray-600 cursor-pointer"
                     title="Edit"
                 >
                     <Pencil className="w-4 h-4" />
@@ -65,7 +65,7 @@ const LeadPlatformCard = ({
                 <button
                     onClick={onDelete}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium
-                   transition-colors bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                   transition-colors bg-red-50 dark:bg-gray-700 text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-gray-600 cursor-pointer"
                     title="Delete"
                 >
                     <Trash2 className="w-4 h-4" />
@@ -115,24 +115,18 @@ const LeadPlateform: React.FC = () => {
     // Sorting logic
     const sortedData = useMemo(() => {
         if (!leadPlatforms) return [];
-
         let data = [...leadPlatforms];
-
-        // Apply sorting if sortConfig is set
         if (sortConfig) {
             data.sort((a: any, b: any) => {
                 const aVal = a[sortConfig.key];
                 const bVal = b[sortConfig.key];
-
                 if (typeof aVal === 'number' && typeof bVal === 'number') {
                     return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
                 }
-
                 const comparison = String(aVal).localeCompare(String(bVal));
                 return sortConfig.direction === 'asc' ? comparison : -comparison;
             });
         }
-
         return data;
     }, [leadPlatforms, sortConfig]);
 
@@ -219,7 +213,7 @@ const LeadPlateform: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-800">
             {/* Desktop Header */}
             <div className="hidden lg:block p-6">
                 <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -241,23 +235,23 @@ const LeadPlateform: React.FC = () => {
             </div>
 
             {/* Mobile Header */}
-            <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 lg:hidden">
+            <div className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 lg:hidden">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900">Lead Platforms</h1>
-                        <p className="text-xs text-gray-600">Manage and track your lead platforms</p>
+                        <h1 className="text-lg font-bold text-gray-900 dark:text-white">Lead Platforms</h1>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Manage and track your lead platforms</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
-                            className="p-2 text-gray-500 hover:text-gray-700"
+                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             title="Switch view"
                         >
                             {viewMode === 'table' ? <Grid3X3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
                         </button>
                         <button
                             onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="p-2 text-gray-500 hover:text-gray-700"
+                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             title="Menu"
                         >
                             <Menu className="w-5 h-5" />
@@ -267,7 +261,7 @@ const LeadPlateform: React.FC = () => {
             </div>
 
             {/* Sticky Add Button for Mobile */}
-            <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
+            <div className="sticky top-16 z-20 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
                 {hasPermission(21, "add") && (
                     <button
                         onClick={handleAdd}
@@ -295,15 +289,15 @@ const LeadPlateform: React.FC = () => {
                                     setSearchValue(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 dark:text-white"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="h-5 w-5 text-gray-400" />
+                                <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                             </div>
                         </div>
                         {loading ? (
                             <div className="flex justify-center py-12">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
                             </div>
                         ) : (
                             <>
@@ -320,9 +314,9 @@ const LeadPlateform: React.FC = () => {
                                 </div>
                                 {sortedData.length === 0 && (
                                     <div className="text-center py-12">
-                                        <div className="text-gray-400 text-5xl mb-4">🖥️</div>
-                                        <p className="text-gray-500 text-lg font-medium">No platforms found</p>
-                                        <p className="text-gray-400 text-sm mt-1">
+                                        <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">🖥️</div>
+                                        <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">No platforms found</p>
+                                        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
                                             {searchValue ? 'Try adjusting your search terms' : 'Add your first platform to get started'}
                                         </p>
                                     </div>
@@ -330,16 +324,16 @@ const LeadPlateform: React.FC = () => {
                             </>
                         )}
                         {totalPages > 1 && (
-                            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                            <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <button
                                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                     disabled={currentPage === 1}
-                                    className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
+                                    className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Previous
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-600">
+                                    <span className="text-sm text-gray-600 dark:text-gray-300">
                                         Page {currentPage} of {totalPages}
                                     </span>
                                     <select
@@ -348,7 +342,7 @@ const LeadPlateform: React.FC = () => {
                                             setPageSize(Number(e.target.value));
                                             setCurrentPage(1);
                                         }}
-                                        className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                                        className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 dark:text-white"
                                     >
                                         <option value={10}>10</option>
                                         <option value={25}>25</option>
@@ -358,14 +352,14 @@ const LeadPlateform: React.FC = () => {
                                 <button
                                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
+                                    className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Next
                                 </button>
                             </div>
                         )}
-                        <div className="bg-purple-50 rounded-lg p-3 text-center">
-                            <p className="text-sm text-purple-700">
+                        <div className="bg-purple-50 dark:bg-gray-700 rounded-lg p-3 text-center">
+                            <p className="text-sm text-purple-700 dark:text-purple-300">
                                 Total: <span className="font-semibold">{total}</span> platforms
                             </p>
                         </div>
@@ -374,7 +368,7 @@ const LeadPlateform: React.FC = () => {
 
                 {/* Table View (Desktop + Mobile) */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden" style={{ marginTop: "15px" }}>
                         <CustomTable<LeadPlatform>
                             data={sortedData}
                             columns={columns}
@@ -408,7 +402,7 @@ const LeadPlateform: React.FC = () => {
                                     {hasPermission(22, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
-                                            className="p-1 rounded text-blue-500 hover:text-blue-700 cursor-pointer"
+                                            className="p-1 rounded text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
                                             title="Edit"
                                         >
                                             <Pencil className="w-4 h-4" />
@@ -417,7 +411,7 @@ const LeadPlateform: React.FC = () => {
                                     {hasPermission(4, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
-                                            className="p-1 rounded text-red-500 hover:text-red-700 cursor-pointer"
+                                            className="p-1 rounded text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 cursor-pointer"
                                             title="Delete"
                                         >
                                             <Trash2 className="w-4 h-4" />

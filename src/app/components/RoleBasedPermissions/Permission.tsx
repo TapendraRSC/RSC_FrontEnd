@@ -132,31 +132,31 @@ const UserPermissions: React.FC = () => {
     const headers = list?.data?.permissions || [];
 
     return (
-        <div className="w-full bg-white shadow-xl rounded-xl overflow-hidden">
+        <div className="w-full bg-white dark:bg-gray-900 shadow-xl rounded-xl overflow-hidden">
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4">
                 <h2 className="text-lg sm:text-xl font-semibold">User Permissions</h2>
             </div>
             <div className="p-4 sm:p-6">
                 {/* Role Dropdown */}
                 <div className="relative mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Role</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Role</label>
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="w-full sm:w-64 px-3 py-2 bg-white border border-gray-300 rounded-lg flex justify-between items-center hover:border-indigo-400 transition-colors"
+                        className="w-full sm:w-64 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg flex justify-between items-center hover:border-indigo-400 transition-colors"
                     >
-                        <span className="text-sm sm:text-base">{selectedRole.roleType}</span>
+                        <span className="text-sm sm:text-base text-gray-900 dark:text-gray-200">{selectedRole.roleType}</span>
                         <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isDropdownOpen && (
-                        <div className="absolute top-full left-0 w-full sm:w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-20 mt-1">
+                        <div className="absolute top-full left-0 w-full sm:w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 mt-1">
                             {rolesLoading ? (
-                                <div className="p-2 text-center text-gray-500">Loading roles...</div>
+                                <div className="p-2 text-center text-gray-500 dark:text-gray-400">Loading roles...</div>
                             ) : (
                                 roles?.map((role: any) => (
                                     <button
                                         key={role.id}
                                         onClick={() => handleRoleSelection(role)}
-                                        className="block w-full text-left px-3 py-2 hover:bg-indigo-50 text-sm transition-colors"
+                                        className="block w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-gray-700 text-sm transition-colors text-gray-900 dark:text-gray-200"
                                     >
                                         {role.roleType}
                                     </button>
@@ -167,23 +167,23 @@ const UserPermissions: React.FC = () => {
                 </div>
 
                 {rolePermissionsLoading && (
-                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
                         <div className="flex items-center">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                            <span className="text-blue-700 text-sm">Loading permissions for {selectedRole.roleType}...</span>
+                            <span className="text-blue-700 dark:text-blue-300 text-sm">Loading permissions for {selectedRole.roleType}...</span>
                         </div>
                     </div>
                 )}
 
                 <div className="hidden xl:block">
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-full">
                                 <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200">
-                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm min-w-[180px]">Module Name</th>
+                                    <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                                        <th className="text-left p-4 font-semibold text-gray-700 dark:text-gray-300 text-sm min-w-[180px]">Module Name</th>
                                         {headers?.map((h: any) => (
-                                            <th key={h.id} className="text-center p-4 font-semibold text-gray-700 text-xs min-w-[80px] capitalize">
+                                            <th key={h.id} className="text-center p-4 font-semibold text-gray-700 dark:text-gray-300 text-xs min-w-[80px] capitalize">
                                                 {h.permissionName}
                                             </th>
                                         ))}
@@ -192,7 +192,7 @@ const UserPermissions: React.FC = () => {
                                 <tbody>
                                     {loading || rolePermissionsLoading ? (
                                         <tr>
-                                            <td colSpan={headers.length + 1} className="p-6 text-center text-gray-500">
+                                            <td colSpan={headers.length + 1} className="p-6 text-center text-gray-500 dark:text-gray-400">
                                                 {rolePermissionsLoading ? 'Loading role permissions...' : 'Loading...'}
                                             </td>
                                         </tr>
@@ -202,8 +202,8 @@ const UserPermissions: React.FC = () => {
                                         </tr>
                                     ) : permissions.length > 0 ? (
                                         permissions?.map((row, ri) => (
-                                            <tr key={ri} className={`border-b ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                                                <td className="p-4 text-gray-700 font-medium text-sm">{row.pageName}</td>
+                                            <tr key={ri} className={`border-b ${ri % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/50'} border-gray-200 dark:border-gray-700`}>
+                                                <td className="p-4 text-gray-700 dark:text-gray-300 font-medium text-sm">{row.pageName}</td>
                                                 {headers?.map((h: any) => {
                                                     const permissionId = h.id.toString();
                                                     const val = permissions[ri]?.permissions?.[permissionId] ?? false;
@@ -214,7 +214,7 @@ const UserPermissions: React.FC = () => {
                                                                 disabled={rolePermissionsLoading}
                                                                 className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all hover:scale-110 ${val
                                                                     ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
-                                                                    : 'bg-white border-gray-300 hover:border-indigo-400'
+                                                                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
                                                                     } ${rolePermissionsLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                             >
                                                                 {val && <Check className="w-3 h-3" />}
@@ -226,7 +226,7 @@ const UserPermissions: React.FC = () => {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={headers.length + 1} className="p-6 text-center text-gray-500">No permissions to display.</td>
+                                            <td colSpan={headers.length + 1} className="p-6 text-center text-gray-500 dark:text-gray-400">No permissions to display.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -234,25 +234,26 @@ const UserPermissions: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
                 {/* TABLET VIEW */}
                 <div className="hidden md:block xl:hidden">
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                         <div className="overflow-x-auto">
                             <div className={`min-w-[${Math.max(600, (headers.length + 2) * 80)}px]`}>
-                                <div className="bg-gray-50 border-b border-gray-200 p-4">
+                                <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
                                     <div className="grid gap-3" style={{ gridTemplateColumns: `200px repeat(${headers.length}, 80px)` }}>
-                                        <div className="font-semibold text-gray-700 text-sm">Module Name</div>
+                                        <div className="font-semibold text-gray-700 dark:text-gray-300 text-sm">Module Name</div>
                                         {headers.map((h: any) => (
-                                            <div key={h.id} className="text-center font-semibold text-gray-700 text-xs capitalize">
+                                            <div key={h.id} className="text-center font-semibold text-gray-700 dark:text-gray-300 text-xs capitalize">
                                                 {h.permissionName}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                                 {permissions?.map((row, ri) => (
-                                    <div key={ri} className={`p-4 border-b ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                    <div key={ri} className={`p-4 border-b ${ri % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/50'} border-gray-200 dark:border-gray-700`}>
                                         <div className="grid gap-3 items-center" style={{ gridTemplateColumns: `200px repeat(${headers.length}, 80px)` }}>
-                                            <div className="text-gray-700 font-medium text-sm">{row.pageName}</div>
+                                            <div className="text-gray-700 dark:text-gray-300 font-medium text-sm">{row.pageName}</div>
                                             {headers?.map((h: any) => {
                                                 const permissionId = h.id.toString();
                                                 const val = permissions[ri]?.permissions?.[permissionId] ?? false;
@@ -263,7 +264,7 @@ const UserPermissions: React.FC = () => {
                                                             disabled={rolePermissionsLoading}
                                                             className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all hover:scale-110 ${val
                                                                 ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
-                                                                : 'bg-white border-gray-300 hover:border-indigo-400'
+                                                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
                                                                 } ${rolePermissionsLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         >
                                                             {val && <Check className="w-3 h-3" />}
@@ -278,24 +279,25 @@ const UserPermissions: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
                 {/* MOBILE VIEW */}
                 <div className="block md:hidden space-y-4">
                     {permissions?.map((row, ri) => (
-                        <div key={ri} className="border border-gray-200 bg-white p-4 rounded-lg shadow-sm">
-                            <h3 className="font-semibold text-gray-800 mb-4 text-base border-b border-gray-100 pb-2">{row.pageName}</h3>
+                        <div key={ri} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
+                            <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 text-base border-b border-gray-100 dark:border-gray-700 pb-2">{row.pageName}</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 {headers?.map((h: any) => {
                                     const permissionId = h.id.toString();
                                     const val = permissions[ri]?.permissions?.[permissionId] ?? false;
                                     return (
-                                        <div key={h.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                            <span className="text-sm text-gray-600 font-medium capitalize">{h.permissionName}</span>
+                                        <div key={h.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                                            <span className="text-sm text-gray-600 dark:text-gray-300 font-medium capitalize">{h.permissionName}</span>
                                             <button
                                                 onClick={() => togglePermission(ri, permissionId)}
                                                 disabled={rolePermissionsLoading}
                                                 className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all hover:scale-110 ${val
                                                     ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
-                                                    : 'bg-white border-gray-300 hover:border-indigo-400'
+                                                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
                                                     } ${rolePermissionsLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 {val && <Check className="w-3 h-3" />}
@@ -307,6 +309,7 @@ const UserPermissions: React.FC = () => {
                         </div>
                     ))}
                 </div>
+
                 {/* Save Button */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
                     <button

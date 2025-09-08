@@ -43,19 +43,19 @@ const LandModal: React.FC<LandModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50" style={{ margin: "0px" }}>
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-fadeIn">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+            <div className="bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-fadeIn">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b pb-3 mb-4">
+                <div className="flex items-center justify-between border-b border-gray-700 pb-3 mb-4">
                     <div className="flex items-center gap-2">
-                        {/* <Map className="w-5 h-5 text-blue-600" /> */}
-                        <h2 className="text-lg font-semibold text-gray-800">
+                        {/* <Map className="w-5 h-5 text-blue-500" /> */}
+                        <h2 className="text-lg font-semibold text-gray-100">
                             {initialData ? "Edit Land" : "Add Land"}
                         </h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition"
+                        className="text-gray-400 hover:text-gray-200 transition"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -65,13 +65,13 @@ const LandModal: React.FC<LandModalProps> = ({
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     {/* Type Field */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
                             Type <span className="text-red-500">*</span>
                         </label>
                         <input
                             {...register("type", { required: "Type is required" })}
                             type="text"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            className="w-full border border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             placeholder="Enter land type"
                         />
                         {errors.type && (
@@ -86,7 +86,7 @@ const LandModal: React.FC<LandModalProps> = ({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+                            className="px-4 py-2 rounded-lg text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 transition"
                         >
                             Cancel
                         </button>
