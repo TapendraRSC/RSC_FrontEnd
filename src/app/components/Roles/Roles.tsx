@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store/store';
@@ -26,7 +26,6 @@ export default function RolesPage() {
         limit,
         loading: isLoading,
     } = useSelector((state: RootState) => state.roles);
-
     const [searchValue, setSearchValue] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: keyof Role; direction: 'asc' | 'desc' } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,7 +34,6 @@ export default function RolesPage() {
     const [pageSize, setPageSize] = useState(10);
     const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
     const [currentRole, setCurrentRole] = useState<Role | null>(null);
-
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -63,7 +61,7 @@ export default function RolesPage() {
         setSearchValue(val);
     };
 
-    const handleSort = (config: any) => {
+    const handleSort = (config: { key: keyof any; direction: 'asc' | 'desc' } | any) => {
         setSortConfig(config);
     };
 
@@ -132,6 +130,19 @@ export default function RolesPage() {
         }
     };
 
+    const sortedData = useMemo(() => {
+        if (!sortConfig) return roles;
+        return [...roles].sort((a, b) => {
+            const aVal = a[sortConfig.key];
+            const bVal = b[sortConfig.key];
+            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            }
+            const comparison = String(aVal).localeCompare(String(bVal));
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    }, [roles, sortConfig]);
+
     const columns: any = [
         {
             label: 'ID',
@@ -151,7 +162,6 @@ export default function RolesPage() {
 
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
-
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
@@ -172,10 +182,8 @@ export default function RolesPage() {
 
     const hasPermission = (permId: number, permName: string) => {
         if (!leadPermissionIds.includes(permId)) return false;
-
         const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
         if (!matched) return false;
-
         return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
     };
 
@@ -197,7 +205,6 @@ export default function RolesPage() {
                     </span>
                 </div>
             </div>
-
             <div className="flex gap-2 pt-3 border-t border-gray-100">
                 {hasPermission(22, "edit") && (
                     <button
@@ -238,17 +245,11 @@ export default function RolesPage() {
                         >
                             {viewMode === 'table' ? <Grid3X3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
                         </button>
-                        {/* <button
-                            onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="p-2 text-gray-500 hover:text-gray-700"
-                            title="Menu"
-                        >
-                            <Menu className="w-5 h-5" />
-                        </button> */}
                     </div>
                 </div>
             </div>
 
+            {/* Mobile Actions */}
             <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
                 {hasPermission(21, "add") && (
                     <button
@@ -261,6 +262,7 @@ export default function RolesPage() {
                 )}
             </div>
 
+            {/* Desktop Header */}
             <div className="hidden lg:block p-6">
                 <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
@@ -285,7 +287,9 @@ export default function RolesPage() {
                 </div>
             </div>
 
+            {/* Content */}
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+                {/* Grid View (Mobile) */}
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
                         <div className="relative">
@@ -300,7 +304,6 @@ export default function RolesPage() {
                                 <Search className="h-5 w-5 text-gray-400" />
                             </div>
                         </div>
-
                         {isLoading ? (
                             <div className="flex justify-center py-12">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -308,12 +311,11 @@ export default function RolesPage() {
                         ) : (
                             <>
                                 <div className="grid gap-4">
-                                    {roles.map((role) => (
+                                    {sortedData.map((role) => (
                                         <RoleCard key={role.id} role={role} />
                                     ))}
                                 </div>
-
-                                {roles.length === 0 && (
+                                {sortedData.length === 0 && (
                                     <div className="text-center py-12">
                                         <div className="text-gray-400 text-5xl mb-4">🛡️</div>
                                         <p className="text-gray-500 text-lg font-medium">No roles found</p>
@@ -324,7 +326,6 @@ export default function RolesPage() {
                                 )}
                             </>
                         )}
-
                         {totalPages > 1 && (
                             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                                 <button
@@ -357,7 +358,6 @@ export default function RolesPage() {
                                 </button>
                             </div>
                         )}
-
                         <div className="bg-purple-50 rounded-lg p-3 text-center">
                             <p className="text-sm text-purple-700">
                                 Total: <span className="font-semibold">{total}</span> system roles
@@ -366,10 +366,11 @@ export default function RolesPage() {
                     </div>
                 </div>
 
+                {/* Table View */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                         <CustomTable<Role>
-                            data={roles}
+                            data={sortedData}
                             isLoading={isLoading}
                             title="System Roles"
                             columns={columns}
@@ -415,6 +416,7 @@ export default function RolesPage() {
                 </div>
             </div>
 
+            {/* Modals */}
             <RolesModal
                 isOpen={isModalOpen}
                 onClose={() => {
