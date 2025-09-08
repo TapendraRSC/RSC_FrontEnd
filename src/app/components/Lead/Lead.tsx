@@ -642,6 +642,7 @@ const LeadComponent: React.FC = () => {
                             {hasPermission(22, 'edit') && (
                                 <button
                                     onClick={() => handleEdit(row)}
+                                    title="Edit"
                                     className="p-1 rounded text-blue-500 hover:text-blue-700 cursor-pointer"
                                 >
                                     <Pencil className="w-4 h-4" />
@@ -650,6 +651,7 @@ const LeadComponent: React.FC = () => {
                             {hasPermission(4, 'delete') && (
                                 <button
                                     onClick={() => handleDelete(row)}
+                                    title="Delete"
                                     className="p-1 rounded text-red-500 hover:text-red-700 cursor-pointer"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -660,6 +662,7 @@ const LeadComponent: React.FC = () => {
                                     setSelectedLeadId(row);
                                     setIsFollowUpModalOpen(true);
                                 }}
+                                title="Delete"
                                 className="text-green-500 hover:text-green-700 p-1 cursor-pointer"
                             >
                                 📞
