@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect, useMemo } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
@@ -9,6 +10,7 @@ import { AppDispatch, RootState } from '../../../../store/store';
 import { fetchPermissions, addPermission, updatePermission, deletePermission } from '../../../../store/permissionSlice';
 import { toast } from 'react-toastify';
 
+// ------------------ Types ------------------
 interface Permission {
     id: number;
     permissionName: string;
@@ -19,6 +21,7 @@ interface SortConfig {
     direction: 'asc' | 'desc';
 }
 
+// ------------------ Component ------------------
 const PermissionsShow: React.FC = () => {
     const [searchValue, setSearchValue] = React.useState('');
     const [sortConfig, setSortConfig] = React.useState<SortConfig | null>(null);
@@ -29,13 +32,16 @@ const PermissionsShow: React.FC = () => {
     const [currentPermission, setCurrentPermission] = React.useState<Permission | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [permissionToDelete, setPermissionToDelete] = React.useState<Permission | null>(null);
+
     const dispatch = useDispatch<AppDispatch>();
     const { list, loading, error } = useSelector((state: RootState) => state.permissions);
 
+    // ✅ Fetch permissions
     useEffect(() => {
         dispatch(fetchPermissions({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
 
+    // ------------------ Data handling ------------------
     const filteredData = list?.data?.permissions || [];
     const totalPages = list?.data?.totalPages || 1;
 
@@ -107,7 +113,7 @@ const PermissionsShow: React.FC = () => {
         }
     };
 
-    // Sorting logic
+    // ------------------ Sorting ------------------
     const sortedData = useMemo(() => {
         if (!sortConfig) return filteredData;
         return [...filteredData].sort((a, b) => {
@@ -121,6 +127,7 @@ const PermissionsShow: React.FC = () => {
         });
     }, [filteredData, sortConfig]);
 
+    // ------------------ Table columns ------------------
     const columns: any = [
         {
             label: 'ID',
@@ -135,11 +142,14 @@ const PermissionsShow: React.FC = () => {
     ];
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return <div className="text-red-600 dark:text-red-400">Error: {error}</div>;
     }
 
+    // ------------------ UI ------------------
     return (
-        <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white min-h-screen overflow-y-auto">
+        <div className="space-y-8 bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-900 min-h-screen overflow-y-auto transition-colors">
+
+            {/* Header Section */}
             <div className="mb-6 flex justify-between items-center p-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Permissions</h1>
@@ -147,14 +157,16 @@ const PermissionsShow: React.FC = () => {
                 </div>
                 <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md dark:shadow-blue-800/30"
                 >
                     <Plus className="w-4 h-4" />
                     Add Permission
                 </button>
             </div>
+
+            {/* Table Section */}
             <div className="p-6">
-                <div className="bg-white rounded-lg shadow-sm">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-lg transition-colors border border-gray-100 dark:border-gray-700">
                     <CustomTable<Permission>
                         data={sortedData}
                         columns={columns}
@@ -178,27 +190,31 @@ const PermissionsShow: React.FC = () => {
                         showColumnToggle={true}
                         hiddenColumns={hiddenColumns}
                         onColumnVisibilityChange={handleColumnVisibilityChange}
-                    // actions={(row: Permission) => (
-                    //     <div className="flex gap-2">
-                    //         <button
-                    //             onClick={() => handleEdit(row)}
-                    //             className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
-                    //             title="Edit"
-                    //         >
-                    //             <Pencil className="w-4 h-4" />
-                    //         </button>
-                    //         <button
-                    //             onClick={() => handleDelete(row)}
-                    //             className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                    //             title="Delete"
-                    //         >
-                    //             <Trash2 className="w-4 h-4" />
-                    //         </button>
-                    //     </div>
-                    // )}
+                        actions={(row: Permission) => (
+                            <div className="flex gap-2">
+                                {/* Edit button */}
+                                <button
+                                    onClick={() => handleEdit(row)}
+                                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition-colors"
+                                    title="Edit"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                                {/* Delete button */}
+                                <button
+                                    onClick={() => handleDelete(row)}
+                                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors"
+                                    title="Delete"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
                     />
                 </div>
             </div>
+
+            {/* Modals */}
             <PermissionModalShow
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -206,6 +222,7 @@ const PermissionsShow: React.FC = () => {
                 isLoading={loading}
                 currentPermission={currentPermission}
             />
+
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}

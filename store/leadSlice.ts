@@ -127,6 +127,7 @@ export interface Lead {
     leadStatusId: number;
     leadStatus?: string;
     assignedUserName?: string;
+    interestStatus?: string;
 }
 
 interface LeadState {
@@ -188,22 +189,17 @@ const leadSlice = createSlice({
                         assignedTo: item.assignedTo,
                         platformId: item.platformId,
                         platformType: item.platformType,
-
-                        // Plot info
                         plotId: item.plotId,
                         plotNumber: item.plotNumber,
                         plotPrice: item.plotPrice,
-
-                        // 👇 Add these two if API sends them
                         plotProjectId: item.plotProjectId,
                         plotProjectTitle: item.plotProjectTitle,
-
-                        // Lead stage / status
                         leadStageId: item.leadStageId,
                         leadStage: item.leadStage,
                         leadStatusId: item.leadStatusId,
                         leadStatus: item.leadStatus,
                         assignedUserName: item.assignedUserName,
+                        interestStatus: item.interestStatus,
                     })) || [];
 
             })

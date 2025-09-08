@@ -87,7 +87,6 @@ const Users: React.FC = () => {
         const map = new Map<string, string>();
         const rolesData: any = roles;
         let rolesArray: any[] = [];
-
         try {
             if (Array.isArray(rolesData)) {
                 rolesArray = rolesData;
@@ -103,7 +102,6 @@ const Users: React.FC = () => {
         } catch (error) {
             console.error('Error processing roles data:', error);
         }
-
         if (rolesArray && rolesArray.length > 0) {
             rolesArray.forEach((role: any) => {
                 if (role && role.id && role.roleType) {
@@ -173,7 +171,6 @@ const Users: React.FC = () => {
         setSearchValue(value);
         setCurrentPage(1);
     };
-
     const handleColumnVisibilityChange = (newHiddenColumns: string[]) => {
         setHiddenColumns(newHiddenColumns);
         localStorage.setItem('users-hidden-columns', JSON.stringify(newHiddenColumns));
@@ -203,28 +200,21 @@ const Users: React.FC = () => {
     const handleUserSubmit = async (data: any) => {
         setIsSubmitting(true);
         let resultAction: any;
-
         if (editingUser) {
             resultAction = await dispatch(updateUser({ id: editingUser.id, userData: data }));
         } else {
             resultAction = await dispatch(addUser(data));
         }
-
         const res = resultAction.payload;
-
         if (res?.success) {
-            // toast.success(res.message);
             dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
             setModalOpen(false);
         } else {
-            // Backend ka actual error message show karo
             const errorMessage = Array.isArray(res?.errors) && res.errors.length > 0
-                ? res.errors[0]  // sirf pehla validation error
+                ? res.errors[0]
                 : res?.message;
-
             toast.error(errorMessage);
         }
-
         setIsSubmitting(false);
     };
 
@@ -237,9 +227,7 @@ const Users: React.FC = () => {
         if (userToDelete) {
             try {
                 const res = await dispatch(deleteUser(userToDelete.id));
-
                 if (res.meta.requestStatus === "fulfilled") {
-                    // toast.success("User deleted successfully ");
                     await dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue }));
                     setIsDeleteModalOpen(false);
                 } else {
@@ -254,7 +242,6 @@ const Users: React.FC = () => {
     const getRoleType = (roleId: number) => {
         const rolesData: any = roles;
         let actualRoles: any[] = [];
-
         if (Array.isArray(rolesData)) {
             actualRoles = rolesData;
         } else if (rolesData?.data) {
@@ -264,13 +251,11 @@ const Users: React.FC = () => {
                 actualRoles = rolesData.data.data;
             }
         }
-
         const foundRole = actualRoles.find((role: any) => {
             return String(role.id) === String(roleId) ||
                 role.id === roleId ||
                 Number(role.id) === Number(roleId);
         });
-
         return foundRole ? foundRole.roleType : `Role ${roleId}`;
     };
 
@@ -299,7 +284,7 @@ const Users: React.FC = () => {
                     <img
                         src={row.profileImage}
                         alt="Profile"
-                        className="w-20 h-12 object-cover border border-gray-300 rounded-lg"
+                        className="w-20 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-lg"
                     />
                 ) : (
                     '-'
@@ -321,9 +306,9 @@ const Users: React.FC = () => {
             accessor: 'email',
             sortable: true,
             width: '200px',
-            mobile: true, // Show on mobile
+            mobile: true,
             render: (row: User) => (
-                <div className="truncate max-w-[150px] md:max-w-[200px]" title={row.email}>
+                <div className="truncate max-w-[150px] md:max-w-[200px] text-gray-900 dark:text-gray-100" title={row.email}>
                     {row.email}
                 </div>
             ),
@@ -344,16 +329,15 @@ const Users: React.FC = () => {
             accessor: 'roleId',
             sortable: true,
             width: '120px',
-            mobile: true, // Show on mobile
+            mobile: true,
             render: (row: User) => {
                 const roleType = getRoleType(row.roleId);
                 return (
-                    <div className="truncate max-w-[100px] md:max-w-[120px]" title={roleType}>
+                    <div className="truncate max-w-[100px] md:max-w-[120px] text-gray-900 dark:text-gray-100" title={roleType}>
                         {roleType}
                     </div>
                 );
             },
-            // showTooltip: true
         },
         {
             label: 'Status',
@@ -363,8 +347,8 @@ const Users: React.FC = () => {
             mobile: false,
             render: (row: User) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                     }`}>
                     {row.status || 'Active'}
                 </span>
@@ -375,7 +359,6 @@ const Users: React.FC = () => {
 
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
-
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
@@ -395,26 +378,21 @@ const Users: React.FC = () => {
     const leadPermissionIds = getLeadPermissions();
 
     const hasPermission = (permId: number, permName: string) => {
-        // rolePermissions se id check
         if (!leadPermissionIds.includes(permId)) return false;
-
-        // master list se naam check
         const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
         if (!matched) return false;
-
         return matched.permissionName?.trim().toLowerCase() === permName.trim().toLowerCase();
     };
 
-    // Mobile card component for user items
     const UserCard = ({ user }: { user: User }) => (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3 flex-1">
                     {user.profileImage ? (
                         <img
                             src={user.profileImage}
                             alt="Profile"
-                            className="w-12 h-12 object-cover border border-gray-300 rounded-full"
+                            className="w-12 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-full"
                         />
                     ) : (
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
@@ -424,32 +402,30 @@ const Users: React.FC = () => {
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900 truncate">{user.name}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{getRoleType(user.roleId)}</p>
-                        <p className="text-sm text-gray-600 truncate mt-1">{user.email}</p>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 truncate">{user.name}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{getRoleType(user.roleId)}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 truncate mt-1">{user.email}</p>
                     </div>
                 </div>
                 {user.status && (
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                         }`}>
                         {user.status}
                     </span>
                 )}
             </div>
-
             {user.phoneNumber && (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                     <span className="font-medium">Phone:</span> {user.phoneNumber}
                 </div>
             )}
-
-            <div className="flex gap-2 pt-3 border-t border-gray-100">
+            <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
                 {hasPermission(22, "edit") && (
                     <button
                         onClick={() => handleEdit(user)}
-                        className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors flex items-center justify-center gap-2"
                     >
                         <Pencil className="w-4 h-4" />
                         Edit
@@ -458,7 +434,7 @@ const Users: React.FC = () => {
                 {hasPermission(4, "delete") && (
                     <button
                         onClick={() => handleDelete(user)}
-                        className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 dark:hover:bg-red-800 transition-colors flex items-center justify-center gap-2"
                     >
                         <Trash2 className="w-4 h-4" />
                         Delete
@@ -469,25 +445,25 @@ const Users: React.FC = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white dark:from-slate-950 dark:via-slate-900 dark:to-black">
             {/* Mobile Header */}
-            <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 lg:hidden">
+            <div className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 lg:hidden">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900">Users Management</h1>
-                        <p className="text-xs text-gray-600">Manage system users</p>
+                        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Users Management</h1>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Manage system users</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
-                            className="p-2 text-gray-500 hover:text-gray-700"
+                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             title="Switch view"
                         >
                             {viewMode === 'table' ? <Grid3X3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
                         </button>
                         <button
                             onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="p-2 text-gray-500 hover:text-gray-700"
+                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             title="Menu"
                         >
                             <Menu className="w-5 h-5" />
@@ -495,39 +471,33 @@ const Users: React.FC = () => {
                     </div>
                 </div>
             </div>
-
             {/* Mobile Action Button */}
-            <div className="sticky top-16 z-20 bg-white border-b border-gray-100 px-4 py-3 lg:hidden">
+            <div className="sticky top-16 z-20 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
                 <div className="flex items-center gap-2">
-                    {/* Add User Button */}
                     {hasPermission(21, "add") && (
                         <button
                             onClick={handleAdd}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
-                bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg duration-200"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg duration-200"
                         >
                             <Plus className="w-5 h-5" />
                             <span>Add New User</span>
                         </button>
                     )}
-
                     {hasPermission(24, "export") && (
                         <button
                             onClick={handleExport}
-                            className="flex items-center justify-center gap-2 p-2.5 rounded-lg 
-                bg-purple-500 hover:bg-purple-600 text-white transition-colors shadow-md hover:shadow-lg duration-200"
+                            className="flex items-center justify-center gap-2 p-2.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors shadow-md hover:shadow-lg duration-200"
                         >
                             <Download className="w-5 h-5" />
                         </button>
                     )}
                 </div>
             </div>
-
             {/* Desktop Header */}
             <div className="hidden lg:block p-6">
                 <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             Users Management
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -536,23 +506,18 @@ const Users: React.FC = () => {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         {hasPermission(24, "export") && (
-
                             <button
                                 onClick={handleExport}
-                                className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base
-            bg-purple-500 hover:bg-purple-600 text-white font-medium
-            shadow-md hover:shadow-lg transition-all duration-200"
+                                className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base bg-purple-500 hover:bg-purple-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
                             >
                                 <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                                 <span className="hidden sm:inline">Export</span>
                             </button>
                         )}
-
                         {hasPermission(21, "add") && (
                             <button
                                 onClick={handleAdd}
-                                className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white 
-            px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg duration-200"
+                                className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg duration-200"
                             >
                                 <Plus className="w-4 h-4" />
                                 <span className="hidden sm:inline">Add User</span>
@@ -561,7 +526,6 @@ const Users: React.FC = () => {
                     </div>
                 </div>
             </div>
-
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
@@ -571,16 +535,15 @@ const Users: React.FC = () => {
                                 placeholder="Search users..."
                                 value={searchValue}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="h-5 w-5 text-gray-400" />
+                                <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                             </div>
                         </div>
-
                         {loading ? (
                             <div className="flex justify-center py-12">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
                             </div>
                         ) : (
                             <>
@@ -589,37 +552,35 @@ const Users: React.FC = () => {
                                         <UserCard key={user.id} user={user} />
                                     ))}
                                 </div>
-
                                 {paginatedData.length === 0 && (
                                     <div className="text-center py-12">
-                                        <div className="text-gray-400 text-5xl mb-4">👥</div>
-                                        <p className="text-gray-500 text-lg font-medium">No users found</p>
-                                        <p className="text-gray-400 text-sm mt-1">
+                                        <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">👥</div>
+                                        <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">No users found</p>
+                                        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
                                             {searchValue ? 'Try adjusting your search terms' : 'Add your first user to get started'}
                                         </p>
                                     </div>
                                 )}
                             </>
                         )}
-
                         {/* Mobile Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                            <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <button
                                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                     disabled={currentPage === 1}
-                                    className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
+                                    className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                 >
                                     Previous
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-600">
+                                    <span className="text-sm text-gray-600 dark:text-gray-300">
                                         Page {currentPage} of {totalPages}
                                     </span>
                                     <select
                                         value={pageSize}
                                         onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                                        className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                                        className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                                     >
                                         <option value={10}>10</option>
                                         <option value={25}>25</option>
@@ -629,24 +590,22 @@ const Users: React.FC = () => {
                                 <button
                                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
+                                    className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                 >
                                     Next
                                 </button>
                             </div>
                         )}
-
                         {/* Mobile Summary */}
-                        <div className="bg-blue-50 rounded-lg p-3 text-center">
-                            <p className="text-sm text-blue-700">
+                        <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
                                 Total: <span className="font-semibold">{totalRecords}</span> users
                             </p>
                         </div>
                     </div>
                 </div>
-
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
                         <CustomTable<User>
                             data={paginatedData}
                             columns={columns}
@@ -675,17 +634,16 @@ const Users: React.FC = () => {
                                     {hasPermission(22, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
-                                            className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                                            className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 rounded transition-colors"
                                             title="Edit"
                                         >
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
                                     )}
-
                                     {hasPermission(4, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
-                                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded transition-colors"
                                             title="Delete"
                                         >
                                             <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -697,7 +655,6 @@ const Users: React.FC = () => {
                     </div>
                 </div>
             </div>
-
             {/* Modals */}
             <UsersModal
                 isOpen={modalOpen}
@@ -713,7 +670,6 @@ const Users: React.FC = () => {
                 message={`Are you sure you want to delete the user "${userToDelete?.name}"?`}
                 Icon={Trash2}
             />
-
             <ExportModal
                 isOpen={isExportModalOpen}
                 onClose={() => setIsExportModalOpen(false)}

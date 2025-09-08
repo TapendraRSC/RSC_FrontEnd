@@ -1,14 +1,12 @@
 'use client';
-
 import Link from 'next/link';
 import { useState, useEffect, createContext, useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChevronDown, X } from 'lucide-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
-import 'react-perfect-scrollbar/dist/css/styles.css'; // ✅ Import CSS
+import 'react-perfect-scrollbar/dist/css/styles.css';
 import AnimateHeight from 'react-animate-height';
-
 import { AppDispatch, RootState } from '../../../../store/store';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
@@ -19,6 +17,7 @@ interface SidebarContextType {
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+
 export const useSidebar = () => {
     const context = useContext(SidebarContext);
     if (!context) throw new Error('useSidebar must be used within a SidebarProvider');
@@ -27,7 +26,6 @@ export const useSidebar = () => {
 
 export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
     useEffect(() => {
@@ -74,8 +72,8 @@ const Sidebar = () => {
                 { pageName: 'User Permissions', title: 'User Permissions', href: '/rolebasedpermissions' },
                 { pageName: 'Lead Stage Master View', title: 'Lead Stage Master View', href: '/leadstagemasterpage' },
                 { pageName: 'Status Master View', title: 'Status Master View', href: '/statusmasterview' },
-                { pageName: 'Land', title: 'Land', href: '/land', },
-                { pageName: 'Lead Platform', title: 'Lead Platform', href: '/leadplatform', },
+                { pageName: 'Land', title: 'Land', href: '/land' },
+                { pageName: 'Lead Platform', title: 'Lead Platform', href: '/leadplatform' },
             ]
         },
         projectstatus: { pageName: 'Project Status', title: 'Project Status', href: '/projectstatus', type: 'single' },
@@ -87,7 +85,6 @@ const Sidebar = () => {
     const getFilteredMenu = () => {
         if (!rolePermissions?.permissions) return {};
         const filtered: any = {};
-
         Object.entries(menuStructure).forEach(([key, item]: any) => {
             if (item.type === 'single') {
                 const permission = rolePermissions.permissions.find(
@@ -95,7 +92,6 @@ const Sidebar = () => {
                 );
                 if (permission) filtered[key] = item;
             }
-
             if (item.type === 'dropdown') {
                 const children = item.children.filter((child: any) => {
                     const permission = rolePermissions.permissions.find(
@@ -103,11 +99,9 @@ const Sidebar = () => {
                     );
                     return permission;
                 });
-
                 if (children.length > 0) filtered[key] = { ...item, children };
             }
         });
-
         return filtered;
     };
 
@@ -130,14 +124,13 @@ const Sidebar = () => {
                 setSidebarOpen(false);
             }
         };
-
         if (sidebarOpen) document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [sidebarOpen]);
 
     if (rolePermissionsLoading) {
         return (
-            <nav className="sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black transition-transform duration-300 ease-in-out lg:translate-x-0">
+            <nav className="sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-gray-900 transition-transform duration-300 ease-in-out lg:translate-x-0">
                 <div className="p-4 space-y-3 animate-pulse">
                     <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -151,22 +144,20 @@ const Sidebar = () => {
             {sidebarOpen && (
                 <div onClick={toggleSidebar} className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" />
             )}
-
             <nav
-                className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-black shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    } lg:translate-x-0`}
+                className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-gray-900 shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] dark:shadow-[5px_0_25px_0_rgba(0,0,0,0.3)] transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
             >
                 <div className="flex flex-col h-full">
                     {/* ---------- Header ---------- */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                         <Link href="/" className="main-logo flex items-center gap-2">
-                            <span className="text-2xl font-semibold text-black dark:text-white">RSC Group</span>
+                            <span className="text-2xl font-semibold text-gray-900 dark:text-white">RSC Group</span>
                         </Link>
                         <button
                             onClick={toggleSidebar}
-                            className="lg:hidden h-8 w-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+                            className="lg:hidden h-8 w-8 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
                         >
-                            <X className="w-5 h-5 text-black dark:text-white" />
+                            <X className="w-5 h-5 text-gray-900 dark:text-white" />
                         </button>
                     </div>
 
@@ -186,11 +177,9 @@ const Sidebar = () => {
                                     <li className="menu nav-item">
                                         <Link
                                             href={filteredMenuItems.dashboard.href}
-                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100"
                                         >
-                                            <span className="text-black dark:text-white">
-                                                {filteredMenuItems.dashboard.title}
-                                            </span>
+                                            <span>{filteredMenuItems.dashboard.title}</span>
                                         </Link>
                                     </li>
                                 )}
@@ -200,46 +189,28 @@ const Sidebar = () => {
                                         <button
                                             onClick={() =>
                                                 setCurrentMenu(
-                                                    currentMenu === filteredMenuItems.allMasters.key
-                                                        ? ''
-                                                        : filteredMenuItems.allMasters.key
+                                                    currentMenu === filteredMenuItems.allMasters.key ? '' : filteredMenuItems.allMasters.key
                                                 )
                                             }
-                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition ${currentMenu === filteredMenuItems.allMasters.key
-                                                ? 'bg-gray-100 dark:bg-gray-800'
-                                                : ''
-                                                }`}
+                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${currentMenu === filteredMenuItems.allMasters.key ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
                                         >
-                                            <span className="text-black dark:text-white">
-                                                {filteredMenuItems.allMasters.title}
-                                            </span>
+                                            <span>{filteredMenuItems.allMasters.title}</span>
                                             <ChevronDown
-                                                className={`w-5 h-5 text-black dark:text-white transition-transform ${currentMenu === filteredMenuItems.allMasters.key
-                                                    ? 'rotate-0'
-                                                    : '-rotate-90'
-                                                    }`}
+                                                className={`w-5 h-5 transition-transform text-gray-900 dark:text-gray-100 ${currentMenu === filteredMenuItems.allMasters.key ? 'rotate-0' : '-rotate-90'}`}
                                             />
                                         </button>
-
-                                        <AnimateHeight
-                                            duration={300}
-                                            height={
-                                                currentMenu === filteredMenuItems.allMasters.key ? 'auto' : 0
-                                            }
-                                        >
-                                            <ul className="sub-menu pl-6 py-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                                                {filteredMenuItems.allMasters.children.map(
-                                                    (child: any, index: number) => (
-                                                        <li key={index}>
-                                                            <Link
-                                                                href={child.href}
-                                                                className="hover:text-black dark:hover:text-white transition"
-                                                            >
-                                                                {child.title}
-                                                            </Link>
-                                                        </li>
-                                                    )
-                                                )}
+                                        <AnimateHeight duration={300} height={currentMenu === filteredMenuItems.allMasters.key ? 'auto' : 0}>
+                                            <ul className="sub-menu pl-6 py-2 space-y-1 text-sm">
+                                                {filteredMenuItems.allMasters.children.map((child: any, index: number) => (
+                                                    <li key={index}>
+                                                        <Link
+                                                            href={child.href}
+                                                            className="block px-3 py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                                                        >
+                                                            {child.title}
+                                                        </Link>
+                                                    </li>
+                                                ))}
                                             </ul>
                                         </AnimateHeight>
                                     </li>
@@ -249,11 +220,9 @@ const Sidebar = () => {
                                     <li className="menu nav-item">
                                         <Link
                                             href={filteredMenuItems.projectstatus.href}
-                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100"
                                         >
-                                            <span className="text-black dark:text-white">
-                                                {filteredMenuItems.projectstatus.title}
-                                            </span>
+                                            <span>{filteredMenuItems.projectstatus.title}</span>
                                         </Link>
                                     </li>
                                 )}
@@ -262,11 +231,9 @@ const Sidebar = () => {
                                     <li className="menu nav-item">
                                         <Link
                                             href={filteredMenuItems.Lead.href}
-                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100"
                                         >
-                                            <span className="text-black dark:text-white">
-                                                {filteredMenuItems.Lead.title}
-                                            </span>
+                                            <span>{filteredMenuItems.Lead.title}</span>
                                         </Link>
                                     </li>
                                 )}

@@ -1,5 +1,4 @@
 'use client';
-
 import { useForm } from 'react-hook-form';
 import { X, Plus } from 'lucide-react';
 import { useEffect } from 'react';
@@ -25,8 +24,8 @@ interface ProjectStatusModalProps {
 interface FormData {
     title: string;
     status: string;
-    projectImage?: string;
-    projectPdf?: string;
+    projectImage?: FileList;
+    projectPdf?: FileList;
 }
 
 const statusOptions = [
@@ -58,11 +57,11 @@ export default function ProjectStatusModal({
             reset({
                 title: currentProjectStatus.title,
                 status: currentProjectStatus.status,
-                projectImage: currentProjectStatus.projectImage,
-                projectPdf: currentProjectStatus.projectPdf,
+                projectImage: undefined,
+                projectPdf: undefined,
             });
         } else {
-            reset({ title: '', status: 'active', projectImage: '', projectPdf: '' });
+            reset({ title: '', status: 'active', projectImage: undefined, projectPdf: undefined });
         }
     }, [currentProjectStatus, reset]);
 
@@ -82,13 +81,13 @@ export default function ProjectStatusModal({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 animate-in fade-in duration-200"
             style={{ margin: "0px" }}
         >
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm sm:max-w-md lg:max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm sm:max-w-md lg:max-w-lg max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex justify-between items-center p-3 sm:p-4 border-b">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                <div className="flex justify-between items-center p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                         {currentProjectStatus ? 'Edit Project Status' : 'Add New Project Status'}
                     </h2>
-                    <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
+                    <button onClick={handleClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -104,11 +103,12 @@ export default function ProjectStatusModal({
                         required
                         clearErrors={clearErrors}
                         placeholder="Enter project status"
+                        className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     />
 
                     {/* Status Dropdown */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Status<span className="text-red-500 ml-1">*</span>
                         </label>
                         <CommonDropdown
@@ -116,32 +116,33 @@ export default function ProjectStatusModal({
                             selected={statusOptions.find((s) => s.value === selectedStatus) || null}
                             onChange={(value) => setValue('status', (value as any).value)}
                             placeholder="Select status"
+                            className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                         />
                         {errors.status && (
-                            <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
+                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.status.message}</p>
                         )}
                     </div>
 
                     {/* Project Image Upload */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Project Image
                         </label>
                         <input
                             type="file"
                             accept="image/*"
                             {...register('projectImage')}
-                            className="block w-full text-sm text-gray-700 border border-gray-300 rounded-md p-2"
+                            className="block w-full text-sm text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700"
                         />
                         {errors.projectImage && (
-                            <p className="mt-1 text-sm text-red-600">{errors.projectImage.message}</p>
+                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.projectImage.message}</p>
                         )}
                         {currentProjectStatus?.projectImage && (
                             <a
                                 href={currentProjectStatus.projectImage}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 text-sm hover:underline mt-1 block"
+                                className="text-blue-500 dark:text-blue-400 text-sm hover:underline mt-1 block"
                             >
                                 View Current Image
                             </a>
@@ -150,24 +151,24 @@ export default function ProjectStatusModal({
 
                     {/* Project PDF Upload */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Project PDF
                         </label>
                         <input
                             type="file"
                             accept="application/pdf"
                             {...register('projectPdf')}
-                            className="block w-full text-sm text-gray-700 border border-gray-300 rounded-md p-2"
+                            className="block w-full text-sm text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700"
                         />
                         {errors.projectPdf && (
-                            <p className="mt-1 text-sm text-red-600">{errors.projectPdf.message}</p>
+                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.projectPdf.message}</p>
                         )}
                         {currentProjectStatus?.projectPdf && (
                             <a
                                 href={currentProjectStatus.projectPdf}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 text-sm hover:underline mt-1 block"
+                                className="text-blue-500 dark:text-blue-400 text-sm hover:underline mt-1 block"
                             >
                                 View Current PDF
                             </a>
@@ -179,7 +180,7 @@ export default function ProjectStatusModal({
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                            className="w-full sm:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                             Cancel
                         </button>
