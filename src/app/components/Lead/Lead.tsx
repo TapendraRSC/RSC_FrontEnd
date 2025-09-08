@@ -102,6 +102,7 @@ const LeadComponent: React.FC = () => {
             plotPrice: lead?.plotPrice || 'N/A',
             plotProjectId: lead?.plotProjectId || null,
             plotProjectTitle: lead?.plotProjectTitle || 'N/A',
+            interestStatus: lead?.interestStatus || 'N/A'
         }));
     }, [leadList, currentPage, pageSize]);
 
@@ -234,13 +235,13 @@ const LeadComponent: React.FC = () => {
 
     const stringToColor = (str: string) => {
         let hash = 0;
-        for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 10) - hash);
+        for (let i = 0; i < str?.length; i++) hash = str.charCodeAt(i) + ((hash << 10) - hash);
         return `hsl(${Math.abs(hash) % 360}, 65%, 92%)`;
     };
 
     const stringToTextColor = (str: string) => {
         let hash = 0;
-        for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 10) - hash);
+        for (let i = 0; i < str?.length; i++) hash = str.charCodeAt(i) + ((hash << 10) - hash);
         return `hsl(${Math.abs(hash) % 360}, 75%, 25%)`;
     };
 
@@ -310,6 +311,13 @@ const LeadComponent: React.FC = () => {
                     showTooltip: true,
                 },
                 {
+                    label: 'Current Status',
+                    accessor: 'interestStatus',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row?.interestStatus),
+                    showTooltip: true,
+                },
+                {
                     label: 'Remark',
                     accessor: 'remark',
                     sortable: true,
@@ -366,6 +374,13 @@ const LeadComponent: React.FC = () => {
                     showTooltip: true,
                 },
                 {
+                    label: 'Current Status',
+                    accessor: 'interestStatus',
+                    sortable: true,
+                    render: (row: any) => renderBadge(row.interestStatus),
+                    showTooltip: true,
+                },
+                {
                     label: 'Platform Type',
                     accessor: 'platformType',
                     sortable: true,
@@ -403,6 +418,7 @@ const LeadComponent: React.FC = () => {
             ];
         }
     };
+
 
     const columns = getColumnsBasedOnRole(currentUser?.roleId);
 

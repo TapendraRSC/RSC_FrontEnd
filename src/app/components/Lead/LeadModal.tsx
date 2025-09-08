@@ -12,6 +12,7 @@ import { fetchProjectStatuses } from "../../../../store/projectSlice";
 import { fetchPlots } from "../../../../store/plotSlice";
 import { fetchLeadStages } from "../../../../store/leadStageSlice";
 import { fetchStatuses } from "../../../../store/statusMasterSlice";
+import FormPhoneInput from "../Common/FormPhoneInput";
 
 interface ComprehensiveLeadModalProps {
   isOpen: boolean;
@@ -75,6 +76,15 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     [statusList]
   );
 
+  // ------------------ New Current Status options ------------------
+  const currentStatusOptions = useMemo(
+    () => [
+      { label: "interested", value: "interested" },
+      { label: "Not Interested", value: "Not Interested" },
+    ],
+    []
+  );
+
   // ------------------ Current user ------------------
   const currentUser = useMemo(() => {
     try {
@@ -93,19 +103,23 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   }, [assignedToOptions, currentUser]);
 
   // ------------------ React Hook Form ------------------
-  const defaultValues = useMemo(() => ({
-    name: "",
-    email: "",
-    phone: "",
-    city: "",
-    state: "",
-    assignedTo: currentUser.roleId === 36 ? currentUser.id : null,
-    platformId: null,
-    projectStatusId: null,
-    plotId: null,
-    leadStageId: null,
-    leadStatusId: null,
-  }), [currentUser]);
+  const defaultValues = useMemo(
+    () => ({
+      name: "",
+      email: "",
+      phone: "",
+      city: "",
+      state: "",
+      assignedTo: currentUser.roleId === 36 ? currentUser.id : null,
+      platformId: null,
+      projectStatusId: null,
+      plotId: null,
+      leadStageId: null,
+      leadStatusId: null,
+      interestStatus: "interested", // ✅ Default value
+    }),
+    [currentUser]
+  );
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch, control, clearErrors } = useForm({
     defaultValues,
@@ -130,10 +144,10 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           ...defaultValues,
           ...initialData,
           projectStatusId: initialData.plotProjectId || null,
-          plotId: null, // plot will be set after plots are loaded
+          plotId: null,
+          interestStatus: initialData.interestStatus || "interested", // ✅ load existing or default
         });
 
-        // Fetch plots for edit case
         if (initialData.plotProjectId) {
           dispatch(fetchPlots({ projectId: initialData.plotProjectId, page: 1, limit: 100, search: "" }));
         }
@@ -164,7 +178,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   useEffect(() => {
     if (selectedProjectId) {
       dispatch(fetchPlots({ projectId: selectedProjectId, page: 1, limit: 100, search: "" }));
-      setValue("plotId", null); // reset plot when project changes
+      setValue("plotId", null);
     } else {
       setValue("plotId", null);
     }
@@ -216,6 +230,27 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             />
             <FormInput name="city" label="City" placeholder="Enter City" register={register} errors={errors} clearErrors={clearErrors} />
             <FormInput name="state" label="State" placeholder="Enter State" register={register} errors={errors} clearErrors={clearErrors} />
+            {/* ✅ Current Status */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Current Status <span className="text-red-500">*</span>
+              </label>
+              <Controller
+                name="interestStatus"
+                control={control}
+                rules={{ required: "Current Status is required" }}
+                render={({ field }) => (
+                  <CommonDropdown
+                    options={currentStatusOptions}
+                    selected={currentStatusOptions.find((opt: any) => opt.value === field.value) || null}
+                    onChange={(val: any) => field.onChange(val?.value || null)}
+                    placeholder="Select Current Status"
+                    error={!!errors.interestStatus}
+                  />
+                )}
+              />
+              {errors.interestStatus && <p className="mt-1 text-sm text-red-600">{errors.interestStatus.message as string}</p>}
+            </div>
           </div>
 
           {/* Dropdowns */}
@@ -346,6 +381,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.leadStatusId && <p className="mt-1 text-sm text-red-600">{errors.leadStatusId.message as string}</p>}
             </div>
+
+
           </div>
 
           {/* Footer */}

@@ -26,7 +26,7 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
     const [searchValue, setSearchValue] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const [sortConfig, setSortConfig] = useState<any>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPlot, setSelectedPlot] = useState<any>(null);
@@ -57,25 +57,29 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             label: "Plot No.",
             accessor: "plotNumber",
             mobile: true,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "City",
             accessor: "city",
             mobile: true,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "Facing",
             accessor: "facing",
             mobile: false,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "Land Type",
             accessor: "landType",
             mobile: false,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "Project",
@@ -83,25 +87,29 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             mobile: false,
             minWidth: 200,
             maxWidth: 500,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "Sq. Yard",
             accessor: "sqYard",
             mobile: true,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "Sq. Feet",
             accessor: "sqFeet",
             mobile: false,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "Price",
             accessor: "price",
             mobile: true,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
         {
             label: "Status",
@@ -109,7 +117,8 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
             mobile: true,
             minWidth: 150,
             maxWidth: 300,
-            showTooltip: true
+            showTooltip: true,
+            sortable: true
         },
     ];
 
