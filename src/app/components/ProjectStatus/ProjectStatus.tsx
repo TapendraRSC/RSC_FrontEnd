@@ -1,23 +1,23 @@
-'use client'
-import React, { useEffect, useState, useMemo } from 'react'
-import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, FileText, Eye, Download } from 'lucide-react'
-import CustomTable from '../Common/CustomTable'
-import DeleteConfirmationModal from '../Common/DeleteConfirmationModal'
-import ProjectStatusModal from './ProjectStatusModal'
-import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '../../../../store/store'
-import { toast } from 'react-toastify'
+'use client';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, FileText, Eye, Download } from 'lucide-react';
+import CustomTable from '../Common/CustomTable';
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
+import ProjectStatusModal from './ProjectStatusModal';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../../store/store';
+import { toast } from 'react-toastify';
 import {
     addStatus,
     deleteStatus,
     fetchProjectStatuses,
     ProjectStatus,
     updateStatus
-} from '../../../../store/projectSlice'
-import Link from 'next/link'
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice'
-import { fetchPermissions } from '../../../../store/permissionSlice'
-import ExportModal from '../Common/ExportModal'
+} from '../../../../store/projectSlice';
+import Link from 'next/link';
+import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
+import { fetchPermissions } from '../../../../store/permissionSlice';
+import ExportModal from '../Common/ExportModal';
 
 type SortConfig = {
     key: string;
@@ -39,6 +39,7 @@ const ProjectStatusComponent: React.FC = () => {
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
     const { list, loading, error } = useSelector((state: RootState) => state.projectStatus);
     const projectStatusList: ProjectStatus[] = list?.projects || [];
     const totalRecords = list?.total || 0;
@@ -142,7 +143,7 @@ const ProjectStatusComponent: React.FC = () => {
             render: (row: ProjectStatus) => (
                 <Link
                     href={`/projectstatus/${row.id}`}
-                    className="text-blue-500 hover:text-blue-700 hover:underline cursor-pointer text-sm sm:text-base"
+                    className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline cursor-pointer text-sm sm:text-base"
                 >
                     {row.title}
                 </Link>
@@ -157,7 +158,7 @@ const ProjectStatusComponent: React.FC = () => {
                     <img
                         src={row.projectImage}
                         alt="projectImage"
-                        className="object-cover border border-gray-300 rounded-lg w-16 h-10 sm:w-20 sm:h-12"
+                        className="object-cover border border-gray-300 dark:border-gray-600 rounded-lg w-16 h-10 sm:w-20 sm:h-12"
                     />
                 ) : (
                     '-'
@@ -174,7 +175,7 @@ const ProjectStatusComponent: React.FC = () => {
                         href={row.projectPdf}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline text-sm sm:text-base"
+                        className="text-blue-500 dark:text-blue-400 hover:underline text-sm sm:text-base"
                     >
                         View PDF
                     </a>
@@ -190,7 +191,7 @@ const ProjectStatusComponent: React.FC = () => {
             mobile: true,
             render: (row: ProjectStatus) => (
                 <span
-                    className={`text-xs sm:text-sm ${row.status === 'active' ? 'text-green-600' : 'text-red-600'}`}
+                    className={`text-xs sm:text-sm ${row.status === 'active' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                 >
                     {row.status}
                 </span>
@@ -227,21 +228,21 @@ const ProjectStatusComponent: React.FC = () => {
     };
 
     const ProjectStatusCard = ({ project }: { project: ProjectStatus }) => (
-        <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 space-y-3 sm:space-y-4 hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-4 space-y-3 sm:space-y-4 hover:shadow-md transition-shadow" style={{ marginTop: "15px" }}>
             <div className="flex justify-between items-start">
                 <div className="flex-1">
                     <Link
                         href={`/projectstatus/${project.id}`}
-                        className="text-blue-600 hover:text-blue-800 font-medium sm:font-semibold text-base sm:text-lg block hover:underline"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium sm:font-semibold text-base sm:text-lg block hover:underline"
                     >
                         {project.title}
                     </Link>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1">ID: {project.id}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">ID: {project.id}</p>
                 </div>
                 <span
                     className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${project.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                        : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                         }`}
                 >
                     {project.status}
@@ -252,17 +253,17 @@ const ProjectStatusComponent: React.FC = () => {
                     <img
                         src={project.projectImage}
                         alt={project.title}
-                        className="w-full h-32 sm:h-40 object-cover rounded-lg border border-gray-200"
+                        className="w-full h-32 sm:h-40 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                     />
                 </div>
             )}
-            <div className="flex gap-1 sm:gap-2 pt-2 sm:pt-3 border-t border-gray-100">
+            <div className="flex gap-1 sm:gap-2 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
                 {project.projectPdf && (
                     <a
                         href={project.projectPdf}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 bg-gray-50 text-gray-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-1 sm:gap-2"
+                        className="flex-1 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-1 sm:gap-2"
                     >
                         <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="hidden sm:inline">PDF</span>
@@ -270,7 +271,7 @@ const ProjectStatusComponent: React.FC = () => {
                 )}
                 <Link
                     href={`/projectstatus/${project.id}`}
-                    className="flex-1 bg-green-50 text-green-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-1 sm:gap-2"
+                    className="flex-1 bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-100 dark:hover:bg-green-800 transition-colors flex items-center justify-center gap-1 sm:gap-2"
                 >
                     <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="hidden sm:inline">View</span>
@@ -278,7 +279,7 @@ const ProjectStatusComponent: React.FC = () => {
                 {hasPermission(22, "edit") && (
                     <button
                         onClick={() => handleEdit(project)}
-                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 sm:gap-2 transition-colors bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 sm:gap-2 transition-colors bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800"
                     >
                         <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="hidden sm:inline">Edit</span>
@@ -287,7 +288,7 @@ const ProjectStatusComponent: React.FC = () => {
                 {hasPermission(4, "delete") && (
                     <button
                         onClick={() => handleDelete(project)}
-                        className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 transition-colors bg-red-50 text-red-600 hover:bg-red-100"
+                        className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 transition-colors bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-800"
                     >
                         <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="hidden sm:inline">Delete</span>
@@ -298,25 +299,25 @@ const ProjectStatusComponent: React.FC = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-800">
             {/* Mobile Header */}
-            <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-3 py-2 lg:hidden">
+            <div className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2 lg:hidden">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-base sm:text-lg font-bold text-gray-900">Project Status</h1>
-                        <p className="text-xs text-gray-600">Manage project statuses</p>
+                        <h1 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Project Status</h1>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Manage project statuses</p>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
                         <button
                             onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
-                            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700"
+                            className="p-1.5 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             title="Switch view"
                         >
                             {viewMode === 'table' ? <Grid3X3 className="w-4 h-4 sm:w-5 sm:h-5" /> : <List className="w-4 h-4 sm:w-5 sm:h-5" />}
                         </button>
                         <button
                             onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700"
+                            className="p-1.5 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             title="Menu"
                         >
                             <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -326,7 +327,7 @@ const ProjectStatusComponent: React.FC = () => {
             </div>
 
             {/* Mobile Actions */}
-            <div className="sticky top-10 sm:top-12 z-20 bg-white border-b border-gray-100 px-3 py-2 lg:hidden">
+            <div className="sticky top-10 sm:top-12 z-20 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-3 py-2 lg:hidden">
                 <div className="flex items-center gap-1 sm:gap-2">
                     {hasPermission(21, "add") && (
                         <button
@@ -358,10 +359,10 @@ const ProjectStatusComponent: React.FC = () => {
             <div className="hidden lg:block p-4 sm:p-6">
                 <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                             Project Status Master
                         </h1>
-                        <p className="text-sm sm:text-base text-gray-600">Manage project statuses</p>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage project statuses</p>
                     </div>
                     <div className="flex gap-1 sm:gap-2">
                         <button
@@ -406,15 +407,15 @@ const ProjectStatusComponent: React.FC = () => {
                                     setSearchValue(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs sm:text-sm"
+                                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-xs sm:text-sm dark:text-white"
                             />
                             <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500" />
                             </div>
                         </div>
                         {loading ? (
                             <div className="flex justify-center py-8 sm:py-12">
-                                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
                             </div>
                         ) : (
                             <>
@@ -425,9 +426,9 @@ const ProjectStatusComponent: React.FC = () => {
                                 </div>
                                 {sortedData.length === 0 && (
                                     <div className="text-center py-8 sm:py-12">
-                                        <div className="text-gray-400 text-4xl sm:text-5xl mb-3 sm:mb-4">📋</div>
-                                        <p className="text-gray-500 text-base sm:text-lg font-medium">No project statuses found</p>
-                                        <p className="text-gray-400 text-xs sm:text-sm mt-1">
+                                        <div className="text-gray-400 dark:text-gray-500 text-4xl sm:text-5xl mb-3 sm:mb-4">📋</div>
+                                        <p className="text-gray-500 dark:text-gray-400 text-base sm:text-lg font-medium">No project statuses found</p>
+                                        <p className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm mt-1">
                                             {searchValue ? 'Try adjusting your search terms' : 'Add your first project status to get started'}
                                         </p>
                                     </div>
@@ -435,16 +436,16 @@ const ProjectStatusComponent: React.FC = () => {
                             </>
                         )}
                         {totalPages > 1 && (
-                            <div className="flex justify-between items-center pt-3 sm:pt-4 border-t border-gray-200">
+                            <div className="flex justify-between items-center pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <button
                                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                     disabled={currentPage === 1}
-                                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
+                                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Previous
                                 </button>
                                 <div className="flex items-center gap-1 sm:gap-2">
-                                    <span className="text-xs sm:text-sm text-gray-600">
+                                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                                         Page {currentPage} of {totalPages}
                                     </span>
                                     <select
@@ -453,7 +454,7 @@ const ProjectStatusComponent: React.FC = () => {
                                             setPageSize(Number(e.target.value));
                                             setCurrentPage(1);
                                         }}
-                                        className="text-xs sm:text-sm border border-gray-300 rounded px-1.5 py-0.5 sm:px-2 sm:py-1 bg-white"
+                                        className="text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 sm:px-2 sm:py-1 bg-white dark:bg-gray-800 dark:text-white"
                                     >
                                         <option value={10}>10</option>
                                         <option value={25}>25</option>
@@ -463,14 +464,14 @@ const ProjectStatusComponent: React.FC = () => {
                                 <button
                                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
+                                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Next
                                 </button>
                             </div>
                         )}
-                        <div className="bg-blue-50 rounded-lg p-2 sm:p-3 text-center">
-                            <p className="text-xs sm:text-sm text-blue-700">
+                        <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-2 sm:p-3 text-center">
+                            <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-200">
                                 Total: <span className="font-semibold">{totalRecords}</span> project statuses
                             </p>
                         </div>
@@ -479,7 +480,7 @@ const ProjectStatusComponent: React.FC = () => {
 
                 {/* Table View */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden" style={{ marginTop: "15px" }}>
                         <CustomTable<ProjectStatus>
                             data={sortedData}
                             columns={columns}
@@ -515,7 +516,7 @@ const ProjectStatusComponent: React.FC = () => {
                                         <button
                                             onClick={() => handleEdit(row)}
                                             title="Edit"
-                                            className="p-1 rounded text-blue-500 hover:text-blue-700"
+                                            className="p-1 rounded text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                                         >
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
@@ -524,7 +525,7 @@ const ProjectStatusComponent: React.FC = () => {
                                         <button
                                             onClick={() => handleDelete(row)}
                                             title="Delete"
-                                            className="p-1 rounded text-red-500 hover:text-red-700"
+                                            className="p-1 rounded text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                                         >
                                             <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>

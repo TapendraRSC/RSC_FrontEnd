@@ -14,9 +14,8 @@ interface Plot {
     id?: number;
     plotNumber: string;
     sqYard: number;
-    price: number;   // ✅ Added price
+    price: number;
     city: string;
-    // remarks: string;
     facing?: string;
     status?: string;
     projectId: number;
@@ -76,9 +75,8 @@ const statusOptions = [
 const defaultValues: Partial<Plot> = {
     plotNumber: undefined,
     sqYard: undefined,
-    price: undefined,   // ✅ Default value for price
+    price: undefined,
     city: "",
-    // remarks: "",
     facing: undefined,
     status: undefined,
     projectId: undefined,
@@ -95,6 +93,7 @@ export default function PlotModal({
     const dispatch = useDispatch<AppDispatch>();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+
     const { list, loading, error } = useSelector((state: RootState) => state.projectStatus);
     const { list: landsList, loading: landsLoading } = useSelector((state: RootState) => state.lands);
 
@@ -127,9 +126,7 @@ export default function PlotModal({
         formState: { errors },
         clearErrors,
         control
-    } = useForm<Plot>({
-        defaultValues,
-    });
+    } = useForm<Plot>({ defaultValues });
 
     const selectedFacing = watch("facing");
     const selectedStatus = watch("status");
@@ -188,16 +185,15 @@ export default function PlotModal({
     return (
         <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50"
-            style={{ margin: "0px" }}
         >
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
-                    <h2 className="text-xl font-bold text-gray-900">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-t-xl">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                         {currentPlot ? "Edit Plot" : "Add New Plot"}
                     </h2>
                     <button
                         onClick={handleClose}
-                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition-colors"
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-1 transition-colors"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -205,6 +201,7 @@ export default function PlotModal({
 
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6">
                     <div className="space-y-6">
+                        {/* Plot Number + City */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormInput<Plot>
                                 name="plotNumber"
@@ -214,6 +211,7 @@ export default function PlotModal({
                                 errors={errors}
                                 required
                                 clearErrors={clearErrors}
+                                className="dark:bg-gray-800 dark:text-gray-100"
                             />
                             <FormInput<Plot>
                                 name="city"
@@ -222,9 +220,11 @@ export default function PlotModal({
                                 errors={errors}
                                 required
                                 clearErrors={clearErrors}
+                                className="dark:bg-gray-800 dark:text-gray-100"
                             />
                         </div>
 
+                        {/* SqYard + Price */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormInput<Plot>
                                 name="sqYard"
@@ -235,6 +235,7 @@ export default function PlotModal({
                                 required
                                 clearErrors={clearErrors}
                                 step="any"
+                                className="dark:bg-gray-800 dark:text-gray-100"
                             />
                             <FormInput<Plot>
                                 name="price"
@@ -245,41 +246,35 @@ export default function PlotModal({
                                 required
                                 clearErrors={clearErrors}
                                 step="any"
+                                className="dark:bg-gray-800 dark:text-gray-100"
                             />
                         </div>
 
+                        {/* Facing + Status */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     Facing
                                 </label>
-
                                 <Controller
                                     name="facing"
                                     control={control}
-                                    // rules={{ required: "Facing is required" }}
                                     render={({ field }) => (
                                         <CommonDropdown
                                             options={facingOptions}
-                                            selected={facingOptions.find((f) => f.value === field.value) || null}
+                                            selected={facingOptions.find(f => f.value === field.value) || null}
                                             onChange={(value: any) => field.onChange(value?.value || null)}
                                             placeholder="Select facing"
                                             error={!!errors.facing}
+                                            className="dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
                                         />
                                     )}
                                 />
-
-                                {/* {errors.facing && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {errors.facing.message as string}
-                                    </p>
-                                )} */}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     Status <span className="text-red-500">*</span>
                                 </label>
-
                                 <Controller
                                     name="status"
                                     control={control}
@@ -287,18 +282,16 @@ export default function PlotModal({
                                     render={({ field }) => (
                                         <CommonDropdown
                                             options={statusOptions}
-                                            selected={statusOptions.find((s) => s.value === field.value) || null}
+                                            selected={statusOptions.find(s => s.value === field.value) || null}
                                             onChange={(value: any) => field.onChange(value?.value || null)}
                                             placeholder="Select status"
                                             error={!!errors.status}
+                                            className="dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
                                         />
                                     )}
                                 />
-
                                 {errors.status && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {errors.status.message as string}
-                                    </p>
+                                    <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
                                 )}
                             </div>
                         </div>
@@ -306,7 +299,7 @@ export default function PlotModal({
                         {/* Project + Land */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     Project <span className="text-red-500">*</span>
                                 </label>
                                 <Controller
@@ -316,19 +309,16 @@ export default function PlotModal({
                                     render={({ field }) => (
                                         <CommonDropdown
                                             options={projectOptions || []}
-                                            selected={
-                                                projectOptions?.find((p) => p.value === field.value) || null
-                                            }
+                                            selected={projectOptions?.find(p => p.value === field.value) || null}
                                             onChange={(value: any) => field.onChange(value?.value || null)}
                                             placeholder="Select project"
                                             error={!!errors.projectId}
+                                            className="dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
                                         />
                                     )}
                                 />
                                 {errors.projectId && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {errors.projectId.message || "Project is required"}
-                                    </p>
+                                    <p className="mt-1 text-sm text-red-600">{errors.projectId.message}</p>
                                 )}
                             </div>
                             <div>
@@ -338,15 +328,16 @@ export default function PlotModal({
                                     rules={{ required: "Land is required" }}
                                     render={({ field }) => (
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                                 Land
                                             </label>
                                             <CommonDropdown
                                                 options={landOptions || []}
-                                                selected={landOptions.find((l) => l.value === field.value) || null}
+                                                selected={landOptions.find(l => l.value === field.value) || null}
                                                 onChange={(value: any) => field.onChange(value ? value.value : null)}
                                                 placeholder="Select land"
                                                 error={!!errors.landId}
+                                                className="dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
                                             />
                                             {errors.landId && (
                                                 <p className="mt-1 text-sm text-red-600">{errors.landId.message}</p>
@@ -354,16 +345,16 @@ export default function PlotModal({
                                         </div>
                                     )}
                                 />
-
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
+                    {/* Buttons */}
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium"
+                            className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-colors font-medium"
                         >
                             Cancel
                         </button>
@@ -373,24 +364,9 @@ export default function PlotModal({
                             className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-w-[120px]"
                         >
                             {isLoading ? (
-                                <svg
-                                    className="w-5 h-5 animate-spin"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v8H4z"
-                                    ></path>
+                                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                 </svg>
                             ) : (
                                 <>

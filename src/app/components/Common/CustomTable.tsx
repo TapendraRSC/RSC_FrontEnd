@@ -284,7 +284,7 @@ const CustomTable = <T extends { id: number | string }>({
           background-color: rgba(34, 197, 94, 0.15) !important;
         }
       `}</style>
-            <div className="bg-white dark:bg-gray-900 rounded-t-xl border border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4">
+            <div className="bg-white dark:bg-gray-900 rounded-t-xl border border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4" >
                 <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
                     <div className="min-w-0">
                         <h2 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>

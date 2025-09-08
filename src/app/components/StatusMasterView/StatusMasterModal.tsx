@@ -59,24 +59,26 @@ const StatusMasterModal: React.FC<StatusMasterModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ margin: "0px" }}>
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-                <div className="flex justify-between items-center p-4 border-b">
-                    <h2 className="text-xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
+                {/* Header */}
+                <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                         {currentStatus ? 'Edit Lead Status' : 'Add New Lead Status'}
                     </h2>
-                    <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
+                    <button onClick={handleClose} className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
 
+                {/* Form */}
+                <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Lead Status</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lead Status</label>
                         <input
                             type="text"
                             {...register('type', { required: 'Lead Status is required' })}
-                            className="w-full border rounded-lg px-3 py-2"
+                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter lead status"
                         />
                         {errors.type && (
@@ -84,29 +86,31 @@ const StatusMasterModal: React.FC<StatusMasterModalProps> = ({
                         )}
                     </div>
 
+                    {/* Uncomment if you want status select */}
                     {/* <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                         <select
                             {...register('status', { required: true })}
-                            className="w-full border rounded-lg px-3 py-2"
+                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         >
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                         </select>
                     </div> */}
 
+                    {/* Buttons */}
                     <div className="flex justify-end space-x-2 pt-2">
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-60"
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md disabled:opacity-60 transition-colors"
                         >
                             {isLoading ? (
                                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
