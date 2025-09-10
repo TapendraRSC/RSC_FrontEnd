@@ -256,7 +256,7 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
         });
     };
 
-    const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = async (event: any) => {
         const file = event.target.files?.[0];
         if (!file) return;
         const fileExtension = file.name.split('.').pop()?.toLowerCase();
@@ -649,6 +649,7 @@ export default function ProjectStatusDetail({ params }: { params: Promise<{ id: 
                 previewData={previewData}
                 isLoading={uploadLoading}
                 totalRows={previewData.length}
+                onFileSelect={handleFileSelect}
             />
             <ExportModal
                 isOpen={isExportModalOpen}
