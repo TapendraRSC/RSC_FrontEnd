@@ -79,7 +79,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   // ------------------ New Current Status options ------------------
   const currentStatusOptions = useMemo(
     () => [
-      { label: "interested", value: "interested" },
+      { label: "Interested", value: "Interested" },
       { label: "Not Interested", value: "Not Interested" },
     ],
     []
@@ -116,7 +116,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       plotId: null,
       leadStageId: null,
       leadStatusId: null,
-      interestStatus: "interested", // ✅ Default value
+      interestStatus: null, // ✅ Default value
     }),
     [currentUser]
   );
@@ -145,7 +145,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           ...initialData,
           projectStatusId: initialData.plotProjectId || null,
           plotId: null,
-          interestStatus: initialData.interestStatus || "interested", // ✅ load existing or default
+          interestStatus: initialData.interestStatus || "Interested",
         });
 
         if (initialData.plotProjectId) {
@@ -190,7 +190,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/60" style={{ margin: "0px" }}>
       <div className="bg-white dark:bg-gray-900 w-full max-w-4xl rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -233,12 +233,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             {/* ✅ Current Status */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                Current Status <span className="text-red-500">*</span>
+                Current Status
               </label>
               <Controller
                 name="interestStatus"
                 control={control}
-                rules={{ required: "Current Status is required" }}
                 render={({ field }) => (
                   <CommonDropdown
                     options={currentStatusOptions}
@@ -302,12 +301,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             {/* Project */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                Project <span className="text-red-500">*</span>
+                Project
               </label>
               <Controller
                 name="projectStatusId"
                 control={control}
-                rules={{ required: "Project is required" }}
                 render={({ field }) => (
                   <CommonDropdown
                     options={projectStatusOptions}
@@ -341,12 +339,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             {/* Lead Stage */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                Lead Stage <span className="text-red-500">*</span>
+                Lead Stage
               </label>
               <Controller
                 name="leadStageId"
                 control={control}
-                rules={{ required: "Lead Stage is required" }}
                 render={({ field }) => (
                   <CommonDropdown
                     options={leadStageOptions}
@@ -363,12 +360,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             {/* Lead Status */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                Lead Status <span className="text-red-500">*</span>
+                Lead Status
               </label>
               <Controller
                 name="leadStatusId"
                 control={control}
-                rules={{ required: "Lead Status is required" }}
                 render={({ field }) => (
                   <CommonDropdown
                     options={leadStatusOptions}
