@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 let optimizeCss = false;
 
-// ✅ Try to enable Critters safely
 try {
   require.resolve("critters");
   optimizeCss = true;
@@ -13,14 +12,14 @@ try {
 }
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true, // helps catch issues in dev
-  swcMinify: true,       // faster minifier
+  reactStrictMode: true,
+  swcMinify: true,
   images: {
-    domains: ["res.cloudinary.com"], // allow Cloudinary images
-    formats: ["image/avif", "image/webp"], // modern formats
+    domains: ["res.cloudinary.com"],
+    formats: ["image/avif", "image/webp"],
   },
   experimental: {
-    optimizeCss, // auto true if critters installed, else false
+    optimizeCss,
   },
 };
 
