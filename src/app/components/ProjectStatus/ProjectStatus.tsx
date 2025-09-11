@@ -83,7 +83,7 @@ const ProjectStatusComponent: React.FC = () => {
         try {
             const formData: any = new FormData();
             formData.append('title', data.title);
-            formData.append('status', data.status || 'active');
+            formData.append('status', data.status);
             if (data.projectImage?.[0]) {
                 formData.append('projectImage', data.projectImage[0]);
             }
@@ -128,26 +128,24 @@ const ProjectStatusComponent: React.FC = () => {
 
     const columns: any = [
         {
-            label: 'Sr',
-            accessor: 'id',
-            sortable: true,
-            mobile: false,
-            showTooltip: true
-        },
-        {
             label: 'Project Title',
             accessor: 'title',
             sortable: true,
             mobile: true,
             showTooltip: true,
-            render: (row: ProjectStatus) => (
-                <Link
-                    href={`/projectstatus/${row.id}`}
-                    className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline cursor-pointer text-sm sm:text-base"
-                >
-                    {row.title}
-                </Link>
-            ),
+            render: (row: ProjectStatus) =>
+                row.status === 'inactive' ? (
+                    <span className="text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm sm:text-base">
+                        {row.title}
+                    </span>
+                ) : (
+                    <Link
+                        href={`/projectstatus/${row.id}`}
+                        className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline cursor-pointer text-sm sm:text-base"
+                    >
+                        {row.title}
+                    </Link>
+                ),
         },
         {
             label: 'Image',
@@ -158,12 +156,13 @@ const ProjectStatusComponent: React.FC = () => {
                     <img
                         src={row.projectImage}
                         alt="projectImage"
-                        className="object-cover border border-gray-300 dark:border-gray-600 rounded-lg w-16 h-10 sm:w-20 sm:h-12"
+                        className={`object-cover border border-gray-300 dark:border-gray-600 rounded-lg w-16 h-10 sm:w-20 sm:h-12 ${row.status === 'inactive' ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                     />
                 ) : (
                     '-'
                 ),
-            showTooltip: true
+            showTooltip: true,
         },
         {
             label: 'PDF',
@@ -171,18 +170,24 @@ const ProjectStatusComponent: React.FC = () => {
             mobile: false,
             render: (row: ProjectStatus) =>
                 row.projectPdf ? (
-                    <a
-                        href={row.projectPdf}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 dark:text-blue-400 hover:underline text-sm sm:text-base"
-                    >
-                        View PDF
-                    </a>
+                    row.status === 'inactive' ? (
+                        <span className="text-gray-400 cursor-not-allowed text-sm sm:text-base">
+                            View PDF
+                        </span>
+                    ) : (
+                        <a
+                            href={row.projectPdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                        >
+                            View PDF
+                        </a>
+                    )
                 ) : (
                     '-'
                 ),
-            showTooltip: true
+            showTooltip: true,
         },
         {
             label: 'Status',
@@ -191,12 +196,15 @@ const ProjectStatusComponent: React.FC = () => {
             mobile: true,
             render: (row: ProjectStatus) => (
                 <span
-                    className={`text-xs sm:text-sm ${row.status === 'active' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                    className={`text-xs sm:text-sm ${row.status === 'active'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400 cursor-not-allowed'
+                        }`}
                 >
                     {row.status}
                 </span>
             ),
-            showTooltip: true
+            showTooltip: true,
         },
     ];
 

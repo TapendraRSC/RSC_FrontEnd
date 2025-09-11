@@ -61,7 +61,7 @@ export default function ProjectStatusModal({
                 projectPdf: undefined,
             });
         } else {
-            reset({ title: '', status: 'active', projectImage: undefined, projectPdf: undefined });
+            reset({ title: '', status: '', projectImage: undefined, projectPdf: undefined });
         }
     }, [currentProjectStatus, reset]);
 
@@ -117,6 +117,7 @@ export default function ProjectStatusModal({
                             onChange={(value) => setValue('status', (value as any).value)}
                             placeholder="Select status"
                             className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            allowClear={true}
                         />
                         {errors.status && (
                             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.status.message}</p>
