@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // Add this import
 import {
     User,
     Users,
@@ -14,9 +15,11 @@ interface StatItem {
     value: number;
     icon: React.ReactNode;
     color: string;
+    route?: string; // Add route property
 }
 
 const SalesDashboard = () => {
+    const router = useRouter(); // Initialize router
     const [statsData, setStatsData] = useState<StatItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -32,6 +35,22 @@ const SalesDashboard = () => {
         fetchStats();
     }, []);
 
+    const getRouteForKey = (key: string): string | undefined => {
+        const lowerKey = key.toLowerCase();
+        if (lowerKey.includes("user")) return "/users";
+        // if (lowerKey.includes("plot")) return "/projectstatus/17";
+        if (lowerKey.includes("project")) return "/projectstatus";
+        if (lowerKey.includes("lead")) return "/lead";
+        return undefined;
+    };
+
+    // Function to handle card click
+    const handleCardClick = (route?: string) => {
+        if (route) {
+            router.push(route);
+        }
+    };
+
     const fetchStats = async () => {
         setIsLoading(true);
         try {
@@ -42,13 +61,14 @@ const SalesDashboard = () => {
                 const title = key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase());
                 let icon: React.ReactNode = <Users size={18} />;
                 let color = "blue";
+                const route = getRouteForKey(key); // Get route for this key
 
                 if (key.toLowerCase().includes("user")) icon = <User size={18} />;
                 if (key.toLowerCase().includes("plot")) color = "pink";
                 if (key.toLowerCase().includes("project")) color = "purple";
                 if (key.toLowerCase().includes("lead")) color = "orange";
 
-                return { title, value: value ?? 0, icon, color };
+                return { title, value: value ?? 0, icon, color, route };
             });
 
             setStatsData(updatedStats);
@@ -127,7 +147,9 @@ const SalesDashboard = () => {
                         : statsData.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 hover:shadow-xl transition-transform hover:-translate-y-1"
+                                onClick={() => handleCardClick(item.route)}
+                                className={`bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 hover:shadow-xl transition-transform hover:-translate-y-1 ${item.route ? 'cursor-pointer hover:scale-105' : ''
+                                    }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className={`p-3 rounded-xl ${getColorClasses(item.color, "bg")}`}>

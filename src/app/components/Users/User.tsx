@@ -269,12 +269,20 @@ const Users: React.FC = () => {
 
     const columns: any = [
         {
-            label: 'ID',
-            accessor: 'id',
+            label: 'Name',
+            accessor: 'name',
             sortable: true,
-            width: '80px',
-            mobile: false,
-            showTooltip: true
+            width: '150px',
+            mobile: true,
+            minWidth: 200,
+            maxWidth: 500,
+            showTooltip: true,
+            render: (row: User) =>
+                row.status === 'inactive' ? (
+                    <span className="text-gray-400 cursor-not-allowed">{row.name}</span>
+                ) : (
+                    <span className="text-gray-900 dark:text-gray-100">{row.name}</span>
+                ),
         },
         {
             label: 'Profile Image',
@@ -284,22 +292,13 @@ const Users: React.FC = () => {
                     <img
                         src={row.profileImage}
                         alt="Profile"
-                        className="w-20 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-lg"
+                        className={`w-20 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-lg ${row.status === 'inactive' ? 'opacity-50 cursor-not-allowed ' : ''
+                            }`}
                     />
                 ) : (
                     '-'
                 ),
-            showTooltip: true
-        },
-        {
-            label: 'Name',
-            accessor: 'name',
-            sortable: true,
-            width: '150px',
-            mobile: true,
-            minWidth: 200,
-            maxWidth: 500,
-            showTooltip: true
+            showTooltip: true,
         },
         {
             label: 'Email',
@@ -308,11 +307,17 @@ const Users: React.FC = () => {
             width: '200px',
             mobile: true,
             render: (row: User) => (
-                <div className="truncate max-w-[150px] md:max-w-[200px] text-gray-900 dark:text-gray-100" title={row.email}>
+                <div
+                    className={`truncate max-w-[150px] md:max-w-[200px] ${row.status === 'inactive'
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-gray-900 dark:text-gray-100'
+                        }`}
+                    title={row.status === 'inactive' ? 'Inactive user' : row.email}
+                >
                     {row.email}
                 </div>
             ),
-            showTooltip: true
+            showTooltip: true,
         },
         {
             label: 'Phone',
@@ -322,7 +327,18 @@ const Users: React.FC = () => {
             mobile: false,
             minWidth: 200,
             maxWidth: 500,
-            showTooltip: true
+            render: (row: User) => (
+                <span
+                    className={
+                        row.status === 'inactive'
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-900 dark:text-gray-100'
+                    }
+                >
+                    {row.phoneNumber}
+                </span>
+            ),
+            showTooltip: true,
         },
         {
             label: 'Role',
@@ -333,7 +349,13 @@ const Users: React.FC = () => {
             render: (row: User) => {
                 const roleType = getRoleType(row.roleId);
                 return (
-                    <div className="truncate max-w-[100px] md:max-w-[120px] text-gray-900 dark:text-gray-100" title={roleType}>
+                    <div
+                        className={`truncate max-w-[100px] md:max-w-[120px] ${row.status === 'inactive'
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-900 dark:text-gray-100'
+                            }`}
+                        title={roleType}
+                    >
                         {roleType}
                     </div>
                 );
@@ -346,16 +368,19 @@ const Users: React.FC = () => {
             width: '100px',
             mobile: false,
             render: (row: User) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'active'
+                <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'active'
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                    }`}>
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 cursor-not-allowed'
+                        }`}
+                >
                     {row.status || 'Active'}
                 </span>
             ),
-            showTooltip: true
+            showTooltip: true,
         },
     ];
+
 
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
@@ -409,8 +434,8 @@ const Users: React.FC = () => {
                 </div>
                 {user.status && (
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.status === 'active'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                         }`}>
                         {user.status}
                     </span>

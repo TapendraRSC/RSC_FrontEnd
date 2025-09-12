@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Option {
@@ -16,6 +16,7 @@ interface CommonDropdownProps {
     placeholder?: string;
     className?: string;
     error?: boolean;
+    allowClear?: boolean; // New prop to allow clearing selection
 }
 
 export default function CommonDropdown({
@@ -26,6 +27,7 @@ export default function CommonDropdown({
     placeholder = 'Select...',
     className = '',
     error = false,
+    allowClear = true, // Default to true
 }: CommonDropdownProps) {
     const [open, setOpen] = useState(false);
 
@@ -46,10 +48,24 @@ export default function CommonDropdown({
                 onChange([...selectedArray, option]);
             }
         } else {
-            onChange(option);
+            // If same option is clicked again and allowClear is true, deselect it
+            if (allowClear && (selected as Option)?.value === option.value) {
+                onChange(null);
+            } else {
+                onChange(option);
+            }
             setOpen(false);
         }
     };
+
+    const handleClear = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onChange(isMulti ? [] : null);
+    };
+
+    const hasSelection = isMulti
+        ? Array.isArray(selected) && selected.length > 0
+        : selected !== null;
 
     return (
         <div className={`relative ${className}`}>
@@ -70,15 +86,52 @@ export default function CommonDropdown({
                             : placeholder
                         : (selected as Option)?.label || placeholder}
                 </span>
-                {open ? (
-                    <ChevronUp size={18} className="text-gray-500 dark:text-gray-400" />
-                ) : (
-                    <ChevronDown size={18} className="text-gray-500 dark:text-gray-400" />
-                )}
+
+                <div className="flex items-center gap-1">
+                    {/* Clear button - only show if there's a selection and allowClear is true */}
+                    {allowClear && hasSelection && (
+                        <div
+                            onClick={handleClear}
+                            className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors cursor-pointer"
+                        >
+                            <X size={14} className="text-gray-500 dark:text-gray-400" />
+                        </div>
+                    )}
+
+                    {/* Chevron icon */}
+                    {open ? (
+                        <ChevronUp size={18} className="text-gray-500 dark:text-gray-400" />
+                    ) : (
+                        <ChevronDown size={18} className="text-gray-500 dark:text-gray-400" />
+                    )}
+                </div>
             </button>
 
             {open && (
                 <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl shadow-lg max-h-48 overflow-y-auto scrollbar-thin">
+                    {/* Default "Select" option for single select */}
+                    {!isMulti && (
+                        <div
+                            className={clsx(
+                                'cursor-pointer px-4 py-2 text-sm flex items-center justify-between transition-colors',
+                                'hover:bg-gray-100 dark:hover:bg-gray-600',
+                                selected === null && 'bg-gray-100 dark:bg-gray-600 font-medium'
+                            )}
+                            onClick={() => {
+                                onChange(null);
+                                setOpen(false);
+                            }}
+                        >
+                            <span className="text-gray-500 dark:text-gray-400 italic">{placeholder}</span>
+                            {selected === null && <Check size={16} className="text-blue-500 dark:text-blue-400" />}
+                        </div>
+                    )}
+
+                    {/* Separator line if default option is shown */}
+                    {!isMulti && options.length > 0 && (
+                        <div className="border-t border-gray-200 dark:border-gray-600"></div>
+                    )}
+
                     {options.length > 0 ? (
                         options.map((option) => (
                             <div
