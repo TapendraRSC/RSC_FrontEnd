@@ -274,6 +274,9 @@ const LeadComponent: React.FC = () => {
 
     const storedUser = localStorage.getItem('user');
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
+    const formatValue = (value: any) => {
+        return value !== null && value !== undefined && value !== '' ? value : 'NA';
+    };
 
     const getColumnsBasedOnRole = (roleId: any) => {
         if (roleId === 36) {
@@ -285,6 +288,7 @@ const LeadComponent: React.FC = () => {
                     minWidth: 200,
                     maxWidth: 300,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.name),
                 },
                 {
                     label: 'Phone',
@@ -293,25 +297,27 @@ const LeadComponent: React.FC = () => {
                     minWidth: 200,
                     maxWidth: 500,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.phone),
                 },
                 {
                     label: 'Email',
                     accessor: 'email',
                     sortable: true,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.email),
                 },
                 {
                     label: 'Assigned Person',
                     accessor: 'assignedUserName',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.assignedUserName),
+                    render: (row: any) => renderBadge(formatValue(row.assignedUserName)),
                     showTooltip: true,
                 },
                 {
                     label: 'Current Status',
                     accessor: 'leadStatus',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.leadStatus),
+                    render: (row: any) => renderBadge(formatValue(row.leadStatus)),
                     minWidth: 200,
                     maxWidth: 500,
                     showTooltip: true,
@@ -320,7 +326,7 @@ const LeadComponent: React.FC = () => {
                     label: 'Lead Stage',
                     accessor: 'leadStage',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.leadStage),
+                    render: (row: any) => renderBadge(formatValue(row.leadStage)),
                     minWidth: 200,
                     maxWidth: 500,
                     showTooltip: true,
@@ -329,7 +335,7 @@ const LeadComponent: React.FC = () => {
                     label: 'Lead Status',
                     accessor: 'interestStatus',
                     sortable: true,
-                    render: (row: any) => renderBadge(row?.interestStatus),
+                    render: (row: any) => renderBadge(formatValue(row?.interestStatus)),
                     showTooltip: true,
                 },
                 {
@@ -337,6 +343,7 @@ const LeadComponent: React.FC = () => {
                     accessor: 'remark',
                     sortable: true,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.remark),
                 },
             ];
         } else {
@@ -348,12 +355,14 @@ const LeadComponent: React.FC = () => {
                     minWidth: 200,
                     maxWidth: 300,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.name),
                 },
                 {
                     label: 'Email',
                     accessor: 'email',
                     sortable: true,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.email),
                 },
                 {
                     label: 'Phone',
@@ -362,19 +371,20 @@ const LeadComponent: React.FC = () => {
                     minWidth: 200,
                     maxWidth: 500,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.phone),
                 },
                 {
                     label: 'Assigned Person',
                     accessor: 'assignedUserName',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.assignedUserName),
+                    render: (row: any) => renderBadge(formatValue(row.assignedUserName)),
                     showTooltip: true,
                 },
                 {
                     label: 'Current Status',
                     accessor: 'leadStatus',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.leadStatus),
+                    render: (row: any) => renderBadge(formatValue(row.leadStatus)),
                     minWidth: 200,
                     maxWidth: 500,
                     showTooltip: true,
@@ -383,7 +393,7 @@ const LeadComponent: React.FC = () => {
                     label: 'Lead Stage',
                     accessor: 'leadStage',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.leadStage),
+                    render: (row: any) => renderBadge(formatValue(row.leadStage)),
                     minWidth: 200,
                     maxWidth: 500,
                     showTooltip: true,
@@ -392,28 +402,28 @@ const LeadComponent: React.FC = () => {
                     label: 'Lead Status',
                     accessor: 'interestStatus',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.interestStatus),
+                    render: (row: any) => renderBadge(formatValue(row.interestStatus)),
                     showTooltip: true,
                 },
                 {
                     label: 'Platform Type',
                     accessor: 'platformType',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.platformType),
+                    render: (row: any) => renderBadge(formatValue(row.platformType)),
                     showTooltip: true,
                 },
                 {
                     label: 'Plot Number',
                     accessor: 'plotNumber',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.plotNumber),
+                    render: (row: any) => renderBadge(formatValue(row.plotNumber)),
                     showTooltip: true,
                 },
                 {
                     label: 'Plot Price',
                     accessor: 'plotPrice',
                     sortable: true,
-                    render: (row: any) => renderBadge(row.plotPrice),
+                    render: (row: any) => renderBadge(formatValue(row.plotPrice)),
                     showTooltip: true,
                 },
                 {
@@ -421,6 +431,7 @@ const LeadComponent: React.FC = () => {
                     accessor: 'city',
                     sortable: true,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.city),
                 },
                 {
                     label: 'State',
@@ -429,10 +440,12 @@ const LeadComponent: React.FC = () => {
                     minWidth: 200,
                     maxWidth: 500,
                     showTooltip: true,
+                    render: (row: any) => formatValue(row.state),
                 },
             ];
         }
     };
+
 
     const columns = getColumnsBasedOnRole(currentUser?.roleId);
     const handleSort = (config: any) => setSortConfig(config);

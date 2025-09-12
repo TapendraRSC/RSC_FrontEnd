@@ -211,21 +211,19 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput name="name" label="Name" required placeholder="Enter Name" register={register} errors={errors} clearErrors={clearErrors} />
             <FormInput name="email" label="Email" type="email" placeholder="Enter Email" register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput
+            <FormPhoneInput
               name="phone"
               label="Phone"
-              type="number"
               required
-              placeholder="Enter Phone"
+              placeholder="Enter phone number"
               register={register}
               errors={errors}
               clearErrors={clearErrors}
+              setValue={setValue}
+              control={control}
               maxLength={10}
               validation={{
                 required: "Phone number is required",
-                validate: {
-                  is10Digits: (value: any) => (value && value.toString().length === 10) || "Phone number must be exactly 10 digits",
-                },
               }}
             />
             <FormInput name="city" label="City" placeholder="Enter City" register={register} errors={errors} clearErrors={clearErrors} />
@@ -245,6 +243,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     onChange={(val: any) => field.onChange(val?.value || null)}
                     placeholder="Select Current Status"
                     error={!!errors.interestStatus}
+                    allowClear={true}
                   />
                 )}
               />
@@ -270,6 +269,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Assignee"
                     error={!!errors.assignedTo}
+                    allowClear={true}
                   />
                 )}
               />
@@ -292,6 +292,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Platform"
                     error={!!errors.platformId}
+                    allowClear={true}
                   />
                 )}
               />
@@ -313,6 +314,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Project"
                     error={!!errors.projectStatusId}
+                    allowClear={true}
                   />
                 )}
               />
@@ -331,6 +333,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     selected={plotOptions.find((opt: any) => opt.value === field.value) || null}
                     onChange={(val: any) => field.onChange(val?.value || null)}
                     placeholder="Select Plot"
+                    allowClear={true}
                   />
                 )}
               />
@@ -351,6 +354,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Lead Stage"
                     error={!!errors.leadStageId}
+                    allowClear={true}
                   />
                 )}
               />
@@ -372,6 +376,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Lead Status"
                     error={!!errors.leadStatusId}
+                    allowClear={true}
                   />
                 )}
               />
