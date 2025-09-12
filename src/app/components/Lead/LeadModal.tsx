@@ -211,21 +211,19 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput name="name" label="Name" required placeholder="Enter Name" register={register} errors={errors} clearErrors={clearErrors} />
             <FormInput name="email" label="Email" type="email" placeholder="Enter Email" register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput
+            <FormPhoneInput
               name="phone"
               label="Phone"
-              type="number"
               required
-              placeholder="Enter Phone"
+              placeholder="Enter phone number"
               register={register}
               errors={errors}
               clearErrors={clearErrors}
+              setValue={setValue}
+              control={control}
               maxLength={10}
               validation={{
                 required: "Phone number is required",
-                validate: {
-                  is10Digits: (value: any) => (value && value.toString().length === 10) || "Phone number must be exactly 10 digits",
-                },
               }}
             />
             <FormInput name="city" label="City" placeholder="Enter City" register={register} errors={errors} clearErrors={clearErrors} />
