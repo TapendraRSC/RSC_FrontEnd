@@ -300,7 +300,7 @@ const FormPhoneInput = <T extends Record<string, any>>({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [inputValue, setInputValue] = useState("");
-    const [showCountryCodePrompt, setShowCountryCodePrompt] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const error = errors[name];
@@ -311,50 +311,103 @@ const FormPhoneInput = <T extends Record<string, any>>({
         name,
     });
 
-    // Extract country code and phone number from the existing value
     useEffect(() => {
-        if (fieldValue) {
-            // Check if the value already has a space (e.g., "+91 9898989898")
-            const [dialCode, phoneNumber] = fieldValue.split(" ");
-            if (dialCode && phoneNumber) {
+        if (fieldValue && !isInitialized) {
+            let parsedCountry = selectedCountry;
+            let parsedPhoneNumber = "";
+
+            const spaceMatch = fieldValue.match(/^(\+\d{1,4})\s+(.+)$/);
+            const dashMatch = fieldValue.match(/^(\+\d{1,4})-(.+)$/);
+
+            if (spaceMatch) {
+                const [, dialCode, phoneNumber] = spaceMatch;
                 const country = countriesData.find((c) => c.dial_code === dialCode);
                 if (country) {
-                    setSelectedCountry(country);
-                    setInputValue(phoneNumber);
-                    setShowCountryCodePrompt(false);
+                    parsedCountry = country;
+                    parsedPhoneNumber = phoneNumber.replace(/\D/g, "");
                 }
-            } else {
-                // If no space, try to find the country code
-                const country = countriesData.find((c) =>
-                    fieldValue.startsWith(c.dial_code)
-                );
+            } else if (dashMatch) {
+                const [, dialCode, phoneNumber] = dashMatch;
+                const country = countriesData.find((c) => c.dial_code === dialCode);
                 if (country) {
-                    setSelectedCountry(country);
-                    const phoneNumber = fieldValue.replace(country.dial_code, "");
-                    setInputValue(phoneNumber);
-                    setShowCountryCodePrompt(false);
-                } else {
-                    // If no country code, default to India and show prompt
-                    setSelectedCountry(countriesData.find((c) => c.code === "IN") || countriesData[0]);
-                    setInputValue(fieldValue);
-                    setShowCountryCodePrompt(true);
+                    parsedCountry = country;
+                    parsedPhoneNumber = phoneNumber.replace(/\D/g, "");
+                }
+            } // Replace this entire else if block:
+            else if (fieldValue.startsWith("+")) {
+                let foundCountry = null;
+                let phoneNumber = "";
+
+                const sortedCountries = [...countriesData].sort((a, b) => b.dial_code.length - a.dial_code.length);
+
+                for (const country of sortedCountries) {
+                    if (fieldValue.startsWith(country.dial_code)) {
+                        foundCountry = country;
+                        phoneNumber = fieldValue.substring(country.dial_code.length);
+                        break;
+                    }
+                }
+
+                if (foundCountry) {
+                    parsedCountry = foundCountry;
+                    parsedPhoneNumber = phoneNumber.replace(/\D/g, "");
                 }
             }
-        }
-    }, [fieldValue]);
 
+            else if (fieldValue.startsWith("+")) {
+                let foundCountry = null;
+                let phoneNumber = "";
+
+                const sortedCountries = [...countriesData].sort((a, b) => b.dial_code.length - a.dial_code.length);
+
+                for (const country of sortedCountries) {
+                    if (fieldValue.startsWith(country.dial_code)) {
+                        phoneNumber = fieldValue.substring(country.dial_code.length);
+                        if (phoneNumber && phoneNumber.replace(/\D/g, "").length >= 6) {
+                            foundCountry = country;
+                            break;
+                        }
+                    }
+                }
+
+                if (foundCountry) {
+                    parsedCountry = foundCountry;
+                    parsedPhoneNumber = phoneNumber.replace(/\D/g, "");
+                }
+            } else {
+                parsedPhoneNumber = fieldValue.replace(/\D/g, "");
+            }
+
+            setSelectedCountry(parsedCountry);
+            setInputValue(parsedPhoneNumber);
+            setIsInitialized(true);
+        }
+    }, [fieldValue, isInitialized]);
+
+    // Updated validation rules - fixed country code validation
     const rules: RegisterOptions<T, Path<T>> = {
         ...validation,
         required: required ? validation.required || `${label} is required` : undefined,
         validate: {
-            hasCountryCode: (value: string) =>
-                value.startsWith("+") || "Phone number must include country code",
+            hasCountryCode: (value: string) => {
+                if (!value) return true;
+                const phoneNumberPart = value.split(" ")[1];
+                if (!phoneNumberPart || phoneNumberPart.length === 0) return true;
+
+                const hasValidFormat = /^\+\d{1,4}\s\d+$/.test(value);
+                return hasValidFormat || "Phone number must include country code";
+            },
             validLength: (value: string) => {
-                const digits = value.split(" ")[1] || value.replace(/^\+\d{1,4}/, "");
+                if (!value) return true;
+                const phoneNumberPart = value.split(" ")[1];
+                if (!phoneNumberPart || phoneNumberPart.length === 0) return true;
+
+                const digits = phoneNumberPart.replace(/\D/g, "");
+                if (digits.length === 0) return true; // No digits entered yet
+
                 return (
-                    digits.length === 0 ||
                     (digits.length >= 6 && digits.length <= 15) ||
-                    "Please enter a complete phone number"
+                    "Please enter a complete phone number (6-15 digits)"
                 );
             },
             ...validation.validate,
@@ -392,21 +445,31 @@ const FormPhoneInput = <T extends Record<string, any>>({
         setSelectedCountry(country);
         setIsDropdownOpen(false);
         setSearchTerm("");
-        setShowCountryCodePrompt(false);
+
+        // Update the form value with proper format
         if (inputValue) {
             const fullNumber = `${country.dial_code} ${inputValue}`;
             setValue(name, fullNumber as any);
+        } else {
+            setValue(name, `${country.dial_code} ` as any);
         }
+
+        // Clear any existing errors
+        if (error) clearErrors(name);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (error) clearErrors(name);
+
         let digits = e.target.value.replace(/\D/g, "");
         if (maxLength && digits.length > maxLength) {
             digits = digits.slice(0, maxLength);
         }
+
         setInputValue(digits);
-        const fullNumber = `${selectedCountry.dial_code} ${digits}`;
+
+        // Always set the value with country code in proper format
+        const fullNumber = digits ? `${selectedCountry.dial_code} ${digits}` : `${selectedCountry.dial_code} `;
         setValue(name, fullNumber as any);
     };
 
@@ -421,21 +484,26 @@ const FormPhoneInput = <T extends Record<string, any>>({
                 {label}
                 {required && <span className="text-red-500 ml-1">*</span>}
             </label>
-            <div className="relative flex">
-                <div className="relative" ref={dropdownRef}>
+
+            {/* Responsive container */}
+            <div className="flex flex-col sm:flex-row">
+                {/* Country selector */}
+                <div className="relative mb-2 sm:mb-0" ref={dropdownRef}>
                     <button
                         type="button"
                         onClick={toggleDropdown}
                         disabled={disabled}
-                        className={`flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors min-w-[120px] ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                        className={`flex items-center justify-between gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-l-lg sm:rounded-r-none bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors w-full sm:min-w-[140px] ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                             } ${error ? "border-red-500 dark:border-red-400" : ""}`}
                     >
-                        <span className="text-lg">{selectedCountry.flag}</span>
-                        <span className="font-medium text-sm">
-                            {selectedCountry.dial_code}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg">{selectedCountry.flag}</span>
+                            <span className="font-medium text-sm">
+                                {selectedCountry.dial_code}
+                            </span>
+                        </div>
                         <svg
-                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""
+                            className={`w-4 h-4 transition-transform flex-shrink-0 ${isDropdownOpen ? "rotate-180" : ""
                                 }`}
                             fill="none"
                             stroke="currentColor"
@@ -449,8 +517,10 @@ const FormPhoneInput = <T extends Record<string, any>>({
                             />
                         </svg>
                     </button>
+
+                    {/* Dropdown */}
                     {isDropdownOpen && (
-                        <div className="absolute top-full left-0 z-50 w-80 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-80 overflow-hidden">
+                        <div className="absolute top-full left-0 z-50 w-full sm:w-80 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-80 overflow-hidden">
                             <div className="p-3 border-b border-gray-200 dark:border-gray-600">
                                 <input
                                     ref={searchInputRef}
@@ -469,15 +539,15 @@ const FormPhoneInput = <T extends Record<string, any>>({
                                             type="button"
                                             onClick={() => handleCountrySelect(country)}
                                             className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${selectedCountry.code === country.code
-                                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                                                    : "text-gray-900 dark:text-gray-100"
+                                                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                                                : "text-gray-900 dark:text-gray-100"
                                                 }`}
                                         >
-                                            <span className="text-lg">{country.flag}</span>
+                                            <span className="text-lg flex-shrink-0">{country.flag}</span>
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-medium truncate">{country.name}</div>
                                             </div>
-                                            <span className="font-medium text-gray-500 dark:text-gray-400 text-sm">
+                                            <span className="font-medium text-gray-500 dark:text-gray-400 text-sm flex-shrink-0">
                                                 {country.dial_code}
                                             </span>
                                         </button>
@@ -491,24 +561,23 @@ const FormPhoneInput = <T extends Record<string, any>>({
                         </div>
                     )}
                 </div>
+
+                {/* Phone number input */}
                 <input
                     {...register(name, rules)}
                     type="tel"
                     value={inputValue}
                     onChange={handleInputChange}
-                    className={`flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 transition-all ${error
-                            ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
-                            : ""
+                    className={`flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-l-none sm:rounded-r-lg sm:border-l-0 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 transition-all ${error
+                        ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
+                        : ""
                         } ${className}`}
                     placeholder={placeholder || "Enter phone number"}
                     disabled={disabled}
                 />
             </div>
-            {showCountryCodePrompt && (
-                <p className="text-yellow-500 dark:text-yellow-400 text-xs mt-1">
-                    Please select a country code.
-                </p>
-            )}
+
+            {/* Error message */}
             {error && (
                 <p className="text-red-500 dark:text-red-400 text-sm mt-1">
                     {error.message as string}

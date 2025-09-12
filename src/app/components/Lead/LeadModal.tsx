@@ -1,10 +1,10 @@
 'use client';
-
 import React, { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import CommonDropdown from "../Common/CommonDropdown";
 import FormInput from "../Common/FormInput";
+import FormPhoneInput from "../Common/FormPhoneInput";
 import { exportUsers } from "../../../../store/userSlice";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { fetchLeadPlatforms } from "../../../../store/leadPlateformSlice";
@@ -12,7 +12,6 @@ import { fetchProjectStatuses } from "../../../../store/projectSlice";
 import { fetchPlots } from "../../../../store/plotSlice";
 import { fetchLeadStages } from "../../../../store/leadStageSlice";
 import { fetchStatuses } from "../../../../store/statusMasterSlice";
-import FormPhoneInput from "../Common/FormPhoneInput";
 
 interface ComprehensiveLeadModalProps {
   isOpen: boolean;
@@ -30,8 +29,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   isLoading = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-
-  // ------------------ Redux selectors ------------------
   const { data: users = [] } = useSelector((state: RootState) => state.users);
   const { leadPlatforms } = useSelector((state: RootState) => state.leadPlateform);
   const { list: projectList } = useSelector((state: RootState) => state.projectStatus);
@@ -39,7 +36,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { list: stageList } = useSelector((state: RootState) => state.leadStages);
   const { list: statusList } = useSelector((state: RootState) => state.statuses);
 
-  // ------------------ Dropdown options ------------------
   const actualUsersData = useMemo(() => {
     if (Array.isArray(users)) return users;
     if (users?.data) {
@@ -53,30 +49,23 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     () => actualUsersData.map((user: any) => ({ label: user.name, value: user.id })),
     [actualUsersData]
   );
-
   const actualPlatformOptions = useMemo(
     () => leadPlatforms.map((platform: any) => ({ label: platform.platformType, value: platform.id })),
     [leadPlatforms]
   );
-
   const projectStatusOptions = useMemo(() => {
     const projects = projectList?.projects || [];
     return projects.map((p: any) => ({ label: p.title, value: p.id }));
   }, [projectList]);
-
   const plotOptions = useMemo(() => plots.map((plot: any) => ({ label: plot.plotNumber, value: plot.id })), [plots]);
-
   const leadStageOptions = useMemo(
     () => (stageList || []).map((s: any) => ({ label: s.type, value: s.id })),
     [stageList]
   );
-
   const leadStatusOptions = useMemo(
     () => (statusList || []).map((s: any) => ({ label: s.type, value: s.id })),
     [statusList]
   );
-
-  // ------------------ New Current Status options ------------------
   const currentStatusOptions = useMemo(
     () => [
       { label: "Interested", value: "Interested" },
@@ -84,8 +73,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     ],
     []
   );
-
-  // ------------------ Current user ------------------
   const currentUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "{}");
@@ -102,7 +89,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     return assignedToOptions;
   }, [assignedToOptions, currentUser]);
 
-  // ------------------ React Hook Form ------------------
   const defaultValues = useMemo(
     () => ({
       name: "",
@@ -116,7 +102,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       plotId: null,
       leadStageId: null,
       leadStatusId: null,
-      interestStatus: null, // ✅ Default value
+      interestStatus: null,
     }),
     [currentUser]
   );
@@ -125,7 +111,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     defaultValues,
   });
 
-  // ------------------ Fetch data when modal opens ------------------
   useEffect(() => {
     if (isOpen) {
       dispatch(exportUsers({ page: 1, limit: 100, searchValue: "" }));
@@ -136,7 +121,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, [dispatch, isOpen]);
 
-  // ------------------ Reset form on modal open or initialData changes ------------------
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
@@ -147,7 +131,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           plotId: null,
           interestStatus: initialData.interestStatus || "Interested",
         });
-
         if (initialData.plotProjectId) {
           dispatch(fetchPlots({ projectId: initialData.plotProjectId, page: 1, limit: 100, search: "" }));
         }
@@ -157,7 +140,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, [isOpen, initialData, reset, defaultValues, dispatch]);
 
-  // ------------------ Set plot value after plots are loaded (edit case) ------------------
   useEffect(() => {
     if (initialData?.plotId && plots.length > 0) {
       const plotExists = plots.find((p: any) => p.id === initialData.plotId);
@@ -167,13 +149,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, [plots, initialData, setValue]);
 
-  // ------------------ Reset form on close ------------------
   const handleClose = () => {
     reset(defaultValues);
     onClose();
   };
 
-  // ------------------ Fetch plots when project changes ------------------
   const selectedProjectId = watch("projectStatusId");
   useEffect(() => {
     if (selectedProjectId) {
@@ -184,31 +164,27 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, [dispatch, selectedProjectId, setValue]);
 
-  // ------------------ Submit ------------------
   const onSubmit = (data: any) => onSave(data);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/60" style={{ margin: "0px" }}>
-      <div className="bg-white dark:bg-gray-900 w-full max-w-4xl rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 dark:bg-black/60" style={{ margin: "0px" }}>
+      <div className="bg-white dark:bg-gray-900 w-full sm:max-w-md md:max-w-2xl lg:max-w-4xl rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">
             {initialData ? "Edit Lead" : "Add New Lead"}
           </h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 text-2xl"
+            className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 text-xl sm:text-2xl"
             disabled={isLoading}
           >
             ×
           </button>
         </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-6 space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <FormInput name="name" label="Name" required placeholder="Enter Name" register={register} errors={errors} clearErrors={clearErrors} />
             <FormInput name="email" label="Email" type="email" placeholder="Enter Email" register={register} errors={errors} clearErrors={clearErrors} />
             <FormPhoneInput
@@ -222,17 +198,12 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               setValue={setValue}
               control={control}
               maxLength={10}
-              validation={{
-                required: "Phone number is required",
-              }}
+              validation={{ required: "Phone number is required" }}
             />
             <FormInput name="city" label="City" placeholder="Enter City" register={register} errors={errors} clearErrors={clearErrors} />
             <FormInput name="state" label="State" placeholder="Enter State" register={register} errors={errors} clearErrors={clearErrors} />
-            {/* ✅ Current Status */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Current Status
-              </label>
+              <label className="block text-sm font-medium mb-1">Current Status</label>
               <Controller
                 name="interestStatus"
                 control={control}
@@ -250,10 +221,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               {errors.interestStatus && <p className="mt-1 text-sm text-red-600">{errors.interestStatus.message as string}</p>}
             </div>
           </div>
-
-          {/* Dropdowns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Assigned To */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">
                 Assigned To <span className="text-red-500">*</span>
@@ -275,8 +243,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.assignedTo && <p className="mt-1 text-sm text-red-600">{errors.assignedTo.message as string}</p>}
             </div>
-
-            {/* Platform */}
             <div>
               <label className="block text-sm font-medium mb-1">
                 Platform <span className="text-red-500">*</span>
@@ -298,12 +264,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.platformId && <p className="mt-1 text-sm text-red-600">{errors.platformId.message as string}</p>}
             </div>
-
-            {/* Project */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Project
-              </label>
+              <label className="block text-sm font-medium mb-1">Project</label>
               <Controller
                 name="projectStatusId"
                 control={control}
@@ -320,8 +282,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.projectStatusId && <p className="mt-1 text-sm text-red-600">{errors.projectStatusId.message as string}</p>}
             </div>
-
-            {/* Plot */}
             <div>
               <label className="block text-sm font-medium mb-1">Plot</label>
               <Controller
@@ -338,12 +298,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 )}
               />
             </div>
-
-            {/* Lead Stage */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Lead Stage
-              </label>
+              <label className="block text-sm font-medium mb-1">Lead Stage</label>
               <Controller
                 name="leadStageId"
                 control={control}
@@ -360,12 +316,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.leadStageId && <p className="mt-1 text-sm text-red-600">{errors.leadStageId.message as string}</p>}
             </div>
-
-            {/* Lead Status */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Lead Status
-              </label>
+              <label className="block text-sm font-medium mb-1">Lead Status</label>
               <Controller
                 name="leadStatusId"
                 control={control}
@@ -382,23 +334,19 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.leadStatusId && <p className="mt-1 text-sm text-red-600">{errors.leadStatusId.message as string}</p>}
             </div>
-
-
           </div>
-
-          {/* Footer */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={handleClose}
-              className="px-6 py-2 border rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="px-4 sm:px-6 py-1.5 sm:py-2 border rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm sm:text-base"
               disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition"
+              className="px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition text-sm sm:text-base"
               disabled={isLoading}
             >
               {isLoading ? "Saving..." : initialData ? "Update Lead" : "Save Lead"}
