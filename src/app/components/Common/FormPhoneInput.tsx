@@ -533,7 +533,7 @@ const FormPhoneInput = <T extends Record<string, any>>({
                             </div>
                             <div className="overflow-y-auto max-h-64">
                                 {filteredCountries.length ? (
-                                    filteredCountries.map((country) => (
+                                    filteredCountries?.map((country) => (
                                         <button
                                             key={country.code}
                                             type="button"
@@ -543,9 +543,9 @@ const FormPhoneInput = <T extends Record<string, any>>({
                                                 : "text-gray-900 dark:text-gray-100"
                                                 }`}
                                         >
-                                            <span className="text-lg flex-shrink-0">{country.flag}</span>
+                                            <span className="text-lg flex-shrink-0">{country?.flag}</span>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-medium truncate">{country.name}</div>
+                                                <div className="font-medium truncate">{country?.name}</div>
                                             </div>
                                             <span className="font-medium text-gray-500 dark:text-gray-400 text-sm flex-shrink-0">
                                                 {country.dial_code}
@@ -562,7 +562,6 @@ const FormPhoneInput = <T extends Record<string, any>>({
                     )}
                 </div>
 
-                {/* Phone number input */}
                 <input
                     {...register(name, rules)}
                     type="tel"
