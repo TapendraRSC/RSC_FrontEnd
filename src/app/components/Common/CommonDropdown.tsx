@@ -88,7 +88,6 @@ export default function CommonDropdown({
                 </span>
 
                 <div className="flex items-center gap-1">
-                    {/* Clear button - only show if there's a selection and allowClear is true */}
                     {allowClear && hasSelection && (
                         <div
                             onClick={handleClear}
@@ -98,7 +97,6 @@ export default function CommonDropdown({
                         </div>
                     )}
 
-                    {/* Chevron icon */}
                     {open ? (
                         <ChevronUp size={18} className="text-gray-500 dark:text-gray-400" />
                     ) : (

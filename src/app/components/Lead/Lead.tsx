@@ -314,7 +314,7 @@ const LeadComponent: React.FC = () => {
                     showTooltip: true,
                 },
                 {
-                    label: 'Current Status',
+                    label: 'Lead Status',
                     accessor: 'leadStatus',
                     sortable: true,
                     render: (row: any) => renderBadge(formatValue(row.leadStatus)),
@@ -332,7 +332,7 @@ const LeadComponent: React.FC = () => {
                     showTooltip: true,
                 },
                 {
-                    label: 'Lead Status',
+                    label: 'Current Status',
                     accessor: 'interestStatus',
                     sortable: true,
                     render: (row: any) => renderBadge(formatValue(row?.interestStatus)),
@@ -381,7 +381,7 @@ const LeadComponent: React.FC = () => {
                     showTooltip: true,
                 },
                 {
-                    label: 'Current Status',
+                    label: 'Lead status',
                     accessor: 'leadStatus',
                     sortable: true,
                     render: (row: any) => renderBadge(formatValue(row.leadStatus)),
@@ -399,7 +399,7 @@ const LeadComponent: React.FC = () => {
                     showTooltip: true,
                 },
                 {
-                    label: 'Lead Status',
+                    label: 'Current Status',
                     accessor: 'interestStatus',
                     sortable: true,
                     render: (row: any) => renderBadge(formatValue(row.interestStatus)),
