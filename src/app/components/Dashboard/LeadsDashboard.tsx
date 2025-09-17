@@ -1,27 +1,134 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Add this import
+import { useRouter } from "next/navigation";
 import {
     User,
     Users,
     Globe,
     Facebook,
     Activity,
+    Search,
 } from "lucide-react";
 import axiosInstance from "@/libs/axios";
+import { toast } from "react-toastify";
+import { Phone, Mail, UserCheck } from "lucide-react";
+interface SearchResultItem {
+    id?: number;
+    leadName?: string;
+    name?: string;
+    email?: string | null;
+    phone?: string;
+    assignedUser?: string;
+}
+
+interface SearchModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    data: SearchResultItem[];
+}
+
+const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, data }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+                <div className="p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <Search size={20} className="text-blue-500" />
+                            Search Results
+                        </h2>
+                        <button
+                            onClick={onClose}
+                            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            <span className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 text-xl">
+                                ✕
+                            </span>
+                        </button>
+                    </div>
+
+                    {/* Results */}
+                    {data.length === 0 ? (
+                        <div className="py-12 flex flex-col items-center justify-center text-center">
+                            <Search className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
+                            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                No results found
+                            </h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                Try adjusting your search or filter to find what you're looking for.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {data.map((item, idx) => (
+                                <div
+                                    key={idx}
+                                    className="bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 p-4 transition-all hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700"
+                                >
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                        {/* Lead Name */}
+                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                            <User className="text-blue-500 flex-shrink-0" size={18} />
+                                            <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                                                {item.leadName || item.name || "N/A"}
+                                            </p>
+                                        </div>
+
+                                        {/* Contact Info */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                                            {item.phone && (
+                                                <div className="flex items-center gap-1.5 text-sm">
+                                                    <Phone className="text-green-500 flex-shrink-0" size={16} />
+                                                    <span className="text-slate-600 dark:text-slate-300">{item.phone}</span>
+                                                </div>
+                                            )}
+                                            {item.email && (
+                                                <div className="flex items-center gap-1.5 text-sm">
+                                                    <Mail className="text-amber-500 flex-shrink-0" size={16} />
+                                                    <span className="text-slate-600 dark:text-slate-300 truncate max-w-[180px]">
+                                                        {item.email}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {item.assignedUser && (
+                                                <div className="flex items-center gap-1.5 text-sm">
+                                                    <UserCheck className="text-purple-500 flex-shrink-0" size={16} />
+                                                    <span className="text-slate-600 dark:text-slate-300">
+                                                        {item.assignedUser}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 interface StatItem {
     title: string;
     value: number;
     icon: React.ReactNode;
     color: string;
-    route?: string; // Add route property
+    route?: string;
 }
 
 const SalesDashboard = () => {
-    const router = useRouter(); // Initialize router
+    const router = useRouter();
     const [statsData, setStatsData] = useState<StatItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+    const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
 
     const sourceData = [
         { title: "HomeOnline", value: 0, icon: <Globe size={18} />, color: "slate" },
@@ -38,13 +145,11 @@ const SalesDashboard = () => {
     const getRouteForKey = (key: string): string | undefined => {
         const lowerKey = key.toLowerCase();
         if (lowerKey.includes("user")) return "/users";
-        // if (lowerKey.includes("plot")) return "/projectstatus/17";
         if (lowerKey.includes("project")) return "/projectstatus";
         if (lowerKey.includes("lead")) return "/lead";
         return undefined;
     };
 
-    // Function to handle card click
     const handleCardClick = (route?: string) => {
         if (route) {
             router.push(route);
@@ -56,21 +161,17 @@ const SalesDashboard = () => {
         try {
             const res = await axiosInstance.get("/dashboard/dashboard-stats");
             const data = res.data.data;
-
             const updatedStats: any = Object.entries(data).map(([key, value]) => {
                 const title = key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase());
                 let icon: React.ReactNode = <Users size={18} />;
                 let color = "blue";
-                const route = getRouteForKey(key); // Get route for this key
-
+                const route = getRouteForKey(key);
                 if (key.toLowerCase().includes("user")) icon = <User size={18} />;
                 if (key.toLowerCase().includes("plot")) color = "pink";
                 if (key.toLowerCase().includes("project")) color = "purple";
                 if (key.toLowerCase().includes("lead")) color = "orange";
-
                 return { title, value: value ?? 0, icon, color, route };
             });
-
             setStatsData(updatedStats);
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
@@ -79,6 +180,30 @@ const SalesDashboard = () => {
             setIsLoading(false);
         }
     };
+
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!searchQuery.trim()) {
+            toast.warning("Please enter a search term");
+            return;
+        }
+        setIsSearching(true);
+        try {
+            const res = await axiosInstance.get(`dashboard/search-leads?search=${encodeURIComponent(searchQuery)}`);
+            // Ensure res.data.data is always treated as an array
+            const results = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            setSearchResults(results);
+            setIsSearchModalOpen(true);
+        } catch (error) {
+            console.error("Error searching leads:", error);
+            toast.error("Error searching leads");
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+
 
     const getColorClasses = (color: string, type = "bg") => {
         const colors: Record<string, string> = {
@@ -97,10 +222,7 @@ const SalesDashboard = () => {
 
     const renderSkeleton = (count: number) => {
         return Array.from({ length: count }).map((_, idx) => (
-            <div
-                key={idx}
-                className="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 animate-pulse"
-            >
+            <div key={idx} className="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 animate-pulse">
                 <div className="w-10 h-10 bg-slate-300 dark:bg-slate-700 rounded-xl mb-3"></div>
                 <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
                 <div className="h-6 bg-slate-300 dark:bg-slate-700 rounded w-1/2"></div>
@@ -110,10 +232,7 @@ const SalesDashboard = () => {
 
     const renderSourceSkeleton = (count: number) => {
         return Array.from({ length: count }).map((_, idx) => (
-            <div
-                key={idx}
-                className="text-center bg-slate-50 dark:bg-slate-900 rounded-xl p-3 animate-pulse"
-            >
+            <div key={idx} className="text-center bg-slate-50 dark:bg-slate-900 rounded-xl p-3 animate-pulse">
                 <div className="inline-flex w-10 h-10 bg-slate-300 dark:bg-slate-700 rounded-xl mb-2"></div>
                 <div className="h-3 bg-slate-300 dark:bg-slate-700 rounded w-3/4 mx-auto mb-1"></div>
                 <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-1/2 mx-auto"></div>
@@ -140,6 +259,29 @@ const SalesDashboard = () => {
                     </div>
                 </div>
 
+                {/* Search Bar */}
+                <div className="w-full max-w-md mx-auto mb-6">
+                    <form onSubmit={handleSearch} className="relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search leads..."
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <Search className="text-slate-400" size={18} />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isSearching}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50"
+                        >
+                            {isSearching ? "Searching..." : "Search"}
+                        </button>
+                    </form>
+                </div>
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                     {isLoading
@@ -148,8 +290,7 @@ const SalesDashboard = () => {
                             <div
                                 key={idx}
                                 onClick={() => handleCardClick(item.route)}
-                                className={`bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 hover:shadow-xl transition-transform hover:-translate-y-1 ${item.route ? 'cursor-pointer hover:scale-105' : ''
-                                    }`}
+                                className={`bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 hover:shadow-xl transition-transform hover:-translate-y-1 ${item.route ? 'cursor-pointer hover:scale-105' : ''}`}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className={`p-3 rounded-xl ${getColorClasses(item.color, "bg")}`}>
@@ -193,6 +334,13 @@ const SalesDashboard = () => {
                             ))}
                     </div>
                 </div>
+
+                {/* Search Modal */}
+                <SearchModal
+                    isOpen={isSearchModalOpen}
+                    onClose={() => setIsSearchModalOpen(false)}
+                    data={searchResults}
+                />
             </div>
         </div>
     );
