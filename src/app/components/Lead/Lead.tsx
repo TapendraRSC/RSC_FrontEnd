@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Pencil, Trash2, Plus, Upload, Loader2, Download } from 'lucide-react';
+import { Pencil, Trash2, Plus, Upload, Loader2, Download, UserPlus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import { FilterConfig, FilterValue } from '../Common/TableFilter';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
@@ -21,6 +21,8 @@ import {
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { RootState } from '../../../../store/store';
+import BulkAssignRoleModal from '../Common/BulkAssignRoleModal';
+
 
 type SortConfig = {
     key: string;
@@ -65,6 +67,11 @@ const LeadComponent: React.FC = () => {
     const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
     const [filterValues, setFilterValues] = useState<FilterValue>({});
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [deleteMode, setDeleteMode] = useState<'single' | 'bulk'>('single');
+    const [deleteTarget, setDeleteTarget] = useState<any>(null);
+    const [selectedIds, setSelectedIds] = useState<(string | number)[]>([1, 2, 3]);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+
 
     useEffect(() => {
         dispatch(
@@ -198,22 +205,41 @@ const LeadComponent: React.FC = () => {
     };
 
     const handleDelete = (lead: any) => {
-        setLeadToDelete(lead);
+        setDeleteMode('single');
+        setDeleteTarget(lead);
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
-        if (leadToDelete) {
-            dispatch(deleteLead(leadToDelete.id))
-                .unwrap()
-                .then(() => {
-                    toast.success('Lead deleted successfully');
-                    dispatch(
-                        fetchLeads({ page: currentPage, limit: pageSize, searchValue })
-                    );
-                })
-                .catch(() => toast.error('Failed to delete lead'));
-            setIsDeleteModalOpen(false);
+    const confirmDelete = async () => {
+        if (deleteMode === 'single') {
+            const id = deleteTarget?.id;
+            if (!id) {
+                setIsDeleteModalOpen(false);
+                setDeleteTarget(null);
+                return;
+            }
+            try {
+                await dispatch(deleteLead(id)).unwrap();
+                toast.success('Lead deleted successfully');
+                dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+            } catch {
+                toast.error('Failed to delete lead');
+            } finally {
+                setIsDeleteModalOpen(false);
+                setDeleteTarget(null);
+            }
+        } else {
+            const ids = Array.isArray(deleteTarget) ? deleteTarget : [];
+            try {
+                await Promise.all(ids.map((id) => dispatch(deleteLead(id)).unwrap()));
+                toast.success(`${ids.length} lead(s) deleted successfully`);
+                dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+            } catch {
+                toast.error('Failed to delete some leads');
+            } finally {
+                setIsDeleteModalOpen(false);
+                setDeleteTarget(null);
+            }
         }
     };
 
@@ -446,8 +472,36 @@ const LeadComponent: React.FC = () => {
         }
     };
 
-
     const columns = getColumnsBasedOnRole(currentUser?.roleId);
+
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        if (!selectedIds || selectedIds.length === 0) {
+            toast.error('No leads selected for deletion');
+            return;
+        }
+        setDeleteMode('bulk');
+        setDeleteTarget(selectedIds);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleBulkAssignRole = (roleId: string | number) => {
+        console.log("Assign role:", roleId, "to IDs:", selectedIds);
+        setIsAssignModalOpen(false);
+    };
+
+    const bulkActions = [
+        {
+            label: 'Delete Selected',
+            icon: <Trash2 className="w-4 h-4" />,
+            onClick: handleBulkDelete,
+        },
+        {
+            label: 'Assign Role',
+            icon: <UserPlus className="w-4 h-4" />,
+            onClick: () => setIsAssignModalOpen(true),
+        },
+
+    ];
     const handleSort = (config: any) => setSortConfig(config);
     const handlePageChange = (page: number) => setCurrentPage(page);
     const handlePageSizeChange = (size: number) => {
@@ -600,6 +654,11 @@ const LeadComponent: React.FC = () => {
                     filterValues={filterValues}
                     onFilterChange={setFilterValues}
                     onPageSizeChange={handlePageSizeChange}
+                    showBulkSelect={true}
+                    onSelectionChange={(selectedIds) => {
+                        console.log("Selected:", selectedIds);
+                    }}
+                    bulkActions={bulkActions} // Pass bulk actions as array
                     actions={(row) => (
                         <div className="flex gap-2">
                             {hasPermission(22, 'edit') && (
@@ -659,10 +718,19 @@ const LeadComponent: React.FC = () => {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onDelete={confirmDelete}
-                title="Confirm Deletion"
-                message={`Are you sure you want to delete "${leadToDelete?.name}"?`}
+                title={
+                    deleteMode === 'bulk'
+                        ? `Confirm Deletion`
+                        : `Confirm Deletion`
+                }
+                message={
+                    deleteMode === 'bulk'
+                        ? `Are you sure you want to delete ${Array.isArray(deleteTarget) ? deleteTarget.length : 0} selected leads?`
+                        : `Are you sure you want to delete "${deleteTarget?.name ?? ''}"?`
+                }
                 Icon={Trash2}
             />
+
 
             <UploadPreviewModal
                 isOpen={isUploadPreviewOpen}
@@ -682,6 +750,15 @@ const LeadComponent: React.FC = () => {
                 fileName={`leads_export_${new Date().toISOString().split('T')[0]}`}
                 columns={columns}
             />
+
+            <BulkAssignRoleModal
+                isOpen={isAssignModalOpen}
+                onClose={() => setIsAssignModalOpen(false)}
+                onConfirm={handleBulkAssignRole}
+                selectedIds={selectedIds}
+                currentUser={currentUser}   // 👈 yeh zaroor pass karna hoga
+            />
+
         </div>
     );
 };
