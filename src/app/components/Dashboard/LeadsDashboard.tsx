@@ -31,7 +31,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, data }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ margin: "0px" }}>
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-y-auto">
                 <div className="p-6">
                     {/* Header */}
@@ -63,7 +63,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, data }) => {
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {data.map((item, idx) => (
+                            {data?.map((item, idx) => (
                                 <div
                                     key={idx}
                                     className="bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 p-4 transition-all hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700"
@@ -73,19 +73,19 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, data }) => {
                                         <div className="flex items-center gap-2 min-w-0 flex-1">
                                             <User className="text-blue-500 flex-shrink-0" size={18} />
                                             <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">
-                                                {item.leadName || item.name || "N/A"}
+                                                {item?.leadName || item?.name || "N/A"}
                                             </p>
                                         </div>
 
                                         {/* Contact Info */}
                                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                                            {item.phone && (
+                                            {item?.phone && (
                                                 <div className="flex items-center gap-1.5 text-sm">
                                                     <Phone className="text-green-500 flex-shrink-0" size={16} />
                                                     <span className="text-slate-600 dark:text-slate-300">{item.phone}</span>
                                                 </div>
                                             )}
-                                            {item.email && (
+                                            {item?.email && (
                                                 <div className="flex items-center gap-1.5 text-sm">
                                                     <Mail className="text-amber-500 flex-shrink-0" size={16} />
                                                     <span className="text-slate-600 dark:text-slate-300 truncate max-w-[180px]">
@@ -93,7 +93,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, data }) => {
                                                     </span>
                                                 </div>
                                             )}
-                                            {item.assignedUser && (
+                                            {item?.assignedUser && (
                                                 <div className="flex items-center gap-1.5 text-sm">
                                                     <UserCheck className="text-purple-500 flex-shrink-0" size={16} />
                                                     <span className="text-slate-600 dark:text-slate-300">
@@ -191,7 +191,7 @@ const SalesDashboard = () => {
         try {
             const res = await axiosInstance.get(`dashboard/search-leads?search=${encodeURIComponent(searchQuery)}`);
             // Ensure res.data.data is always treated as an array
-            const results = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            const results = Array.isArray(res.data?.data) ? res.data?.data : [res.data?.data];
             setSearchResults(results);
             setIsSearchModalOpen(true);
         } catch (error) {
