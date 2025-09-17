@@ -40,8 +40,8 @@ const Toast: React.FC<{
         <div className="fixed top-4 right-4 z-[60] animate-in slide-in-from-right duration-300">
             <div
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border max-w-sm ${type === "success"
-                        ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900 dark:text-green-200 dark:border-green-700"
-                        : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
+                    ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900 dark:text-green-200 dark:border-green-700"
+                    : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
                     }`}
             >
                 {type === "success" ? (
@@ -196,7 +196,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
 
     return (
         <>
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4" style={{ margin: "0px" }}>
                 <div className="bg-white dark:bg-gray-900 w-full max-w-md sm:max-w-2xl md:max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700 max-h-[95vh] flex flex-col">
                     {/* Header */}
                     <div className="flex justify-between items-center bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white px-4 sm:px-6 py-3 sm:py-5 shadow-sm">

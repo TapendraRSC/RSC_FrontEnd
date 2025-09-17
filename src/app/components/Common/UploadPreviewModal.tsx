@@ -41,15 +41,34 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
     };
 
     const handleDownloadSample = () => {
-        // Placeholder logic for sample download
-        const sampleData = new Blob([JSON.stringify([], null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(sampleData);
-        const a = document.createElement('a');
+        const headers = [
+            "Name",
+            "Email",
+            "Phone",
+            "Assigned Person",
+            "Lead Status",
+            "Lead Stage",
+            "Current Status",
+            "Platform Type",
+            "Plot Number",
+            "Plot Price",
+            "City",
+            "State",
+        ];
+
+        const rows = [
+            ["John Doe", "john@example.com", "9876543210", "Admin", "New", "Inquiry", "Interested", "Website", "P-101", "25,00,000", "Ahmedabad", "Gujarat"],
+            ["Jane Smith", "jane@example.com", "9876543211", "Manager", "Contacted", "Negotiation", "Not Interested", "Facebook", "P-202", "30,00,000", "Surat", "Gujarat"]
+        ];
+
+        const csvContent = [headers, ...rows].map(r => r.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
         a.href = url;
-        a.download = 'Sample_Leads.xlsx';
-        document.body.appendChild(a);
+        a.download = "Sample_Leads.csv"; // 👈 CSV extension
         a.click();
-        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
 

@@ -151,7 +151,7 @@ const Sidebar = () => {
                     {/* ---------- Header ---------- */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                         <Link href="/" className="main-logo flex items-center gap-2">
-                            <span className="text-2xl font-semibold text-gray-900 dark:text-white">RSC Group</span>
+                            <span className="text-2xl font-semibold text-gray-900 dark:text-white">Idigital service's</span>
                         </Link>
                         <button
                             onClick={toggleSidebar}
