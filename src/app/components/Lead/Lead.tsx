@@ -244,10 +244,8 @@ const LeadComponent: React.FC = () => {
             dispatch(
                 fetchLeads({ page: currentPage, limit: pageSize, searchValue })
             );
-        } catch {
-            toast.error(
-                currentLead ? 'Failed to update lead' : 'Failed to add lead'
-            );
+        } catch (error: any) {
+            console.error('Error saving lead:', error);
         } finally {
             setIsSaving(false);
         }
@@ -482,7 +480,6 @@ const LeadComponent: React.FC = () => {
             return;
         }
 
-        // Convert string IDs to numbers
         const numericIds = selectedIds?.map(id => Number(id));
         const numericAssignedTo = Number(assignedTo);
 
@@ -504,18 +501,18 @@ const LeadComponent: React.FC = () => {
 
 
     const bulkActions = [
-        {
+        ...(hasPermission(4, 'delete') ? [{
             label: 'Delete Selected',
             icon: <Trash2 className="w-4 h-4" />,
             onClick: handleBulkDelete,
-        },
-        {
+        }] : []),
+        ...(hasPermission(25, 'bulk assign') ? [{
             label: 'Assign Role',
             icon: <UserPlus className="w-4 h-4" />,
             onClick: () => setIsAssignModalOpen(true),
-        },
-
+        }] : []),
     ];
+
     const handleSort = (config: any) => setSortConfig(config);
     const handlePageChange = (page: number) => setCurrentPage(page);
     const handlePageSizeChange = (size: number) => {
@@ -669,7 +666,6 @@ const LeadComponent: React.FC = () => {
                     onFilterChange={setFilterValues}
                     onPageSizeChange={handlePageSizeChange}
                     showBulkSelect={true}
-                    /** 👇 Pass selectedIds so table is controlled */
                     selectedIds={selectedIds}
                     onSelectionChange={(ids) => {
                         console.log("Selected:", ids);

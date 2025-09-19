@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "@/libs/axios";
+import { toast } from "react-toastify";
 
 // ------------------ Async Thunks ------------------
 
@@ -46,7 +47,17 @@ export const createLead = createAsyncThunk(
             const res = await axiosInstance.post("/leads/create-lead-CRM", payload);
             return res.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorData = err.response?.data;
+            console.log("Error Data:", errorData); // Debugging line
+            const errorMessage = errorData?.message || err.message;
+
+            toast.error(errorMessage);
+
+            return rejectWithValue({
+                message: errorMessage,
+                duplicate: errorData?.duplicate,
+                success: errorData?.success
+            });
         }
     }
 );
@@ -250,11 +261,19 @@ const leadSlice = createSlice({
             })
 
             // ✅ Create Lead
+            // ✅ Create Lead - Updated cases
+            .addCase(createLead.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(createLead.fulfilled, (state, action) => {
+                state.loading = false;
                 state.list.push(action.payload);
             })
-
-            // ✅ Update Lead
+            .addCase(createLead.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload?.message || action.payload;
+            })
             .addCase(updateLead.fulfilled, (state, action) => {
                 if (action.payload && action.payload.id) {
                     const index = state.list.findIndex(
@@ -265,13 +284,10 @@ const leadSlice = createSlice({
                     }
                 }
             })
-
-            // ✅ Delete Lead
             .addCase(deleteLead.fulfilled, (state, action) => {
                 state.list = state.list.filter((l: any) => l.id !== action.payload);
             })
 
-            // ✅ Upload Leads
             .addCase(uploadLeads.pending, (state) => {
                 state.loading = true;
             })

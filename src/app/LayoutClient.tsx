@@ -6,10 +6,28 @@ import "react-toastify/dist/ReactToastify.css";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeProvider } from "next-themes";
+import { useDispatch, useSelector } from "react-redux";
 
 import Sidebar, { SidebarProvider, useSidebar } from "./components/Layouts/Sidebar";
 import Header from "./components/Layouts/Header";
 import ReduxProvider from "./ReduxProvider";
+import { AppDispatch, RootState } from "../../store/store";
+import { fetchRolePermissionsSidebar } from "../../store/sidebarPermissionSlice";
+
+const routeToPageNameMap: { [key: string]: string } = {
+    '/': 'Dashboard',
+    '/users': 'User Management',
+    '/roles': 'Roles',
+    '/permissions': 'Permissions',
+    '/pagepermissions': 'Page Permissions',
+    '/rolebasedpermissions': 'User Permissions',
+    '/leadstagemasterpage': 'Lead Stage Master View',
+    '/statusmasterview': 'Status Master View',
+    '/land': 'Land',
+    '/leadplatform': 'Lead Platform',
+    '/projectstatus': 'Project Status',
+    '/lead': 'Lead',
+};
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
     return (
@@ -38,19 +56,59 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [authChecked, setAuthChecked] = useState(false);
+    const dispatch = useDispatch<AppDispatch>();
+    const [permissionChecked, setPermissionChecked] = useState(false);
+
+    const { permissions: rolePermissions, loading: permissionsLoading } = useSelector(
+        (state: RootState) => state.sidebarPermissions
+    );
 
     const isAuthRoute = pathname === "/login";
 
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
-        if (!token && !isAuthRoute) {
+        if (token) {
+            dispatch(fetchRolePermissionsSidebar());
+        } else if (!isAuthRoute) {
             router.replace("/login");
         }
-        setAuthChecked(true);
-    }, [router, isAuthRoute]);
+    }, [dispatch, isAuthRoute, router]);
 
-    if (!authChecked) return null;
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+
+        if (isAuthRoute || !token) {
+            setPermissionChecked(true);
+            return;
+        }
+
+        if (permissionsLoading) {
+            return;
+        }
+
+        if (rolePermissions?.permissions) {
+            const pageName = routeToPageNameMap[pathname];
+
+            if (pageName) {
+                const pagePermission = rolePermissions.permissions.find(
+                    (p: any) => p.pageName === pageName
+                );
+                const hasViewPermission = pagePermission && pagePermission.permissionIds.includes(17);
+
+                if (!hasViewPermission) {
+                    router.replace("/");
+                    return;
+                }
+            }
+        }
+
+        setPermissionChecked(true);
+
+    }, [pathname, rolePermissions, permissionsLoading, isAuthRoute, router]);
+
+    if (!permissionChecked) {
+        return null;
+    }
 
     if (isAuthRoute) {
         return <main className="flex-1">{children}</main>;
@@ -73,7 +131,6 @@ function MainContent({ children }: { children: React.ReactNode }) {
     return (
         <main className="lg:ml-[260px]">
             <Header />
-
             <div className="p-4 lg:p-6">{children}</div>
         </main>
     );
