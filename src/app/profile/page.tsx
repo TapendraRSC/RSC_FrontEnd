@@ -138,9 +138,9 @@ const Profile = () => {
                             <span className={`px-4 py-1.5 text-sm rounded-full border font-medium ${getStatusColor(user.status)}`}>
                                 {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                             </span>
-                            <button className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-full transition">
+                            {/* <button className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-full transition">
                                 <Edit3 size={16} /> Edit Profile
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </div>

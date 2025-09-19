@@ -55,7 +55,10 @@ const Sidebar = () => {
     );
 
     useEffect(() => {
-        dispatch(fetchRolePermissionsSidebar());
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+            dispatch(fetchRolePermissionsSidebar());
+        }
     }, [dispatch]);
 
     const menuStructure = {
