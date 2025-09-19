@@ -99,6 +99,42 @@ export const uploadLeads = createAsyncThunk(
     }
 );
 
+export const deleteBulkLeads = createAsyncThunk(
+    "leads/deleteBulk",
+    async (leadIds: number[], { rejectWithValue }) => {
+        try {
+            const res = await axiosInstance.delete("/leads/deleteBulkLeads", {
+                data: { ids: leadIds }, // ✅ Backend expects "ids" key
+            });
+            return leadIds; // Return the IDs that were sent for deletion
+        } catch (err: any) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+export const transferSelectedLeads = createAsyncThunk(
+    "leads/transfer",
+    async (
+        { leadIds, assignedTo }: { leadIds: number[]; assignedTo: number },
+        { rejectWithValue }
+    ) => {
+        try {
+            const res = await axiosInstance.post("/leads/transfer-leads", {
+                assignId: assignedTo, // ✅ Backend expects "assignId"
+                leadIds, // ✅ Backend expects "leadIds"
+            });
+            return {
+                leadIds,
+                assignedTo,
+                newAssignedUserName: res.data.newAssignedUserName || "Unknown User"
+            };
+        } catch (err: any) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
 // ------------------ Types ------------------
 
 export interface Lead {
@@ -249,7 +285,64 @@ const leadSlice = createSlice({
             .addCase(uploadLeads.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-            });
+            })
+            .addCase(deleteBulkLeads.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deleteBulkLeads.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                const deletedIds = action.payload;
+                if (Array.isArray(deletedIds)) {
+                    state.list = state.list.filter(
+                        (lead) => !deletedIds.includes(lead.id)
+                    );
+                    state.total = Math.max(0, state.total - deletedIds.length);
+                    // Clear current if it was deleted
+                    if (state.current && deletedIds.includes(state.current.id)) {
+                        state.current = null;
+                    }
+                }
+            })
+            .addCase(deleteBulkLeads.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+
+            // ✅ Transfer Selected Leads
+            .addCase(transferSelectedLeads.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(transferSelectedLeads.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                const { leadIds, assignedTo, newAssignedUserName } = action.payload;
+
+                state.list = state.list.map((lead) =>
+                    leadIds.includes(lead.id)
+                        ? {
+                            ...lead,
+                            assignedTo,
+                            assignedUserName: newAssignedUserName,
+                        }
+                        : lead
+                );
+
+                // Update current if it was transferred
+                if (state.current && leadIds.includes(state.current.id)) {
+                    state.current = {
+                        ...state.current,
+                        assignedTo,
+                        assignedUserName: newAssignedUserName,
+                    };
+                }
+            })
+            .addCase(transferSelectedLeads.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
     },
 });
 

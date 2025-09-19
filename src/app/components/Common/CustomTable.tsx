@@ -1,6 +1,19 @@
 "use client";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight, Settings, Eye, EyeOff, Filter, X, Trash2, UserPlus } from 'lucide-react';
+import {
+    ChevronUp,
+    ChevronDown,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    Settings,
+    Eye,
+    EyeOff,
+    Filter,
+    X,
+    Trash2,
+    UserPlus,
+} from 'lucide-react';
 import TableFilter, { FilterConfig, FilterValue } from './TableFilter';
 
 type SortConfig = {
@@ -64,6 +77,7 @@ type CustomTableProps<T> = {
     showBulkSelect?: boolean;
     onSelectionChange?: (selectedIds: (string | number)[]) => void;
     hideActionsWhenBulkSelected?: boolean;
+    selectedIds?: (string | number)[];
 };
 
 const useColumnVisibility = (initialHiddenColumns: string[]) => {
@@ -182,12 +196,34 @@ const CustomTable = <T extends { id: number | string }>({
     showBulkSelect = false,
     onSelectionChange,
     hideActionsWhenBulkSelected = true,
+    selectedIds: selectedIdsProp, // <- using different local name to avoid shadowing
 }: CustomTableProps<T>) => {
     const { hiddenCols, toggleColumnVisibility } = useColumnVisibility(hiddenColumns);
     const [showColumnMenu, setShowColumnMenu] = useState(false);
     const [localFilterValues, setLocalFilterValues] = useState<FilterValue>(filterValues);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+
+    // ---------- SELECTION STATE: controlled OR uncontrolled ----------
+    // internalSelectedIds used when parent does NOT control selection
+    const [internalSelectedIds, setInternalSelectedIds] = useState<(string | number)[]>([]);
+
+    // If parent passed selectedIdsProp (array), we treat it as controlled.
+    // If selectedIdsProp is undefined, component is uncontrolled and uses internalSelectedIds.
+    const isControlled = Array.isArray(selectedIdsProp);
+
+    // Derived selectedIds (always use this variable in component)
+    const selectedIds = isControlled ? (selectedIdsProp as (string | number)[]) : internalSelectedIds;
+
+    // Keep internal state in sync if parent supplies selectedIdsProp changes.
+    useEffect(() => {
+        if (isControlled) {
+            // if parent controls, reflect parent's value in internal state too (so any local logic referencing internal state still consistent)
+            setInternalSelectedIds(selectedIdsProp as (string | number)[]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [JSON.stringify(selectedIdsProp || [])]); // stringify to compare arrays shallowly
+
+    // ---------- table/filter/display helpers ----------
     const selectAllRef = useRef<HTMLInputElement>(null);
 
     const filteredData = useMemo(() => {
@@ -199,9 +235,10 @@ const CustomTable = <T extends { id: number | string }>({
 
     const displayData = useMemo(() => filteredData, [filteredData]);
 
-    const visibleColumns = useMemo(() =>
-        columns.filter(col => !hiddenCols.has(String(col.accessor))),
-        [columns, hiddenCols]);
+    const visibleColumns = useMemo(
+        () => columns.filter(col => !hiddenCols.has(String(col.accessor))),
+        [columns, hiddenCols]
+    );
 
     const columnWidths = useMemo(() => {
         if (!dynamicWidth) return {};
@@ -215,34 +252,42 @@ const CustomTable = <T extends { id: number | string }>({
         return widths;
     }, [displayData, visibleColumns, dynamicWidth]);
 
-    const hasMultipleSelected = useMemo(() =>
-        showBulkSelect && selectedIds.length > 1,
-        [selectedIds.length, showBulkSelect]);
+    const hasMultipleSelected = useMemo(
+        () => showBulkSelect && selectedIds.length > 1,
+        [selectedIds.length, showBulkSelect]
+    );
 
+    // ---------- SELECTION HANDLERS ----------
     const handleSelectAll = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (!showBulkSelect) return;
 
         if (e.target.checked) {
             const allIds = displayData.map(row => row.id);
-            setSelectedIds(allIds);
+            // update parent (controlled) and/or internal state (uncontrolled)
             onSelectionChange?.(allIds);
+            if (!isControlled) setInternalSelectedIds(allIds);
         } else {
-            setSelectedIds([]);
             onSelectionChange?.([]);
+            if (!isControlled) setInternalSelectedIds([]);
         }
-    }, [displayData, onSelectionChange, showBulkSelect]);
+    }, [displayData, onSelectionChange, showBulkSelect, isControlled]);
 
     const handleSelectRow = useCallback((id: string | number) => {
         if (!showBulkSelect) return;
 
-        setSelectedIds(prev => {
-            const newSelected = prev.includes(id)
-                ? prev.filter(item => item !== id)
-                : [...prev, id];
-            onSelectionChange?.(newSelected);
-            return newSelected;
-        });
-    }, [onSelectionChange, showBulkSelect]);
+        const currentlySelected = selectedIds;
+        const newSelected = currentlySelected.includes(id)
+            ? currentlySelected.filter(item => item !== id)
+            : [...currentlySelected, id];
+
+        // emit change to parent
+        onSelectionChange?.(newSelected);
+
+        // update internal only if uncontrolled
+        if (!isControlled) {
+            setInternalSelectedIds(newSelected);
+        }
+    }, [onSelectionChange, selectedIds, showBulkSelect, isControlled]);
 
     const isSelected = useCallback((id: string | number) => {
         if (!showBulkSelect) return false;
@@ -261,6 +306,7 @@ const CustomTable = <T extends { id: number | string }>({
             selectedIds.length > 0 && selectedIds.length < displayData.length;
     }, [selectedIds, displayData.length, showBulkSelect]);
 
+    // ---------- text helpers ----------
     const truncateText = useCallback((text: string, maxLength: number = globalMaxLength) => {
         if (!text) return '';
         const textStr = String(text);
@@ -301,7 +347,7 @@ const CustomTable = <T extends { id: number | string }>({
     }, [onFilterChange, onPageChange]);
 
     const getPaginationNumbers = useCallback(() => {
-        const range = [];
+        const range: (number | '...')[] = [];
         for (let i = 1; i <= totalPages; i++) {
             if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
                 range.push(i);
@@ -323,22 +369,23 @@ const CustomTable = <T extends { id: number | string }>({
         }).length;
     };
 
+    // ---------- RENDER ----------
     return (
         <div className="w-full mx-auto sm:px-0">
             <style jsx global>{`
-                @keyframes greenBlink {
-                    0%, 100% { background-color: inherit; }
-                    50% { background-color: rgba(34, 197, 94, 0.25); box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
-                }
-                .fresh-lead-blink {
-                    animation: greenBlink 2s infinite;
-                    transition: all 0.3s ease;
-                }
-                .fresh-lead-blink:hover {
-                    animation-play-state: paused;
-                    background-color: rgba(34, 197, 94, 0.15) !important;
-                }
-            `}</style>
+        @keyframes greenBlink {
+          0%, 100% { background-color: inherit; }
+          50% { background-color: rgba(34, 197, 94, 0.25); box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
+        }
+        .fresh-lead-blink {
+          animation: greenBlink 2s infinite;
+          transition: all 0.3s ease;
+        }
+        .fresh-lead-blink:hover {
+          animation-play-state: paused;
+          background-color: rgba(34, 197, 94, 0.15) !important;
+        }
+      `}</style>
 
             {/* Table Header */}
             <div className="bg-white dark:bg-gray-900 rounded-t-xl border border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4">
@@ -569,8 +616,7 @@ const CustomTable = <T extends { id: number | string }>({
                                     if (!row || !row.id) return null;
 
                                     const customRowClass = rowClassName ? rowClassName(row) : '';
-                                    const finalClassName = `hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 ${customRowClass || (showBulkSelect && isSelected(row.id) ? 'bg-blue-50 dark:bg-blue-900/20' : '')
-                                        }`;
+                                    const finalClassName = `hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 ${customRowClass || (showBulkSelect && isSelected(row.id) ? 'bg-blue-50 dark:bg-blue-900/20' : '')}`;
 
                                     return (
                                         <tr key={row.id} className={finalClassName}>
