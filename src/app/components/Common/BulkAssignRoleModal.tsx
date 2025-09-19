@@ -94,9 +94,9 @@ export default function BulkAssignRoleModal({
                             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                                 Assign to Sales Person
                             </h2>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                            {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                                 {selectedIds.length} selected lead{selectedIds.length !== 1 ? 's' : ''}
-                            </p>
+                            </p> */}
                         </div>
                     </div>
                     <button

@@ -17,12 +17,13 @@ import {
     fetchLeads,
     updateLead,
     uploadLeads,
+    deleteBulkLeads,
+    transferSelectedLeads
 } from '../../../../store/leadSlice';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { RootState } from '../../../../store/store';
 import BulkAssignRoleModal from '../Common/BulkAssignRoleModal';
-
 
 type SortConfig = {
     key: string;
@@ -57,19 +58,17 @@ const LeadComponent: React.FC = () => {
     const [currentTimelineLead, setCurrentTimelineLead] = useState<any | null>(
         null
     );
-
     const [isUploadPreviewOpen, setIsUploadPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [fileName, setFileName] = useState<string>('');
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
     const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
     const [filterValues, setFilterValues] = useState<FilterValue>({});
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [deleteMode, setDeleteMode] = useState<'single' | 'bulk'>('single');
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
-    const [selectedIds, setSelectedIds] = useState<(string | number)[]>([1, 2, 3]);
+    const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
 
@@ -211,35 +210,23 @@ const LeadComponent: React.FC = () => {
     };
 
     const confirmDelete = async () => {
-        if (deleteMode === 'single') {
-            const id = deleteTarget?.id;
-            if (!id) {
-                setIsDeleteModalOpen(false);
-                setDeleteTarget(null);
-                return;
-            }
-            try {
-                await dispatch(deleteLead(id)).unwrap();
+        try {
+            if (deleteMode === 'single') {
+                const id = (deleteTarget as { id: number }).id;
+                await dispatch(deleteLead(id.toString())).unwrap();
                 toast.success('Lead deleted successfully');
-                dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
-            } catch {
-                toast.error('Failed to delete lead');
-            } finally {
-                setIsDeleteModalOpen(false);
-                setDeleteTarget(null);
             }
-        } else {
-            const ids = Array.isArray(deleteTarget) ? deleteTarget : [];
-            try {
-                await Promise.all(ids.map((id) => dispatch(deleteLead(id)).unwrap()));
-                toast.success(`${ids.length} lead(s) deleted successfully`);
-                dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
-            } catch {
-                toast.error('Failed to delete some leads');
-            } finally {
-                setIsDeleteModalOpen(false);
-                setDeleteTarget(null);
+            else if (deleteMode === 'bulk') {
+                await dispatch(deleteBulkLeads(deleteTarget as number[])).unwrap();
+                setSelectedIds([]);
+                toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
             }
+            dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to delete');
+        } finally {
+            setIsDeleteModalOpen(false);
+            setDeleteTarget(null);
         }
     };
 
@@ -301,7 +288,7 @@ const LeadComponent: React.FC = () => {
     const storedUser = localStorage.getItem('user');
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
     const formatValue = (value: any) => {
-        return value !== null && value !== undefined && value !== '' ? value : 'NA';
+        return value !== null && value !== undefined && value !== '' ? value : 'N/A';
     };
 
     const getColumnsBasedOnRole = (roleId: any) => {
@@ -480,14 +467,41 @@ const LeadComponent: React.FC = () => {
             return;
         }
         setDeleteMode('bulk');
-        setDeleteTarget(selectedIds);
+        setDeleteTarget(selectedIds.map(id => Number(id)));
         setIsDeleteModalOpen(true);
     };
 
-    const handleBulkAssignRole = (roleId: string | number) => {
-        console.log("Assign role:", roleId, "to IDs:", selectedIds);
-        setIsAssignModalOpen(false);
+
+    useEffect(() => {
+        console.log("Current selected IDs:", selectedIds);
+    }, [selectedIds]);
+
+    const handleBulkAssignRole = async (assignedTo: string | number) => {
+        if (!selectedIds || selectedIds?.length === 0) {
+            toast.error('No leads selected for assignment');
+            return;
+        }
+
+        // Convert string IDs to numbers
+        const numericIds = selectedIds?.map(id => Number(id));
+        const numericAssignedTo = Number(assignedTo);
+
+        try {
+            await dispatch(transferSelectedLeads({
+                leadIds: numericIds,
+                assignedTo: numericAssignedTo
+            })).unwrap();
+            toast.success(`${numericIds.length} lead(s) transferred successfully`);
+            setSelectedIds([]);
+            // Refresh the leads list
+            dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to transfer selected leads');
+        } finally {
+            setIsAssignModalOpen(false);
+        }
     };
+
 
     const bulkActions = [
         {
@@ -557,7 +571,7 @@ const LeadComponent: React.FC = () => {
                     )}
                     {hasPermission(20, 'upload') && (
                         <label
-                            onClick={handleOpenUploadPreview} // ✅ direct modal open
+                            onClick={handleOpenUploadPreview}
                             className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white cursor-pointer"
                         >
                             {uploadLoading ? (
@@ -655,10 +669,13 @@ const LeadComponent: React.FC = () => {
                     onFilterChange={setFilterValues}
                     onPageSizeChange={handlePageSizeChange}
                     showBulkSelect={true}
-                    onSelectionChange={(selectedIds) => {
-                        console.log("Selected:", selectedIds);
+                    /** 👇 Pass selectedIds so table is controlled */
+                    selectedIds={selectedIds}
+                    onSelectionChange={(ids) => {
+                        console.log("Selected:", ids);
+                        setSelectedIds(ids);
                     }}
-                    bulkActions={bulkActions} // Pass bulk actions as array
+                    bulkActions={bulkActions}
                     actions={(row) => (
                         <div className="flex gap-2">
                             {hasPermission(22, 'edit') && (
@@ -692,6 +709,7 @@ const LeadComponent: React.FC = () => {
                         </div>
                     )}
                 />
+
             </div>
 
             {/* Modals */}
@@ -702,6 +720,7 @@ const LeadComponent: React.FC = () => {
                 initialData={currentLead}
                 isLoading={isSaving}
             />
+
             {selectedLeadId && (
                 <FollowUpLeadModal
                     isOpen={isFollowUpModalOpen}
@@ -709,11 +728,13 @@ const LeadComponent: React.FC = () => {
                     lead={selectedLeadId}
                 />
             )}
+
             <TimelineLeadModal
                 isOpen={isTimelineModalOpen}
                 onClose={() => setIsTimelineModalOpen(false)}
                 lead={currentTimelineLead}
             />
+
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
@@ -730,7 +751,6 @@ const LeadComponent: React.FC = () => {
                 }
                 Icon={Trash2}
             />
-
 
             <UploadPreviewModal
                 isOpen={isUploadPreviewOpen}
@@ -756,7 +776,7 @@ const LeadComponent: React.FC = () => {
                 onClose={() => setIsAssignModalOpen(false)}
                 onConfirm={handleBulkAssignRole}
                 selectedIds={selectedIds}
-                currentUser={currentUser}   // 👈 yeh zaroor pass karna hoga
+                currentUser={currentUser}
             />
 
         </div>
