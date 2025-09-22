@@ -68,8 +68,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   );
   const currentStatusOptions = useMemo(
     () => [
-      { label: "Interested", value: "Interested" },
-      { label: "Not Interested", value: "Not Interested" },
+      { label: "Interested", value: "interested" },
+      { label: "Not Interested", value: "not interested" },
     ],
     []
   );
@@ -121,30 +121,81 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, [dispatch, isOpen]);
 
+  const findOptionByName = (options: any[], name: string) => {
+    if (!name) return null;
+    return options.find((opt: any) =>
+      opt.label?.toLowerCase() === name.toLowerCase()
+    );
+  };
+
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        reset({
-          ...defaultValues,
-          ...initialData,
-          projectStatusId: initialData.plotProjectId || null,
-          plotId: null,
-          interestStatus: initialData.interestStatus || "Interested",
-        });
         if (initialData.plotProjectId) {
           dispatch(fetchPlots({ projectId: initialData.plotProjectId, page: 1, limit: 100, search: "" }));
         }
+
+        const mappedData = {
+          ...defaultValues,
+          name: initialData.name || "",
+          email: initialData.email || "",
+          phone: initialData.phone || "",
+          city: initialData.city || "",
+          state: initialData.state || "",
+          interestStatus: initialData.interestStatus || null,
+          projectStatusId: initialData.plotProjectId || null,
+          // We'll set these after options are loaded
+          assignedTo: null,
+          platformId: null,
+          plotId: null,
+          leadStageId: null,
+          leadStatusId: null,
+        };
+
+        reset(mappedData);
+
+        setTimeout(() => {
+          if (initialData.assignedTo) {
+            const assignedOption = findOptionByName(assignedToOptions, initialData.assignedTo);
+            if (assignedOption) {
+              setValue("assignedTo", assignedOption.value);
+            }
+          }
+
+          if (initialData.platformType || initialData.source) {
+            const platformName = initialData.platformType || initialData.source;
+            const platformOption = findOptionByName(actualPlatformOptions, platformName);
+            if (platformOption) {
+              setValue("platformId", platformOption.value);
+            }
+          }
+
+          if (initialData.stage) {
+            const stageOption = findOptionByName(leadStageOptions, initialData.stage);
+            if (stageOption) {
+              setValue("leadStageId", stageOption.value);
+            }
+          }
+
+          if (initialData.status) {
+            const statusOption = findOptionByName(leadStatusOptions, initialData.status);
+            if (statusOption) {
+              setValue("leadStatusId", statusOption.value);
+            }
+          }
+        }, 500);
+
       } else {
         reset(defaultValues);
       }
     }
-  }, [isOpen, initialData, reset, defaultValues, dispatch]);
+  }, [isOpen, initialData, reset, defaultValues, dispatch, assignedToOptions, actualPlatformOptions, leadStageOptions, leadStatusOptions, setValue]);
 
   useEffect(() => {
-    if (initialData?.plotId && plots.length > 0) {
-      const plotExists = plots.find((p: any) => p.id === initialData.plotId);
-      if (plotExists) {
-        setValue("plotId", initialData.plotId);
+    if (initialData?.plotNumber && plots.length > 0) {
+      const plotOption = findOptionByName(plots.map(p => ({ ...p, label: p.plotNumber })), initialData.plotNumber);
+      if (plotOption) {
+        setValue("plotId", plotOption.id);
       }
     }
   }, [plots, initialData, setValue]);
@@ -158,11 +209,13 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   useEffect(() => {
     if (selectedProjectId) {
       dispatch(fetchPlots({ projectId: selectedProjectId, page: 1, limit: 100, search: "" }));
-      setValue("plotId", null);
+      if (!initialData || selectedProjectId !== initialData.plotProjectId) {
+        setValue("plotId", null);
+      }
     } else {
       setValue("plotId", null);
     }
-  }, [dispatch, selectedProjectId, setValue]);
+  }, [dispatch, selectedProjectId, setValue, initialData]);
 
   const onSubmit = (data: any) => onSave(data);
 
@@ -264,7 +317,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.platformId && <p className="mt-1 text-sm text-red-600">{errors.platformId.message as string}</p>}
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium mb-1">Project</label>
               <Controller
                 name="projectStatusId"
@@ -281,8 +334,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 )}
               />
               {errors.projectStatusId && <p className="mt-1 text-sm text-red-600">{errors.projectStatusId.message as string}</p>}
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <label className="block text-sm font-medium mb-1">Plot</label>
               <Controller
                 name="plotId"
@@ -297,6 +350,25 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                   />
                 )}
               />
+            </div> */}
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Lead Status</label>
+              <Controller
+                name="leadStatusId"
+                control={control}
+                render={({ field }) => (
+                  <CommonDropdown
+                    options={leadStatusOptions}
+                    selected={leadStatusOptions.find((opt: any) => opt.value === field.value) || null}
+                    onChange={(value: any) => field.onChange(value?.value || null)}
+                    placeholder="Select Lead Status"
+                    error={!!errors.leadStatusId}
+                    allowClear={true}
+                  />
+                )}
+              />
+              {errors.leadStatusId && <p className="mt-1 text-sm text-red-600">{errors.leadStatusId.message as string}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Lead Stage</label>
@@ -315,24 +387,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 )}
               />
               {errors.leadStageId && <p className="mt-1 text-sm text-red-600">{errors.leadStageId.message as string}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Lead Status</label>
-              <Controller
-                name="leadStatusId"
-                control={control}
-                render={({ field }) => (
-                  <CommonDropdown
-                    options={leadStatusOptions}
-                    selected={leadStatusOptions.find((opt: any) => opt.value === field.value) || null}
-                    onChange={(value: any) => field.onChange(value?.value || null)}
-                    placeholder="Select Lead Status"
-                    error={!!errors.leadStatusId}
-                    allowClear={true}
-                  />
-                )}
-              />
-              {errors.leadStatusId && <p className="mt-1 text-sm text-red-600">{errors.leadStatusId.message as string}</p>}
             </div>
           </div>
           <div className="flex justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">

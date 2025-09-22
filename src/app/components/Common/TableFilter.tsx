@@ -42,7 +42,6 @@ const TableFilter = <T extends Record<string, any>>({
     const [tempValues, setTempValues] = useState<FilterValue>({ ...initialValues });
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Reset tempValues when initialValues change from outside
     useEffect(() => {
         setTempValues({ ...initialValues });
     }, [initialValues]);
@@ -89,7 +88,6 @@ const TableFilter = <T extends Record<string, any>>({
     const addColumn = (columnKey: keyof T) => {
         if (!selectedColumns.includes(columnKey)) {
             setSelectedColumns([...selectedColumns, columnKey]);
-            // Initialize temp value if not exists
             if (!tempValues[String(columnKey)]) {
                 setTempValues({ ...tempValues, [String(columnKey)]: '' });
             }
@@ -334,7 +332,6 @@ const TableFilter = <T extends Record<string, any>>({
                 )}
             </div>
 
-            {/* Date Modal */}
             {showDateModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                     <div
@@ -440,7 +437,6 @@ const TableFilter = <T extends Record<string, any>>({
                 </div>
             )}
 
-            {/* Date Filter Card (if dateRange is selected) */}
             {tempValues.dateRange && (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                     <div className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 ring-1 ring-blue-100 dark:ring-blue-900 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
@@ -512,7 +508,6 @@ const TableFilter = <T extends Record<string, any>>({
                 </div>
             )}
 
-            {/* Active Filters Summary */}
             {activeFiltersCount > 0 && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
                     <div className="flex items-center gap-2 mb-3">
@@ -549,7 +544,6 @@ const TableFilter = <T extends Record<string, any>>({
                 </div>
             )}
 
-            {/* Empty State */}
             {selectedColumns.length === 0 && !tempValues.dateRange && (
                 <div className="text-center py-8 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
                     <Filter className="w-8 h-8 text-gray-400 mx-auto mb-3" />
