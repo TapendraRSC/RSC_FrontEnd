@@ -43,7 +43,7 @@ export const saveFollowUp = createAsyncThunk(
     async (
         data: {
             leadId: any;
-            leadStatusId: number;
+            followUpStatus: string;
             inquiryStatus?: string;   // ✅ added here too
             followUpDate: string;
             budget: string;

@@ -1,14 +1,6 @@
 'use client';
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus, Upload, Loader2, Download, UserPlus } from 'lucide-react';
-import CustomTable from '../Common/CustomTable';
-import { FilterConfig, FilterValue } from '../Common/TableFilter';
-import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
-import ComprehensiveLeadModal from './LeadModal';
-import FollowUpLeadModal from './FollowUpLeadModal';
-import TimelineLeadModal from './TimelineLeadModal';
-import UploadPreviewModal from '../../components/Common/UploadPreviewModal';
-import ExportModal from '../Common/ExportModal';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -23,16 +15,55 @@ import {
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { RootState } from '../../../../store/store';
+import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
+import ComprehensiveLeadModal from './LeadModal';
+import FollowUpLeadModal from './FollowUpLeadModal';
+import TimelineLeadModal from './TimelineLeadModal';
+import UploadPreviewModal from '../../components/Common/UploadPreviewModal';
+import ExportModal from '../Common/ExportModal';
 import BulkAssignRoleModal from '../Common/BulkAssignRoleModal';
+import LeadPanel from '../Common/LeadTable';
 
 type SortConfig = {
     key: string;
     direction: 'asc' | 'desc';
 } | null;
 
+// Date formatting utility
+const formatDate = (dateString: string | Date | null) => {
+    if (!dateString) return 'N/A';
+
+    // If it's already a Date object
+    if (dateString instanceof Date) {
+        if (isNaN(dateString.getTime())) return 'N/A';
+        return dateString.toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
+    // If it's a string
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+
+    return date.toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+};
+
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
-
     const { list: leadList, loading, totalPages, total } = useSelector(
         (state: RootState) => state.leads
     );
@@ -42,35 +73,35 @@ const LeadComponent: React.FC = () => {
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
-
     const [searchValue, setSearchValue] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(5);
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
-    const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-    const [isModalOpen, setIsModalOpen] = useState<any>(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [currentLead, setCurrentLead] = useState<any | null>(null);
     const [leadToDelete, setLeadToDelete] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
-    const [currentTimelineLead, setCurrentTimelineLead] = useState<any | null>(
-        null
-    );
+    const [currentTimelineLead, setCurrentTimelineLead] = useState<any | null>(null);
     const [isUploadPreviewOpen, setIsUploadPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<any[]>([]);
-    const [fileName, setFileName] = useState<string>('');
+    const [fileName, setFileName] = useState('');
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
-    const [filterValues, setFilterValues] = useState<FilterValue>({});
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [deleteMode, setDeleteMode] = useState<'single' | 'bulk'>('single');
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
+    useEffect(() => {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'light');
+    }, []);
 
     useEffect(() => {
         dispatch(
@@ -104,34 +135,60 @@ const LeadComponent: React.FC = () => {
         );
     };
 
-    const normalizedLeads = useMemo(() => {
-        return (leadList || [])?.map((lead: any, index: number) => ({
-            ...lead,
-            sr: index + 1 + (currentPage - 1) * pageSize,
-            leadStatus: lead?.leadStatus || 'N/A',
-            platformType: lead?.platformType || 'N/A',
-            plotNumber: lead?.plotNumber || 'N/A',
-            plotPrice: lead?.plotPrice || 'N/A',
-            plotProjectId: lead?.plotProjectId || null,
-            plotProjectTitle: lead?.plotProjectTitle || 'N/A',
-            interestStatus: lead?.interestStatus || 'N/A',
-        }));
-    }, [leadList, currentPage, pageSize]);
+    const transformLeadsForPanel = useMemo(() => {
+        return (leadList || []).map((lead: any) => {
+            // Format dates properly
+            const createdAt = lead.createdAt ? formatDate(lead.createdAt) : 'N/A';
+            const updatedAt = lead.updatedAt ? formatDate(lead.updatedAt) : 'N/A';
+            const latestFollowUpDate = lead.latestFollowUpDate ? formatDate(lead.latestFollowUpDate) : 'Not Scheduled';
+            const lastFollowUpDate = lead.lastFollowUpDate ? formatDate(lead.lastFollowUpDate) : 'N/A';
 
-    const filters: FilterConfig<any>[] = [
-        { key: 'name', label: 'Name', type: 'text' },
-        { key: 'email', label: 'Email', type: 'text' },
-        { key: 'phone', label: 'Phone', type: 'text' },
-        { key: 'leadStatus', label: 'Lead Status', type: 'multiSelect' },
-        { key: 'leadStage', label: 'Lead Stage', type: 'multiSelect' },
-        { key: 'platformType', label: 'Platform Type', type: 'multiSelect' },
-        { key: 'assignedUserName', label: 'Assigned Person', type: 'select' },
-        { key: 'city', label: 'City', type: 'multiSelect' },
-        { key: 'state', label: 'State', type: 'multiSelect' },
-        { key: 'plotNumber', label: 'Plot Number', type: 'text' },
-        { key: 'plotPrice', label: 'Plot Price', type: 'text' },
-        { key: 'createdAt', label: 'Created Date', type: 'dateRange' },
-    ];
+            return {
+                id: lead.id,
+                name: lead.name || 'N/A',
+                phone: lead.phone || 'N/A',
+                email: lead.email || 'N/A',
+                profession: lead.profession || 'Not Provided',
+                address: lead.address || 'Not Provided',
+                city: lead.city || 'Not Provided',
+                state: lead.state || 'Not Provided',
+                nextFollowUp: latestFollowUpDate,
+                stage: lead.leadStage || 'Lead',
+                status: lead.leadStatus || 'N/A',
+                interestedIn: lead.interestedIn || 'not provided',
+                budget: lead.budget || lead.plotPrice || 'N/A',
+                assignedTo: lead.assignedUserName || 'Not Assigned',
+                assignedUserName: lead.assignedUserName || 'Not Assigned',
+                assignedUserEmail: lead.assignedUserEmail || 'N/A',
+                sharedBy: lead.sharedBy || lead.assignedUserName || 'N/A',
+                createdBy: lead.createdBy || 'System',
+                source: lead.platformType || lead.source || 'WEBSITE',
+                remark: lead.remark || 'N/A',
+                lastFollowUp: lead.lastFollowUp || 'DNP',
+                leadNo: `#${lead.id}`,
+                createdDate: createdAt,
+                createdAt: lead.createdAt || null, // Keep original for sorting
+                updatedAt: lead.updatedAt || null, // Keep original for sorting
+                lastFollowUpDate: lastFollowUpDate,
+                latestFollowUpDate: lead.latestFollowUpDate || lead.latestFollowUpDate || null, // For follow-up display
+                platformType: lead.platformType || 'N/A',
+                plotNumber: lead.plotNumber || 'N/A',
+                plotPrice: lead.plotPrice || 'N/A',
+                plotProjectId: lead.plotProjectId || null,
+                plotProjectTitle: lead.plotProjectTitle || 'N/A',
+                interestStatus: lead.interestStatus || 'N/A',
+            };
+        });
+    }, [leadList]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handlePageSizeChange = (size: number) => {
+        setPageSize(size);
+        setCurrentPage(1);
+    };
 
     const resetUploadStates = () => {
         setIsUploadPreviewOpen(false);
@@ -192,7 +249,6 @@ const LeadComponent: React.FC = () => {
         }
     };
 
-    // Add/Edit/Delete lead
     const handleAdd = () => {
         setCurrentLead(null);
         setIsModalOpen(true);
@@ -215,8 +271,7 @@ const LeadComponent: React.FC = () => {
                 const id = (deleteTarget as { id: number }).id;
                 await dispatch(deleteLead(id.toString())).unwrap();
                 toast.success('Lead deleted successfully');
-            }
-            else if (deleteMode === 'bulk') {
+            } else if (deleteMode === 'bulk') {
                 await dispatch(deleteBulkLeads(deleteTarget as number[])).unwrap();
                 setSelectedIds([]);
                 toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
@@ -246,218 +301,19 @@ const LeadComponent: React.FC = () => {
             );
         } catch (error: any) {
             console.error('Error saving lead:', error);
+            toast.error(error?.message || 'Failed to save lead');
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleExport = () => {
-        if (sortedData.length === 0) {
+        if (transformLeadsForPanel.length === 0) {
             toast.error('No data to export');
             return;
         }
         setIsExportModalOpen(true);
     };
-
-    const stringToColor = (str: string) => {
-        let hash = 0;
-        for (let i = 0; i < str?.length; i++) hash = str.charCodeAt(i) + ((hash << 10) - hash);
-        return `hsl(${Math.abs(hash) % 360}, 65%, 92%)`;
-    };
-
-    const stringToTextColor = (str: string) => {
-        let hash = 0;
-        for (let i = 0; i < str?.length; i++) hash = str.charCodeAt(i) + ((hash << 10) - hash);
-        return `hsl(${Math.abs(hash) % 360}, 75%, 25%)`;
-    };
-
-    const renderBadge = (value: string) => (
-        <span
-            className="px-2 py-1 rounded-full text-xs font-medium"
-            style={{
-                backgroundColor: stringToColor(value),
-                color: stringToTextColor(value),
-            }}
-        >
-            {value}
-        </span>
-    );
-
-    const storedUser = localStorage.getItem('user');
-    const currentUser = storedUser ? JSON.parse(storedUser) : null;
-    const formatValue = (value: any) => {
-        return value !== null && value !== undefined && value !== '' ? value : 'N/A';
-    };
-
-    const getColumnsBasedOnRole = (roleId: any) => {
-        if (roleId === 36) {
-            return [
-                {
-                    label: 'Name',
-                    accessor: 'name',
-                    sortable: true,
-                    minWidth: 200,
-                    maxWidth: 300,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.name),
-                },
-                {
-                    label: 'Phone',
-                    accessor: 'phone',
-                    sortable: true,
-                    minWidth: 200,
-                    maxWidth: 500,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.phone),
-                },
-                {
-                    label: 'Email',
-                    accessor: 'email',
-                    sortable: true,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.email),
-                },
-                {
-                    label: 'Assigned Person',
-                    accessor: 'assignedUserName',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.assignedUserName)),
-                    showTooltip: true,
-                },
-                {
-                    label: 'Lead Status',
-                    accessor: 'leadStatus',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.leadStatus)),
-                    minWidth: 200,
-                    maxWidth: 500,
-                    showTooltip: true,
-                },
-                {
-                    label: 'Lead Stage',
-                    accessor: 'leadStage',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.leadStage)),
-                    minWidth: 200,
-                    maxWidth: 500,
-                    showTooltip: true,
-                },
-                {
-                    label: 'Current Status',
-                    accessor: 'interestStatus',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row?.interestStatus)),
-                    showTooltip: true,
-                },
-                {
-                    label: 'Remark',
-                    accessor: 'remark',
-                    sortable: true,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.remark),
-                },
-            ];
-        } else {
-            return [
-                {
-                    label: 'Name',
-                    accessor: 'name',
-                    sortable: true,
-                    minWidth: 200,
-                    maxWidth: 300,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.name),
-                },
-                {
-                    label: 'Email',
-                    accessor: 'email',
-                    sortable: true,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.email),
-                },
-                {
-                    label: 'Phone',
-                    accessor: 'phone',
-                    sortable: true,
-                    minWidth: 200,
-                    maxWidth: 500,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.phone),
-                },
-                {
-                    label: 'Assigned Person',
-                    accessor: 'assignedUserName',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.assignedUserName)),
-                    showTooltip: true,
-                },
-                {
-                    label: 'Lead status',
-                    accessor: 'leadStatus',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.leadStatus)),
-                    minWidth: 200,
-                    maxWidth: 500,
-                    showTooltip: true,
-                },
-                {
-                    label: 'Lead Stage',
-                    accessor: 'leadStage',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.leadStage)),
-                    minWidth: 200,
-                    maxWidth: 500,
-                    showTooltip: true,
-                },
-                {
-                    label: 'Current Status',
-                    accessor: 'interestStatus',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.interestStatus)),
-                    showTooltip: true,
-                },
-                {
-                    label: 'Platform Type',
-                    accessor: 'platformType',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.platformType)),
-                    showTooltip: true,
-                },
-                {
-                    label: 'Plot Number',
-                    accessor: 'plotNumber',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.plotNumber)),
-                    showTooltip: true,
-                },
-                {
-                    label: 'Plot Price',
-                    accessor: 'plotPrice',
-                    sortable: true,
-                    render: (row: any) => renderBadge(formatValue(row.plotPrice)),
-                    showTooltip: true,
-                },
-                {
-                    label: 'City',
-                    accessor: 'city',
-                    sortable: true,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.city),
-                },
-                {
-                    label: 'State',
-                    accessor: 'state',
-                    sortable: true,
-                    minWidth: 200,
-                    maxWidth: 500,
-                    showTooltip: true,
-                    render: (row: any) => formatValue(row.state),
-                },
-            ];
-        }
-    };
-
-    const columns = getColumnsBasedOnRole(currentUser?.roleId);
 
     const handleBulkDelete = (selectedIds: (string | number)[]) => {
         if (!selectedIds || selectedIds.length === 0) {
@@ -469,20 +325,13 @@ const LeadComponent: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-
-    useEffect(() => {
-        console.log("Current selected IDs:", selectedIds);
-    }, [selectedIds]);
-
     const handleBulkAssignRole = async (assignedTo: string | number) => {
         if (!selectedIds || selectedIds?.length === 0) {
             toast.error('No leads selected for assignment');
             return;
         }
-
         const numericIds = selectedIds?.map(id => Number(id));
         const numericAssignedTo = Number(assignedTo);
-
         try {
             await dispatch(transferSelectedLeads({
                 leadIds: numericIds,
@@ -490,7 +339,6 @@ const LeadComponent: React.FC = () => {
             })).unwrap();
             toast.success(`${numericIds.length} lead(s) transferred successfully`);
             setSelectedIds([]);
-            // Refresh the leads list
             dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
         } catch (error: any) {
             toast.error(error?.message || 'Failed to transfer selected leads');
@@ -499,55 +347,34 @@ const LeadComponent: React.FC = () => {
         }
     };
 
-
-    const bulkActions = [
-        ...(hasPermission(4, 'delete') ? [{
-            label: 'Delete Selected',
-            icon: <Trash2 className="w-4 h-4" />,
-            onClick: handleBulkDelete,
-        }] : []),
-        ...(hasPermission(25, 'bulk assign') ? [{
-            label: 'Assign Role',
-            icon: <UserPlus className="w-4 h-4" />,
-            onClick: () => setIsAssignModalOpen(true),
-        }] : []),
-    ];
-
-    const handleSort = (config: any) => setSortConfig(config);
-    const handlePageChange = (page: number) => setCurrentPage(page);
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(1);
+    const handleLeadClick = (lead: any) => {
+        setCurrentLead(lead);
+        setCurrentTimelineLead(lead);
+        setIsTimelineModalOpen(true);
     };
 
-    const filteredData = useMemo(() => {
-        return normalizedLeads.filter((lead) => {
-            return Object.entries(filterValues).every(([key, value]) => {
-                if (!value) return true;
-                if (Array.isArray(value)) return value.includes(lead[key]);
-                return String(lead[key])
-                    .toLowerCase()
-                    .includes(String(value).toLowerCase());
-            });
-        });
-    }, [normalizedLeads, filterValues]);
+    const handleAssignLeads = (leadIds: number[]) => {
+        setSelectedIds(leadIds);
+        setIsAssignModalOpen(true);
+    };
 
-    const sortedData = useMemo(() => {
-        if (!sortConfig) return filteredData;
-        return [...filteredData].sort((a, b) => {
-            const aVal = a[sortConfig.key],
-                bVal = b[sortConfig.key];
-            if (typeof aVal === 'number' && typeof bVal === 'number')
-                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-            return sortConfig.direction === 'asc'
-                ? String(aVal).localeCompare(String(bVal))
-                : String(bVal).localeCompare(String(aVal));
-        });
-    }, [filteredData, sortConfig]);
+    const storedUser = localStorage.getItem('user');
+    const currentUser = storedUser ? JSON.parse(storedUser) : null;
+
+    const exportColumns = [
+        { label: 'Name', key: 'name' },
+        { label: 'Phone', key: 'phone' },
+        { label: 'Email', key: 'email' },
+        { label: 'Status', key: 'status' },
+        { label: 'Stage', key: 'stage' },
+        { label: 'Assigned To', key: 'assignedTo' },
+        { label: 'Source', key: 'source' },
+        { label: 'Created Date', key: 'createdDate' },
+        { label: 'Next Follow Up', key: 'nextFollowUp' },
+    ];
 
     return (
         <div className="space-y-8 p-3 sm:p-6 dark:bg-gray-900 dark:text-gray-100">
-            {/* Header */}
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold">Lead Master</h1>
@@ -555,160 +382,70 @@ const LeadComponent: React.FC = () => {
                         Manage leads with advanced filtering
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2">
                     {hasPermission(24, 'export') && (
-                        <label
+                        <button
                             onClick={handleExport}
-                            className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base
-                             bg-purple-500 hover:bg-purple-600 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-medium cursor-pointer"
+                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
+                            bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-medium"
                         >
-                            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span className="hidden sm:inline">Export</span>
-                        </label>
+                        </button>
                     )}
                     {hasPermission(20, 'upload') && (
-                        <label
+                        <button
                             onClick={handleOpenUploadPreview}
-                            className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white cursor-pointer"
+                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
+                            bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
                         >
                             {uploadLoading ? (
-                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                             ) : (
-                                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             )}
                             <span className="hidden sm:inline">Upload</span>
-                        </label>
+                        </button>
                     )}
                     {hasPermission(21, 'add') && (
-                        <label
+                        <button
                             onClick={handleAdd}
-                            className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800 text-white cursor-pointer"
+                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
+                            bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
                         >
-                            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span className="hidden sm:inline">Add New</span>
-                        </label>
+                        </button>
                     )}
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
-                <style jsx>{`
-                    @keyframes greenBlink {
-                        0%, 100% { 
-                            background-color: inherit; 
-                        }
-                        50% { 
-                            background-color: rgba(34,197,94,0.25); 
-                            box-shadow: 0 0 10px rgba(34,197,94,0.3);
-                        }
-                    }
-                    
-                    @keyframes greenBlinkDark {
-                        0%, 100% { 
-                            background-color: inherit; 
-                        }
-                        50% { 
-                            background-color: rgba(34,197,94,0.15); 
-                            box-shadow: 0 0 15px rgba(34,197,94,0.4);
-                        }
-                    }
-                    
-                    .fresh-lead-blink { 
-                        animation: greenBlink 2s infinite; 
-                        transition: all 0.3s ease; 
-                    }
-                    
-                    .fresh-lead-blink:hover { 
-                        animation-play-state: paused; 
-                        background-color: rgba(34,197,94,0.15) !important; 
-                    }
-                    
-                    /* Dark mode styles */
-                    .dark .fresh-lead-blink {
-                        animation: greenBlinkDark 2s infinite;
-                    }
-                    
-                    .dark .fresh-lead-blink:hover {
-                        animation-play-state: paused;
-                        background-color: rgba(34,197,94,0.1) !important;
-                    }
-                `}</style>
-                <CustomTable<any>
-                    data={sortedData}
-                    columns={columns}
-                    isLoading={loading}
-                    title="Leads"
-                    searchValue={searchValue}
-                    onSearchChange={(val) => {
-                        setSearchValue(val);
-                        setCurrentPage(1);
-                    }}
-                    searchPlaceholder="Search leads..."
-                    showSearch
-                    rowClassName={(row: any) => row.leadStatus?.toLowerCase() === 'fresh' ? 'fresh-lead-blink' : ''}
-                    showFilters
-                    sortConfig={sortConfig}
-                    onSortChange={handleSort}
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    pageSize={pageSize}
-                    totalRecords={total}
-                    onPageChange={handlePageChange}
-                    pageSizeOptions={[10, 25, 50, 100]}
-                    showPagination
-                    emptyMessage="No leads found"
-                    showColumnToggle
-                    hiddenColumns={hiddenColumns}
-                    onColumnVisibilityChange={setHiddenColumns}
-                    filters={filters}
-                    filterValues={filterValues}
-                    onFilterChange={setFilterValues}
-                    onPageSizeChange={handlePageSizeChange}
-                    showBulkSelect={true}
-                    selectedIds={selectedIds}
-                    onSelectionChange={(ids) => {
-                        console.log("Selected:", ids);
-                        setSelectedIds(ids);
-                    }}
-                    bulkActions={bulkActions}
-                    actions={(row) => (
-                        <div className="flex gap-2">
-                            {hasPermission(22, 'edit') && (
-                                <button
-                                    onClick={() => handleEdit(row)}
-                                    title="Edit"
-                                    className="p-1 rounded text-blue-500 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-500 cursor-pointer"
-                                >
-                                    <Pencil className="w-4 h-4" />
-                                </button>
-                            )}
-                            {hasPermission(4, 'delete') && (
-                                <button
-                                    onClick={() => handleDelete(row)}
-                                    title="Delete"
-                                    className="p-1 rounded text-red-500 dark:text-red-300 hover:text-red-700 dark:hover:text-red-500 cursor-pointer"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            )}
-                            <button
-                                onClick={() => {
-                                    setSelectedLeadId(row);
-                                    setIsFollowUpModalOpen(true);
-                                }}
-                                title="Follow Up"
-                                className="text-green-500 dark:text-green-300 hover:text-green-700 dark:hover:text-green-500 p-1 cursor-pointer"
-                            >
-                                📞
-                            </button>
-                        </div>
-                    )}
-                />
+            <LeadPanel
+                leads={transformLeadsForPanel}
+                loading={loading}
+                title="Lead Panel"
+                onAddLead={hasPermission(21, 'add') ? handleAdd : undefined}
+                onEditLead={hasPermission(22, 'edit') ? handleEdit : undefined}
+                onDeleteLead={hasPermission(4, 'delete') ? handleDelete : undefined}
+                onBulkDelete={hasPermission(4, 'delete') ? handleBulkDelete : undefined}
+                onBulkAssign={hasPermission(25, 'bulk assign') ? handleAssignLeads : undefined}
+                onLeadClick={handleLeadClick}
+                onFollowUp={(lead: any) => {
+                    setSelectedLeadId(lead);
+                    setIsFollowUpModalOpen(true);
+                }}
+                hasEditPermission={hasPermission(22, 'edit')}
+                hasDeletePermission={hasPermission(4, 'delete')}
+                hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(4, 'delete')}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                currentUser={currentUser}
+                totalRecords={total}
+            />
 
-            </div>
-
-            {/* Modals */}
             <ComprehensiveLeadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -735,11 +472,7 @@ const LeadComponent: React.FC = () => {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onDelete={confirmDelete}
-                title={
-                    deleteMode === 'bulk'
-                        ? `Confirm Deletion`
-                        : `Confirm Deletion`
-                }
+                title={deleteMode === 'bulk' ? 'Confirm Bulk Deletion' : 'Confirm Deletion'}
                 message={
                     deleteMode === 'bulk'
                         ? `Are you sure you want to delete ${Array.isArray(deleteTarget) ? deleteTarget.length : 0} selected leads?`
@@ -762,9 +495,9 @@ const LeadComponent: React.FC = () => {
             <ExportModal
                 isOpen={isExportModalOpen}
                 onClose={() => setIsExportModalOpen(false)}
-                data={sortedData}
+                data={transformLeadsForPanel}
                 fileName={`leads_export_${new Date().toISOString().split('T')[0]}`}
-                columns={columns}
+                columns={exportColumns}
             />
 
             <BulkAssignRoleModal
@@ -774,7 +507,6 @@ const LeadComponent: React.FC = () => {
                 selectedIds={selectedIds}
                 currentUser={currentUser}
             />
-
         </div>
     );
 };
