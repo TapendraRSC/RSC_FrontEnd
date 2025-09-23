@@ -4,13 +4,40 @@ import {
     Search, Eye, EyeOff, ChevronLeft, ChevronRight, ChevronUp, Phone, Home,
     Briefcase, DollarSign, User, FileText, Calendar, Tag, ListFilter, Plus, Edit,
     Trash2, UserPlus, X, LayoutGrid, Table2, MoreHorizontal, Clock, AlertTriangle,
-    CheckCircle, XCircle, RefreshCw, Bell, ShieldAlert, MapPin, Building2, IndianRupee
+    CheckCircle, XCircle, RefreshCw, Bell, ShieldAlert, MapPin, Building2, IndianRupee, Calendar as CalendarIcon
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { fetchLeads } from '../../../../store/leadSlice';
+import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
+
+interface LeadPanelProps {
+    leads?: Lead[];
+    onAddLead?: () => void;
+    onEditLead?: (lead: Lead) => void;
+    onDeleteLead?: (lead: Lead) => void;
+    onBulkDelete?: (leadIds: number[]) => void;
+    onBulkAssign?: (leadIds: number[]) => void;
+    onLeadClick?: (lead: Lead) => void;
+    onFollowUp?: (lead: Lead) => void;
+    loading?: boolean;
+    title?: string;
+    hasEditPermission?: boolean;
+    hasDeletePermission?: boolean;
+    hasBulkPermission?: boolean;
+    currentPage?: number;
+    totalPages?: number;
+    pageSize?: number;
+    totalRecords?: number;
+    onPageChange?: (page: number) => void;
+    onPageSizeChange?: (size: number) => void;
+    currentUser?: { roleId: number };
+    fromDate?: string;
+    toDate?: string;
+    onDateChange?: (fromDate: string, toDate: string) => void;
+}
 
 interface Lead {
     id: number;
@@ -48,28 +75,170 @@ interface Lead {
     plotPrice?: string;
 }
 
-interface LeadPanelProps {
-    leads?: Lead[];
-    onAddLead?: () => void;
-    onEditLead?: (lead: Lead) => void;
-    onDeleteLead?: (lead: Lead) => void;
-    onBulkDelete?: (leadIds: number[]) => void;
-    onBulkAssign?: (leadIds: number[]) => void;
-    onLeadClick?: (lead: Lead) => void;
-    onFollowUp?: (lead: Lead) => void;
-    loading?: boolean;
-    title?: string;
-    hasEditPermission?: boolean;
-    hasDeletePermission?: boolean;
-    hasBulkPermission?: boolean;
-    currentPage?: number;
-    totalPages?: number;
-    pageSize?: number;
-    totalRecords?: number;
-    onPageChange?: (page: number) => void;
-    onPageSizeChange?: (size: number) => void;
-    currentUser?: { roleId: number };
-}
+const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedOption, setSelectedOption] = useState<any>('all');
+    const [customFromDate, setCustomFromDate] = useState(fromDate || '');
+    const [customToDate, setCustomToDate] = useState(toDate || '');
+
+    useEffect(() => {
+        if (fromDate && toDate) {
+            setCustomFromDate(fromDate);
+            setCustomToDate(toDate);
+        }
+    }, [fromDate, toDate]);
+
+    const handleOptionSelect = (option: any) => {
+        const today = new Date();
+        let newFromDate = '';
+        let newToDate = '';
+
+        switch (option) {
+            case 'today':
+                newFromDate = format(startOfDay(today), 'yyyy-MM-dd');
+                newToDate = format(endOfDay(today), 'yyyy-MM-dd');
+                break;
+            case 'yesterday':
+                newFromDate = format(startOfDay(subDays(today, 1)), 'yyyy-MM-dd');
+                newToDate = format(endOfDay(subDays(today, 1)), 'yyyy-MM-dd');
+                break;
+            case 'last7days':
+                newFromDate = format(startOfDay(subDays(today, 6)), 'yyyy-MM-dd');
+                newToDate = format(endOfDay(today), 'yyyy-MM-dd');
+                break;
+            case 'last30days':
+                newFromDate = format(startOfDay(subDays(today, 29)), 'yyyy-MM-dd');
+                newToDate = format(endOfDay(today), 'yyyy-MM-dd');
+                break;
+            case 'thisMonth':
+                newFromDate = format(startOfDay(new Date(today.getFullYear(), today.getMonth(), 1)), 'yyyy-MM-dd');
+                newToDate = format(endOfDay(today), 'yyyy-MM-dd');
+                break;
+            case 'all':
+                newFromDate = '';
+                newToDate = '';
+                break;
+            case 'custom':
+                newFromDate = customFromDate;
+                newToDate = customToDate;
+                break;
+        }
+
+        setSelectedOption(option);
+        onDateChange(newFromDate, newToDate);
+        setIsOpen(false);
+    };
+
+    const getDisplayText = () => {
+        if (!fromDate && !toDate) return 'All Dates';
+
+        if (selectedOption !== 'custom' && selectedOption !== 'all') {
+            const options: any = {
+                today: 'Today',
+                yesterday: 'Yesterday',
+                last7days: 'Last 7 Days',
+                last30days: 'Last 30 Days',
+                thisMonth: 'This Month'
+            };
+            return options[selectedOption] || 'Custom Range';
+        }
+
+        if (fromDate && toDate) {
+            try {
+                const from = parseISO(fromDate);
+                const to = parseISO(toDate);
+
+                if (format(from, 'yyyy-MM-dd') === format(to, 'yyyy-MM-dd')) {
+                    return format(from, 'MMM dd, yyyy');
+                }
+                return `${format(from, 'MMM dd')} - ${format(to, 'MMM dd, yyyy')}`;
+            } catch {
+                return 'Custom Range';
+            }
+        }
+
+        return 'Custom Range';
+    };
+
+    return (
+        <div className="relative">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+            >
+                <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>{getDisplayText()}</span>
+                <ChevronUp className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-200 dark:border-gray-700">
+                    <div className="p-2 space-y-1">
+                        <h3 className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Quick Select
+                        </h3>
+                        {[
+                            { id: 'today', label: 'Today' },
+                            { id: 'yesterday', label: 'Yesterday' },
+                            { id: 'last7days', label: 'Last 7 Days' },
+                            { id: 'last30days', label: 'Last 30 Days' },
+                            { id: 'thisMonth', label: 'This Month' },
+                            { id: 'all', label: 'All Dates' },
+                            { id: 'custom', label: 'Custom Range' }
+                        ].map((option) => (
+                            <button
+                                key={option.id}
+                                onClick={() => handleOptionSelect(option.id)}
+                                className={`w-full text-left px-2 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${selectedOption === option.id
+                                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                    }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+
+                        {selectedOption === 'custom' && (
+                            <div className="pt-2 space-y-2">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                        From Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={customFromDate}
+                                        onChange={(e) => setCustomFromDate(e.target.value)}
+                                        className="w-full px-2 py-1.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                        To Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={customToDate}
+                                        onChange={(e) => setCustomToDate(e.target.value)}
+                                        className="w-full px-2 py-1.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        onDateChange(customFromDate, customToDate);
+                                        setIsOpen(false);
+                                    }}
+                                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-1.5 px-3 rounded-lg text-xs sm:text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all"
+                                >
+                                    Apply Custom Range
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 // Updated function to check if follow-up is due within 1 hour (60 minutes)
 const isFollowUpDueSoon = (followUpDate: string) => {
@@ -77,10 +246,8 @@ const isFollowUpDueSoon = (followUpDate: string) => {
     const now = new Date();
     const followUpTime = new Date(followUpDate);
     if (isNaN(followUpTime.getTime())) return false;
-
     // Calculate difference in minutes
     const diffMinutes = (followUpTime.getTime() - now.getTime()) / (1000 * 60);
-
     // Return true if follow-up is within next 60 minutes (1 hour)
     return diffMinutes >= 0 && diffMinutes <= 60;
 };
@@ -90,7 +257,6 @@ const formatDate = (dateString: string | any) => {
     if (!dateString) return 'Not Scheduled';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Invalid Date';
-
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
@@ -114,7 +280,6 @@ const getFollowUpStatus = (nextFollowUp: string) => {
             isDueSoon: false
         };
     }
-
     // Handle "today" case with time checking
     if (nextFollowUp.toLowerCase().includes('today')) {
         const isDueSoon = isFollowUpDueSoon(nextFollowUp);
@@ -123,15 +288,13 @@ const getFollowUpStatus = (nextFollowUp: string) => {
             color: 'text-yellow-800 dark:text-yellow-200',
             bgColor: 'bg-yellow-300 dark:bg-yellow-400',
             icon: <Bell className="h-4 w-4" />,
-            pulse: isDueSoon, // Will blink if due soon
+            pulse: isDueSoon,
             border: 'border-2 border-yellow-400 dark:border-yellow-500',
             isDueSoon: isDueSoon
         };
     }
-
     const followUpDate = new Date(nextFollowUp);
     const today = new Date();
-
     if (isNaN(followUpDate.getTime())) {
         return {
             text: nextFollowUp,
@@ -143,11 +306,9 @@ const getFollowUpStatus = (nextFollowUp: string) => {
             isDueSoon: false
         };
     }
-
     // Reset time to compare only dates
     const followUpDateOnly = new Date(followUpDate.getFullYear(), followUpDate.getMonth(), followUpDate.getDate());
     const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
     // Check if the date is in the past (overdue)
     if (followUpDateOnly < todayOnly) {
         return {
@@ -155,12 +316,11 @@ const getFollowUpStatus = (nextFollowUp: string) => {
             color: 'text-orange-800 dark:text-orange-200',
             bgColor: 'bg-orange-200 dark:bg-orange-300',
             icon: <AlertTriangle className="h-4 w-4" />,
-            pulse: true, // Blink for overdue
+            pulse: true,
             border: 'border-2 border-orange-300 dark:border-orange-400',
             isDueSoon: false
         };
     }
-
     // Future date - check if due soon (within 60 minutes)
     const isDueSoon = isFollowUpDueSoon(nextFollowUp);
     return {
@@ -168,7 +328,7 @@ const getFollowUpStatus = (nextFollowUp: string) => {
         color: 'text-green-800 dark:text-green-200',
         bgColor: 'bg-green-100 dark:bg-green-900/30',
         icon: <CheckCircle className="h-4 w-4" />,
-        pulse: isDueSoon, // Blink if due soon
+        pulse: isDueSoon,
         border: 'border border-green-200 dark:border-green-700',
         isDueSoon: isDueSoon
     };
@@ -209,7 +369,6 @@ const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
         }
         return pages;
     };
-
     return (
         <div className="flex items-center space-x-1">
             <button
@@ -276,7 +435,6 @@ const getColumnsBasedOnRole = (roleId: number) => {
         { label: 'Created', accessor: 'createdAt', sortable: true, minWidth: 150 },
         { label: 'Last Updated', accessor: 'updatedAt', sortable: true, minWidth: 150 },
     ];
-
     if (roleId === 36) {
         return [
             ...commonColumns,
@@ -287,7 +445,7 @@ const getColumnsBasedOnRole = (roleId: number) => {
             ...commonColumns,
             { label: 'Platform', accessor: 'platformType', sortable: true, minWidth: 120 },
             { label: 'Plot Number', accessor: 'plotNumber', sortable: true, minWidth: 120 },
-            { label: 'Plot Price', accessor: 'plotPrice', sortable: true, minWidth: 120 },
+            // { label: 'Plot Price', accessor: 'plotPrice', sortable: true, minWidth: 120 },
             { label: 'City', accessor: 'city', sortable: true, minWidth: 120 },
             { label: 'State', accessor: 'state', sortable: true, minWidth: 120 },
         ];
@@ -383,7 +541,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     totalRecords: externalTotalRecords,
     onPageChange,
     onPageSizeChange,
-    currentUser
+    currentUser,
+    fromDate: externalFromDate,
+    toDate: externalToDate,
+    onDateChange: externalOnDateChange
 }) => {
     const dispatch = useDispatch<any>();
     const [activeTab, setActiveTab] = useState('list');
@@ -394,6 +555,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
     const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
     const [showBulkActions, setShowBulkActions] = useState(false);
+    const [internalFromDate, setInternalFromDate] = useState('');
+    const [internalToDate, setInternalToDate] = useState('');
 
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
@@ -401,6 +564,20 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
+
+    const fromDate = externalFromDate || internalFromDate;
+    const toDate = externalToDate || internalToDate;
+
+    const handleDateChange = (newFromDate: string, newToDate: string) => {
+        if (externalOnDateChange) {
+            externalOnDateChange(newFromDate, newToDate);
+        } else {
+            setInternalFromDate(newFromDate);
+            setInternalToDate(newToDate);
+        }
+        setInternalCurrentPage(1);
+        setSelectedLeads([]);
+    };
 
     const getCategoryFromTab = (tabId: string) => {
         const tabToCategory: Record<string, string> = {
@@ -426,10 +603,12 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             page: currentPage,
             limit: pageSize,
             searchValue: searchTerm,
+            fromDate: fromDate,
+            toDate: toDate,
             ...(category && { category })
         };
         dispatch(fetchLeads(params));
-    }, [dispatch, currentPage, pageSize, searchTerm, activeTab]);
+    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate]);
 
     const tabs = [
         { id: 'list', label: `All Leads`, icon: ListFilter, },
@@ -451,12 +630,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
-
         const totalPages = externalTotalPages || Math.ceil(sorted.length / pageSize);
         const currentItems = externalPageSize
             ? sorted
             : sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
         return {
             filteredLeads: sorted,
             sortedLeads: sorted,
@@ -484,7 +661,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     };
 
     const leadPermissionIds = getLeadPermissions();
-
     const hasPermission = (permId: number, permName: string) => {
         if (!leadPermissionIds.includes(permId)) return false;
         const matched = allPermissions?.data?.permissions?.find(
@@ -637,7 +813,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     </div>
                 </div>
             )}
-
             <div className="mb-4">
                 <div className="flex space-x-1 sm:space-x-2 overflow-x-auto pb-2 scrollbar-hide">
                     {tabs.map(tab => {
@@ -663,7 +838,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     })}
                 </div>
             </div>
-
             <div className="rounded-lg shadow-sm border mb-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <div className="p-2 sm:p-3">
                     <div className="flex flex-col gap-2 sm:gap-3">
@@ -698,6 +872,11 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             </div>
                             <div className="flex items-center space-x-2 sm:space-x-4">
                                 <div className="flex items-center space-x-1 sm:space-x-2">
+                                    <DateFilterDropdown
+                                        fromDate={fromDate}
+                                        toDate={toDate}
+                                        onDateChange={handleDateChange}
+                                    />
                                     <button
                                         onClick={() => setViewMode('card')}
                                         className={`p-1.5 sm:p-2 rounded-lg transition-all ${viewMode === 'card'
@@ -748,7 +927,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     </div>
                 </div>
             </div>
-
             {showBulkActions && (
                 <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:right-6 sm:left-auto z-50 transition-all duration-300 ease-in-out">
                     <div className="rounded-lg shadow-lg p-2.5 sm:p-3 border flex items-center space-x-2 sm:space-x-3 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -791,7 +969,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     </div>
                 </div>
             )}
-
             {loading ? (
                 <div className="rounded-lg p-8 sm:p-12 text-center bg-white dark:bg-gray-800">
                     <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4 sm:mb-6"></div>
@@ -975,7 +1152,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             </table>
                         </div>
                     )}
-
                     {viewMode === 'card' && (
                         <div className="space-y-3 sm:space-y-4">
                             {currentItems.length > 0 ? (
@@ -1141,7 +1317,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                             )}
                                                         </div>
                                                     </div>
-                                                    {lead.plotPrice && (
+                                                    {/* {lead.plotPrice && (
                                                         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                             <div>
                                                                 <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Plot Price</p>
@@ -1151,7 +1327,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                                 <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex flex-wrap gap-2">
@@ -1213,7 +1389,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     )}
                 </>
             )}
-
             <style jsx>{`
                 .scrollbar-hide {
                     -ms-overflow-style: none;
