@@ -12,12 +12,15 @@ export const fetchLeads = createAsyncThunk(
             page = 1,
             limit = 10,
             searchValue = "",
-        }: { page?: number; limit?: number; searchValue?: string },
+            category = "all-leads",
+            fromDate = "",
+            toDate = "",
+        }: { page?: number; limit?: number; searchValue?: string; category?: string; fromDate?: string; toDate?: string },
         { rejectWithValue }
     ) => {
         try {
             const res = await axiosInstance.get(
-                `/leads/getAllLeads?page=${page}&limit=${limit}&search=${searchValue}`
+                `/leads/getAllLeads?page=${page}&limit=${limit}&search=${searchValue}&category=${category}&fromDate=${fromDate}&toDate=${toDate}`
             );
             return res.data.data;
         } catch (err: any) {
@@ -175,6 +178,9 @@ export interface Lead {
     leadStatus?: string;
     assignedUserName?: string;
     interestStatus?: string;
+    latestFollowUpDate?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 interface LeadState {
@@ -247,6 +253,9 @@ const leadSlice = createSlice({
                         leadStatus: item.leadStatus,
                         assignedUserName: item.assignedUserName,
                         interestStatus: item.interestStatus,
+                        latestFollowUpDate: item.latestFollowUpDate,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
                     })) || [];
 
             })

@@ -6,6 +6,7 @@ import CommonDropdown from "../Common/CommonDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { fetchFollowUps, saveFollowUp } from "../../../../store/followUpSlice";
+import { fetchLeads } from "../../../../store/leadSlice";
 
 interface DropdownOption {
     label: string;
@@ -24,6 +25,25 @@ interface FollowUpLeadModalProps {
     onClose: () => void;
     lead: { id: number; name?: string; phone?: string };
 }
+
+// Status mapping for display purposes only
+const statusMappingReverse: Record<number, string> = {
+    1: "New Lead",
+    2: "in follow up",
+    3: "Very Interested",
+    4: "WARM",
+    5: "Not Interested",
+    6: "READY TO VISIT",
+    7: "NOT CONNECTED",
+    8: "Switch Off",
+    9: "Not reachable/DNP",
+    10: "RERA Projects",
+    11: "Visit Pending",
+    12: "Payment Full fill",
+    13: "Registry Done",
+    14: "High Interested",
+    15: "CLOSE",
+};
 
 // Toast Component
 const Toast: React.FC<{
@@ -62,7 +82,8 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
     const dispatch = useDispatch<AppDispatch>();
     const { followUps, loading } = useSelector((state: RootState) => state.followUps);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
     const {
         register,
         handleSubmit,
@@ -72,7 +93,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         reset,
     } = useForm<FollowUpFormData>({
         defaultValues: {
-            inquiryStatus: { label: "IN FOLLOWUP", value: "IN FOLLOWUP" },
+            inquiryStatus: { label: "in follow up", value: "in follow up" }, // Now using the label as value
             budgetUpto: null,
             nextFollowUpDate: new Date().toISOString().slice(0, 16),
             remark: "",
@@ -85,21 +106,10 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
 
     if (!isOpen) return null;
 
-    // Inquiry Options
     const inquiryOptions: DropdownOption[] = [
-        { label: "IN FOLLOWUP", value: "IN FOLLOWUP" },
-        { label: "Very Interested", value: "Very Interested" },
-        { label: "WARM", value: "WARM" },
-        { label: "Not Interested", value: "Not Interested" },
-        { label: "READY TO VISIT", value: "READY TO VISIT" },
-        { label: "NOT CONNECTED", value: "NOT CONNECTED" },
-        { label: "Switch Off", value: "Switch Off" },
-        { label: "Not reachable/DNP", value: "Not reachable/DNP" },
-        { label: "RERA Projects", value: "RERA Projects" },
-        { label: "Visit Pending", value: "Visit Pending" },
-        { label: "Payment Full fill", value: "Payment Full fill" },
-        { label: "Registry Done", value: "Registry Done" },
-        { label: "High Interested", value: "High Interested" },
+        { label: "in follow up", value: "in follow up" },
+        { label: "not interested", value: "not interested" },
+        { label: "closed", value: "closed" },
     ];
 
     const budgetOptions: DropdownOption[] = [
@@ -120,73 +130,51 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
     const inquiryValue = watch("inquiryStatus");
     const budgetValue = watch("budgetUpto");
 
-    const statusMappingReverse: Record<number, string> = {
-        1: "New Lead",
-        2: "IN FOLLOWUP",
-        3: "Very Interested",
-        4: "WARM",
-        5: "Not Interested",
-        6: "READY TO VISIT",
-        7: "NOT CONNECTED",
-        8: "Switch Off",
-        9: "Not reachable/DNP",
-        10: "RERA Projects",
-        11: "Visit Pending",
-        12: "Payment Full fill",
-        13: "Registry Done",
-        14: "High Interested",
-    };
-
-    const statusValueToId: Record<string, number> = {
-        "IN FOLLOWUP": 2,
-        "Very Interested": 3,
-        "WARM": 4,
-        "Not Interested": 5,
-        "READY TO VISIT": 6,
-        "NOT CONNECTED": 7,
-        "Switch Off": 8,
-        "Not reachable/DNP": 9,
-        "RERA Projects": 10,
-        "Visit Pending": 11,
-        "Payment Full fill": 12,
-        "Registry Done": 13,
-        "High Interested": 14,
-    };
-
     const onSubmit = async (data: FollowUpFormData) => {
         try {
             if (!lead?.id) throw new Error("Lead ID not found");
 
-            const leadStatusId = data.inquiryStatus?.value
-                ? statusValueToId[data.inquiryStatus.value] || 1
-                : 1;
+            const followUpStatusString = data.inquiryStatus?.value || "in follow up";
 
-            await dispatch(
+            const result: any = await dispatch(
                 saveFollowUp({
                     leadId: lead.id,
-                    leadStatusId: leadStatusId,
+                    followUpStatus: followUpStatusString, // Sending the label directly
                     followUpDate: data.nextFollowUpDate,
                     budget: data.budgetUpto?.value || "",
                     remark: data.remark,
                 })
             );
 
-            await dispatch(fetchFollowUps(lead.id));
-            setToast({ message: "Follow-up saved successfully!", type: "success" });
-            reset({
-                inquiryStatus: { label: "IN FOLLOWUP", value: "IN FOLLOWUP" },
-                budgetUpto: null,
-                nextFollowUpDate: new Date().toISOString().slice(0, 16),
-                remark: "",
-            });
-        } catch {
-            setToast({ message: "Failed to save follow-up. Please try again.", type: "error" });
+            if (saveFollowUp.fulfilled.match(result)) {
+                await dispatch(fetchFollowUps(lead.id));
+                const params = {
+                    page: currentPage,
+                    limit: pageSize,
+                };
+                dispatch(fetchLeads(params));
+
+                setToast({ message: "Follow-up saved successfully!", type: "success" });
+                reset({
+                    inquiryStatus: { label: "in follow up", value: "in follow up" },
+                    budgetUpto: null,
+                    nextFollowUpDate: new Date().toISOString().slice(0, 16),
+                    remark: "",
+                });
+            } else {
+                const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
+                setToast({ message: errorMessage, type: "error" });
+            }
+        } catch (error: any) {
+            console.error("Error saving follow-up:", error);
+            const errorMessage = error?.message || "Failed to save follow-up. Please try again.";
+            setToast({ message: errorMessage, type: "error" });
         }
     };
 
     const handleClose = () => {
         reset({
-            inquiryStatus: { label: "IN FOLLOWUP", value: "IN FOLLOWUP" },
+            inquiryStatus: { label: "in follow up", value: "in follow up" },
             budgetUpto: null,
             nextFollowUpDate: new Date().toISOString().slice(0, 16),
             remark: "",
