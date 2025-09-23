@@ -12,12 +12,13 @@ export const fetchLeads = createAsyncThunk(
             page = 1,
             limit = 10,
             searchValue = "",
-        }: { page?: number; limit?: number; searchValue?: string },
+            category = "all-leads"
+        }: { page?: number; limit?: number; searchValue?: string; category?: string },
         { rejectWithValue }
     ) => {
         try {
             const res = await axiosInstance.get(
-                `/leads/getAllLeads?page=${page}&limit=${limit}&search=${searchValue}`
+                `/leads/getAllLeads?page=${page}&limit=${limit}&search=${searchValue}&category=${category}`
             );
             return res.data.data;
         } catch (err: any) {

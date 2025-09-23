@@ -139,6 +139,12 @@ const getStatusIcon = (status: string) => {
             return <XCircle className="h-3 w-3" />;
         case 'fresh':
             return <AlertTriangle className="h-3 w-3" />;
+        case 'hot':
+            return <AlertTriangle className="h-3 w-3 text-orange-500" />;
+        case 'warm':
+            return <AlertTriangle className="h-3 w-3 text-amber-500" />;
+        case 'cold':
+            return <AlertTriangle className="h-3 w-3 text-cyan-500" />;
         default:
             return null;
     }
@@ -237,14 +243,13 @@ const PaginationButtons = ({ currentPage, totalPages, onPageChange }: any) => {
                 onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
                 disabled={currentPage === 1}
                 className={`p-1.5 sm:p-2 rounded-lg border transition-all ${currentPage === 1
-                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
-                        : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                     }`}
                 title="Previous page"
             >
                 <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
-
             <div className="hidden sm:flex items-center space-x-1">
                 {getPageNumbers().map((item) => {
                     if (item.type === 'ellipsis') {
@@ -259,8 +264,8 @@ const PaginationButtons = ({ currentPage, totalPages, onPageChange }: any) => {
                             key={item.key}
                             onClick={() => onPageChange(item.value)}
                             className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${currentPage === item.value
-                                    ? 'bg-blue-500 dark:bg-blue-600 text-white shadow-md transform scale-105'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                                ? 'bg-blue-500 dark:bg-blue-600 text-white shadow-md transform scale-105'
+                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                                 }`}
                         >
                             {item.value}
@@ -268,17 +273,15 @@ const PaginationButtons = ({ currentPage, totalPages, onPageChange }: any) => {
                     );
                 })}
             </div>
-
             <div className="sm:hidden px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 {currentPage} / {totalPages}
             </div>
-
             <button
                 onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 className={`p-1.5 sm:p-2 rounded-lg border transition-all ${currentPage === totalPages
-                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
-                        : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                     }`}
                 title="Next page"
             >
@@ -310,6 +313,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     onPageSizeChange,
     currentUser
 }) => {
+    // console.log("Rendering LeadPanel with leads:", leads);
     const [activeTab, setActiveTab] = useState('list');
     const [searchTerm, setSearchTerm] = useState('');
     const [internalCurrentPage, setInternalCurrentPage] = useState(1);
@@ -337,22 +341,43 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
 
     const tabCounts = useMemo(() => ({
         allLeads: leads.length,
-        todayVisit: leads.filter(l => l.status?.toLowerCase().includes('visit')).length,
         todayFollowup: leads.filter(l => l.nextFollowUp?.toLowerCase().includes('today')).length,
         pendingFollowup: leads.filter(l => l.status?.toLowerCase().includes('pending')).length,
-        freshLead: leads.filter(l => l.stage?.toLowerCase() === 'lead' || l.status?.toLowerCase() === 'fresh').length,
-        assignedLead: leads.filter(l => l.assignedTo && l.assignedTo !== 'Not Provided').length,
-        dumpLead: leads.filter(l => l.status?.toLowerCase().includes('dump')).length,
+        freshLead: leads.filter(l =>
+            l.stage?.toLowerCase() === 'lead' ||
+            l.status?.toLowerCase() === 'fresh' ||
+            l.leadStage?.toLowerCase() === 'fresh'
+        ).length,
+        hotLead: leads.filter(l =>
+            l.status?.toLowerCase() === 'hot' ||
+            l.stage?.toLowerCase() === 'hot' ||
+            l.leadStage?.toLowerCase() === 'hot'
+        ).length,
+        warmLead: leads.filter(l =>
+            l.status?.toLowerCase() === 'warm' ||
+            l.stage?.toLowerCase() === 'warm' ||
+            l.leadStage?.toLowerCase() === 'warm'
+        ).length,
+        coldLead: leads.filter(l =>
+            l.status?.toLowerCase() === 'cold' ||
+            l.stage?.toLowerCase() === 'cold' ||
+            l.leadStage?.toLowerCase() === 'cold'
+        ).length,
+        dumpLead: leads.filter(l =>
+            l.status?.toLowerCase().includes('dump') ||
+            l.stage?.toLowerCase().includes('dump')
+        ).length,
     }), [leads]);
 
     const tabs = [
         { id: 'list', label: `All Leads`, icon: ListFilter, count: tabCounts.allLeads },
-        { id: 'todayVisit', label: `Today Visit`, icon: Calendar, count: tabCounts.todayVisit },
-        { id: 'todayFollowup', label: `Today Followup`, icon: Calendar, count: tabCounts.todayFollowup },
-        { id: 'pendingFollowup', label: `Pending Followup`, icon: Clock, count: tabCounts.pendingFollowup },
-        { id: 'freshLead', label: `Fresh Lead`, icon: Tag, count: tabCounts.freshLead },
-        { id: 'assignedLead', label: `Assigned Lead`, icon: User, count: tabCounts.assignedLead },
-        { id: 'dumpLead', label: `Dump Lead`, icon: EyeOff, count: tabCounts.dumpLead },
+        { id: 'freshLead', label: `Fresh Leads`, icon: Tag, count: tabCounts.freshLead },
+        { id: 'hotLead', label: `Hot`, icon: AlertTriangle, count: tabCounts.hotLead },
+        { id: 'warmLead', label: `Warm`, icon: AlertTriangle, count: tabCounts.warmLead },
+        { id: 'coldLead', label: `Cold`, icon: AlertTriangle, count: tabCounts.coldLead },
+        { id: 'todayFollowup', label: `Today FollowUp`, icon: Calendar, count: tabCounts.todayFollowup },
+        { id: 'pendingFollowup', label: `Pending FollowUp`, icon: Clock, count: tabCounts.pendingFollowup },
+        { id: 'dumpLead', label: `Dump`, icon: EyeOff, count: tabCounts.dumpLead },
     ];
 
     const { filteredLeads, sortedLeads, currentItems } = useMemo(() => {
@@ -365,11 +390,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     lead.status?.toLowerCase().includes('followup')
                 );
                 break;
-            case 'todayVisit':
-                filtered = leads.filter(lead =>
-                    lead.status?.toLowerCase().includes('visit')
-                );
-                break;
             case 'pendingFollowup':
                 filtered = leads.filter(lead =>
                     lead.status?.toLowerCase().includes('pending')
@@ -378,17 +398,35 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             case 'freshLead':
                 filtered = leads.filter(lead =>
                     lead.stage?.toLowerCase() === 'lead' ||
-                    lead.status?.toLowerCase() === 'fresh'
+                    lead.status?.toLowerCase() === 'fresh' ||
+                    lead.leadStage?.toLowerCase() === 'fresh'
                 );
                 break;
-            case 'assignedLead':
+            case 'hotLead':
                 filtered = leads.filter(lead =>
-                    lead.assignedTo && lead.assignedTo !== 'Not Provided'
+                    lead.status?.toLowerCase() === 'hot' ||
+                    lead.stage?.toLowerCase() === 'hot' ||
+                    lead.leadStage?.toLowerCase() === 'hot'
+                );
+                break;
+            case 'warmLead':
+                filtered = leads.filter(lead =>
+                    lead.status?.toLowerCase() === 'warm' ||
+                    lead.stage?.toLowerCase() === 'warm' ||
+                    lead.leadStage?.toLowerCase() === 'warm'
+                );
+                break;
+            case 'coldLead':
+                filtered = leads.filter(lead =>
+                    lead.status?.toLowerCase() === 'cold' ||
+                    lead.stage?.toLowerCase() === 'cold' ||
+                    lead.leadStage?.toLowerCase() === 'cold'
                 );
                 break;
             case 'dumpLead':
                 filtered = leads.filter(lead =>
-                    lead.status?.toLowerCase().includes('dump')
+                    lead.status?.toLowerCase().includes('dump') ||
+                    lead.stage?.toLowerCase().includes('dump')
                 );
                 break;
             default:
@@ -608,8 +646,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 <span>{tab.label}</span>
                                 {tab.count > 0 && (
                                     <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${activeTab === tab.id
-                                            ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300'
-                                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+                                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300'
+                                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
                                         }`}>
                                         {tab.count}
                                     </span>
@@ -634,7 +672,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 />
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
                             </div>
-
                             <div className="flex items-center space-x-1 sm:space-x-2">
                                 <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Show</span>
                                 <select
@@ -650,14 +687,13 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 </select>
                                 <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">entries</span>
                             </div>
-
                             <div className="flex items-center space-x-2 sm:space-x-4">
                                 <div className="flex items-center space-x-1 sm:space-x-2">
                                     <button
                                         onClick={() => setViewMode('card')}
                                         className={`p-1.5 sm:p-2 rounded-lg transition-all ${viewMode === 'card'
-                                                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white transform scale-105 shadow-md'
-                                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
+                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white transform scale-105 shadow-md'
+                                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
                                             }`}
                                         title="Card View"
                                     >
@@ -666,8 +702,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     <button
                                         onClick={() => setViewMode('table')}
                                         className={`p-1.5 sm:p-2 rounded-lg transition-all ${viewMode === 'table'
-                                                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white transform scale-105 shadow-md'
-                                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
+                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white transform scale-105 shadow-md'
+                                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
                                             }`}
                                         title="Table View"
                                     >
@@ -676,7 +712,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 </div>
                             </div>
                         </div>
-
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 gap-2">
                             <div className="flex items-center space-x-2">
                                 <input
@@ -697,8 +732,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             </div>
                             <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                                 <span>Filtered: <span className="font-semibold text-blue-600 dark:text-blue-400">{filteredLeads.length}</span></span>
-                                <span>•</span>
-                                <span>Total: <span className="font-semibold text-green-600 dark:text-green-400">{leads.length}</span></span>
+                                {/* <span>•</span> */}
+                                {/* <span>Total: <span className="font-semibold text-green-600 dark:text-green-400">{leads.length}</span></span> */}
                                 <span>•</span>
                                 <span>Page {currentPage} of {totalPages}</span>
                             </div>
@@ -938,11 +973,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         <div
                                             key={`card-${lead.id}`}
                                             className={`rounded-lg shadow-sm border transition-all duration-200 ${selectedLeads.includes(lead.id)
-                                                    ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50 dark:bg-blue-900/20'
-                                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
+                                                ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50 dark:bg-blue-900/20'
+                                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                                                 }`}
                                         >
-                                            {/* IMPROVED HEADER SECTION WITH BETTER NOT SCHEDULED DESIGN */}
                                             <div className="p-3 sm:p-4 rounded-t-lg bg-gradient-to-r from-gray-800 to-gray-700 text-white">
                                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                                     <div className="flex items-center space-x-3">
@@ -963,14 +997,12 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
-                                                        {/* Lead Stage Badge */}
                                                         <div className="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-full">
                                                             <span className="text-xs font-medium text-white/80">Stage:</span>
                                                             <span className="text-xs font-semibold text-blue-200">
-                                                                {lead.stage || 'Lead'}
+                                                                {lead.stage || 'N/A'}
                                                             </span>
                                                         </div>
-                                                        {/* Status Badge with Icon */}
                                                         <div className="flex items-center space-x-1 bg-white/10 px-3 py-1.5 rounded-full">
                                                             <span className="text-xs font-medium text-white/80">Status:</span>
                                                             {formattedLead.formattedStatus}
@@ -978,8 +1010,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Rest of the card content */}
                                             <div className="p-3 sm:p-5">
                                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-6">
                                                     <div className="flex-1">
@@ -1052,8 +1082,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                {/* Additional Info Section */}
                                                 <div className="rounded-lg mt-4 p-3 sm:p-4 border bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-700">
                                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                                                         <div>
@@ -1063,8 +1091,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                         <div>
                                                             <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Interested In</p>
                                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${lead.interestedIn === 'not provided'
-                                                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                                                    : 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200'
+                                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                                                : 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200'
                                                                 }`}>
                                                                 {lead.interestedIn || 'N/A'}
                                                             </span>
@@ -1104,8 +1132,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                {/* Action Buttons */}
                                                 <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex flex-wrap gap-2">
                                                         {onFollowUp && (
