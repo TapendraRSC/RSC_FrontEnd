@@ -29,6 +29,39 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
+// Date formatting utility
+const formatDate = (dateString: string | Date | null) => {
+    if (!dateString) return 'N/A';
+
+    // If it's already a Date object
+    if (dateString instanceof Date) {
+        if (isNaN(dateString.getTime())) return 'N/A';
+        return dateString.toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
+    // If it's a string
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+
+    return date.toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+};
+
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
     const { list: leadList, loading, totalPages, total } = useSelector(
@@ -40,7 +73,6 @@ const LeadComponent: React.FC = () => {
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
-
     const [searchValue, setSearchValue] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
@@ -104,46 +136,49 @@ const LeadComponent: React.FC = () => {
     };
 
     const transformLeadsForPanel = useMemo(() => {
-        return (leadList || [])?.map((lead: any) => ({
-            id: lead.id,
-            name: lead.name || 'N/A',
-            phone: lead.phone || 'N/A',
-            email: lead.email || 'N/A',
-            profession: lead.profession || 'Not Provided',
-            address: lead.address || 'Not Provided',
-            city: lead.city || 'Not Provided',
-            state: lead.state || 'Not Provided',
-            nextFollowUp: lead.nextFollowUp || 'Not Scheduled',
-            stage: lead.leadStage || 'Lead',
-            status: lead.leadStatus || 'N/A',
-            interestedIn: lead.interestedIn || 'not provided',
-            budget: lead.budget || lead.plotPrice || 'N/A',
-            assignedTo: lead.assignedUserName || 'Not Assigned',
-            sharedBy: lead.sharedBy || lead.assignedUserName || 'N/A',
-            createdBy: lead.createdBy || 'System',
-            source: lead.platformType || lead.source || 'WEBSITE',
-            remark: lead.remark || 'N/A',
-            lastFollowUp: lead.lastFollowUp || 'DNP',
-            leadNo: `#${lead.id}`,
-            createdDate: lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-GB', {
-                weekday: 'short',
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            }) : 'N/A',
-            lastFollowUpDate: lead.updatedAt ? new Date(lead.updatedAt).toLocaleDateString('en-GB', {
-                weekday: 'short',
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            }) : 'N/A',
-            platformType: lead.platformType || 'N/A',
-            plotNumber: lead.plotNumber || 'N/A',
-            plotPrice: lead.plotPrice || 'N/A',
-            plotProjectId: lead.plotProjectId || null,
-            plotProjectTitle: lead.plotProjectTitle || 'N/A',
-            interestStatus: lead.interestStatus || 'N/A',
-        }));
+        return (leadList || []).map((lead: any) => {
+            // Format dates properly
+            const createdAt = lead.createdAt ? formatDate(lead.createdAt) : 'N/A';
+            const updatedAt = lead.updatedAt ? formatDate(lead.updatedAt) : 'N/A';
+            const latestFollowUpDate = lead.latestFollowUpDate ? formatDate(lead.latestFollowUpDate) : 'Not Scheduled';
+            const lastFollowUpDate = lead.lastFollowUpDate ? formatDate(lead.lastFollowUpDate) : 'N/A';
+
+            return {
+                id: lead.id,
+                name: lead.name || 'N/A',
+                phone: lead.phone || 'N/A',
+                email: lead.email || 'N/A',
+                profession: lead.profession || 'Not Provided',
+                address: lead.address || 'Not Provided',
+                city: lead.city || 'Not Provided',
+                state: lead.state || 'Not Provided',
+                nextFollowUp: latestFollowUpDate,
+                stage: lead.leadStage || 'Lead',
+                status: lead.leadStatus || 'N/A',
+                interestedIn: lead.interestedIn || 'not provided',
+                budget: lead.budget || lead.plotPrice || 'N/A',
+                assignedTo: lead.assignedUserName || 'Not Assigned',
+                assignedUserName: lead.assignedUserName || 'Not Assigned',
+                assignedUserEmail: lead.assignedUserEmail || 'N/A',
+                sharedBy: lead.sharedBy || lead.assignedUserName || 'N/A',
+                createdBy: lead.createdBy || 'System',
+                source: lead.platformType || lead.source || 'WEBSITE',
+                remark: lead.remark || 'N/A',
+                lastFollowUp: lead.lastFollowUp || 'DNP',
+                leadNo: `#${lead.id}`,
+                createdDate: createdAt,
+                createdAt: lead.createdAt || null, // Keep original for sorting
+                updatedAt: lead.updatedAt || null, // Keep original for sorting
+                lastFollowUpDate: lastFollowUpDate,
+                latestFollowUpDate: lead.latestFollowUpDate || lead.latestFollowUpDate || null, // For follow-up display
+                platformType: lead.platformType || 'N/A',
+                plotNumber: lead.plotNumber || 'N/A',
+                plotPrice: lead.plotPrice || 'N/A',
+                plotProjectId: lead.plotProjectId || null,
+                plotProjectTitle: lead.plotProjectTitle || 'N/A',
+                interestStatus: lead.interestStatus || 'N/A',
+            };
+        });
     }, [leadList]);
 
     const handlePageChange = (page: number) => {
@@ -152,7 +187,7 @@ const LeadComponent: React.FC = () => {
 
     const handlePageSizeChange = (size: number) => {
         setPageSize(size);
-        setCurrentPage(1); // Reset to first page when changing page size
+        setCurrentPage(1);
     };
 
     const resetUploadStates = () => {
@@ -410,7 +445,6 @@ const LeadComponent: React.FC = () => {
                 currentUser={currentUser}
                 totalRecords={total}
             />
-
 
             <ComprehensiveLeadModal
                 isOpen={isModalOpen}

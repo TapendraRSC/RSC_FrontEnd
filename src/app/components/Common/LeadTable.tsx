@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
+import { fetchLeads } from '../../../../store/leadSlice';
 
 interface Lead {
     id: number;
@@ -25,6 +26,8 @@ interface Lead {
     interestedIn: string;
     budget: string;
     assignedTo: string;
+    assignedUserName?: string;
+    assignedUserEmail?: string;
     sharedBy: string;
     createdBy: string;
     source: string;
@@ -34,7 +37,9 @@ interface Lead {
     email?: string;
     createdDate?: string;
     lastFollowUpDate?: string;
-    assignedUserName?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    latestFollowUpDate?: string;
     leadStatus?: string;
     leadStage?: string;
     interestStatus?: string;
@@ -66,17 +71,210 @@ interface LeadPanelProps {
     currentUser?: { roleId: number };
 }
 
-const formatValue = (value: any) => value || 'N/A';
+// Updated function to check if follow-up is due within 1 hour (60 minutes)
+const isFollowUpDueSoon = (followUpDate: string) => {
+    if (!followUpDate) return false;
+    const now = new Date();
+    const followUpTime = new Date(followUpDate);
+    if (isNaN(followUpTime.getTime())) return false;
+
+    // Calculate difference in minutes
+    const diffMinutes = (followUpTime.getTime() - now.getTime()) / (1000 * 60);
+
+    // Return true if follow-up is within next 60 minutes (1 hour)
+    return diffMinutes >= 0 && diffMinutes <= 60;
+};
+
+// Date formatting utility
+const formatDate = (dateString: string | any) => {
+    if (!dateString) return 'Not Scheduled';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    }).format(date);
+};
+
+// Updated function to determine follow-up status with blinking logic
+const getFollowUpStatus = (nextFollowUp: string) => {
+    if (!nextFollowUp || nextFollowUp.toLowerCase().includes('not scheduled') || nextFollowUp.toLowerCase() === 'n/a') {
+        return {
+            text: 'Not Scheduled',
+            color: 'text-white',
+            bgColor: 'bg-red-600 dark:bg-red-700',
+            icon: <ShieldAlert className="h-4 w-4" />,
+            pulse: false,
+            border: 'border-2 border-red-700 dark:border-red-800',
+            isDueSoon: false
+        };
+    }
+
+    // Handle "today" case with time checking
+    if (nextFollowUp.toLowerCase().includes('today')) {
+        const isDueSoon = isFollowUpDueSoon(nextFollowUp);
+        return {
+            text: nextFollowUp,
+            color: 'text-yellow-800 dark:text-yellow-200',
+            bgColor: 'bg-yellow-300 dark:bg-yellow-400',
+            icon: <Bell className="h-4 w-4" />,
+            pulse: isDueSoon, // Will blink if due soon
+            border: 'border-2 border-yellow-400 dark:border-yellow-500',
+            isDueSoon: isDueSoon
+        };
+    }
+
+    const followUpDate = new Date(nextFollowUp);
+    const today = new Date();
+
+    if (isNaN(followUpDate.getTime())) {
+        return {
+            text: nextFollowUp,
+            color: 'text-gray-800 dark:text-gray-200',
+            bgColor: 'bg-gray-200 dark:bg-gray-700',
+            icon: <ShieldAlert className="h-4 w-4" />,
+            pulse: false,
+            border: 'border border-gray-300 dark:border-gray-600',
+            isDueSoon: false
+        };
+    }
+
+    // Reset time to compare only dates
+    const followUpDateOnly = new Date(followUpDate.getFullYear(), followUpDate.getMonth(), followUpDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    // Check if the date is in the past (overdue)
+    if (followUpDateOnly < todayOnly) {
+        return {
+            text: nextFollowUp,
+            color: 'text-orange-800 dark:text-orange-200',
+            bgColor: 'bg-orange-200 dark:bg-orange-300',
+            icon: <AlertTriangle className="h-4 w-4" />,
+            pulse: true, // Blink for overdue
+            border: 'border-2 border-orange-300 dark:border-orange-400',
+            isDueSoon: false
+        };
+    }
+
+    // Future date - check if due soon (within 60 minutes)
+    const isDueSoon = isFollowUpDueSoon(nextFollowUp);
+    return {
+        text: nextFollowUp,
+        color: 'text-green-800 dark:text-green-200',
+        bgColor: 'bg-green-100 dark:bg-green-900/30',
+        icon: <CheckCircle className="h-4 w-4" />,
+        pulse: isDueSoon, // Blink if due soon
+        border: 'border border-green-200 dark:border-green-700',
+        isDueSoon: isDueSoon
+    };
+};
+
+const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: any) => void;
+}) => {
+    const getPageNumbers = () => {
+        const pages = [];
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push({ type: 'page', value: i, key: `page-${i}` });
+            }
+        } else {
+            pages.push({ type: 'page', value: 1, key: 'page-1' });
+            if (currentPage <= 3) {
+                for (let i = 2; i <= 3; i++) {
+                    pages.push({ type: 'page', value: i, key: `page-${i}` });
+                }
+                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-end' });
+                pages.push({ type: 'page', value: totalPages, key: `page-${totalPages}` });
+            } else if (currentPage >= totalPages - 2) {
+                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-start' });
+                for (let i = totalPages - 2; i <= totalPages; i++) {
+                    pages.push({ type: 'page', value: i, key: `page-${i}` });
+                }
+            } else {
+                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-start' });
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    pages.push({ type: 'page', value: i, key: `page-${i}` });
+                }
+                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-end' });
+                pages.push({ type: 'page', value: totalPages, key: `page-${totalPages}` });
+            }
+        }
+        return pages;
+    };
+
+    return (
+        <div className="flex items-center space-x-1">
+            <button
+                onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+                disabled={currentPage === 1}
+                className={`p-1.5 sm:p-2 rounded-lg border transition-all ${currentPage === 1
+                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    }`}
+                title="Previous page"
+            >
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </button>
+            <div className="hidden sm:flex items-center space-x-1">
+                {getPageNumbers().map((item) => {
+                    if (item.type === 'ellipsis') {
+                        return (
+                            <span key={item.key} className="px-2 py-1.5 text-gray-500 dark:text-gray-400 text-sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </span>
+                        );
+                    }
+                    return (
+                        <button
+                            key={item.key}
+                            onClick={() => onPageChange(item?.value)}
+                            className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${currentPage === item.value
+                                ? 'bg-blue-500 dark:bg-blue-600 text-white shadow-md transform scale-105'
+                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                                }`}
+                        >
+                            {item.value}
+                        </button>
+                    );
+                })}
+            </div>
+            <div className="sm:hidden px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                {currentPage} / {totalPages}
+            </div>
+            <button
+                onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`p-1.5 sm:p-2 rounded-lg border transition-all ${currentPage === totalPages
+                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    }`}
+                title="Next page"
+            >
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </button>
+        </div>
+    );
+};
 
 const getColumnsBasedOnRole = (roleId: number) => {
     const commonColumns = [
         { label: 'Name', accessor: 'name', sortable: true, minWidth: 150 },
         { label: 'Phone', accessor: 'phone', sortable: true, minWidth: 120 },
         { label: 'Email', accessor: 'email', sortable: true, minWidth: 150 },
-        { label: 'Assigned To', accessor: 'assignedTo', sortable: true, minWidth: 120 },
+        { label: 'Assigned To', accessor: 'assignedUserName', sortable: true, minWidth: 120 },
         { label: 'Status', accessor: 'status', sortable: true, minWidth: 120 },
         { label: 'Stage', accessor: 'stage', sortable: true, minWidth: 120 },
-        { label: 'Next Follow-up', accessor: 'nextFollowUp', sortable: true, minWidth: 150 },
+        { label: 'Next Follow-up', accessor: 'latestFollowUpDate', sortable: true, minWidth: 150 },
+        { label: 'Created', accessor: 'createdAt', sortable: true, minWidth: 150 },
+        { label: 'Last Updated', accessor: 'updatedAt', sortable: true, minWidth: 150 },
     ];
 
     if (roleId === 36) {
@@ -165,132 +363,6 @@ const getSourceColor = (source: string) => {
     }
 };
 
-const getFollowUpStatus = (nextFollowUp: string) => {
-    if (!nextFollowUp || nextFollowUp.toLowerCase().includes('not scheduled')) {
-        return {
-            text: 'Not Scheduled',
-            color: 'text-white',
-            bgColor: 'bg-red-600 dark:bg-red-700',
-            icon: <ShieldAlert className="h-4 w-4" />,
-            pulse: true,
-            border: 'border-2 border-red-700 dark:border-red-800'
-        };
-    } else if (nextFollowUp.toLowerCase().includes('today')) {
-        return {
-            text: nextFollowUp,
-            color: 'text-yellow-800 dark:text-yellow-200',
-            bgColor: 'bg-yellow-300 dark:bg-yellow-400',
-            icon: <Bell className="h-4 w-4" />,
-            pulse: true,
-            border: 'border-2 border-yellow-400 dark:border-yellow-500'
-        };
-    } else if (new Date(nextFollowUp) < new Date()) {
-        return {
-            text: nextFollowUp,
-            color: 'text-orange-800 dark:text-orange-200',
-            bgColor: 'bg-orange-200 dark:bg-orange-300',
-            icon: <AlertTriangle className="h-4 w-4" />,
-            pulse: false,
-            border: 'border border-orange-300 dark:border-orange-400'
-        };
-    } else {
-        return {
-            text: nextFollowUp,
-            color: 'text-green-800 dark:text-green-200',
-            bgColor: 'bg-green-100 dark:bg-green-900/30',
-            icon: <CheckCircle className="h-4 w-4" />,
-            pulse: false,
-            border: 'border border-green-200 dark:border-green-700'
-        };
-    }
-};
-
-const PaginationButtons = ({ currentPage, totalPages, onPageChange }: any) => {
-    const getPageNumbers = () => {
-        const pages = [];
-        if (totalPages <= 5) {
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push({ type: 'page', value: i, key: `page-${i}` });
-            }
-        } else {
-            pages.push({ type: 'page', value: 1, key: 'page-1' });
-            if (currentPage <= 3) {
-                for (let i = 2; i <= 3; i++) {
-                    pages.push({ type: 'page', value: i, key: `page-${i}` });
-                }
-                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-end' });
-                pages.push({ type: 'page', value: totalPages, key: `page-${totalPages}` });
-            } else if (currentPage >= totalPages - 2) {
-                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-start' });
-                for (let i = totalPages - 2; i <= totalPages; i++) {
-                    pages.push({ type: 'page', value: i, key: `page-${i}` });
-                }
-            } else {
-                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-start' });
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                    pages.push({ type: 'page', value: i, key: `page-${i}` });
-                }
-                pages.push({ type: 'ellipsis', value: '...', key: 'ellipsis-end' });
-                pages.push({ type: 'page', value: totalPages, key: `page-${totalPages}` });
-            }
-        }
-        return pages;
-    };
-
-    return (
-        <div className="flex items-center space-x-1">
-            <button
-                onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
-                disabled={currentPage === 1}
-                className={`p-1.5 sm:p-2 rounded-lg border transition-all ${currentPage === 1
-                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
-                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                    }`}
-                title="Previous page"
-            >
-                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </button>
-            <div className="hidden sm:flex items-center space-x-1">
-                {getPageNumbers().map((item) => {
-                    if (item.type === 'ellipsis') {
-                        return (
-                            <span key={item.key} className="px-2 py-1.5 text-gray-500 dark:text-gray-400 text-sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </span>
-                        );
-                    }
-                    return (
-                        <button
-                            key={item.key}
-                            onClick={() => onPageChange(item.value)}
-                            className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${currentPage === item.value
-                                ? 'bg-blue-500 dark:bg-blue-600 text-white shadow-md transform scale-105'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
-                                }`}
-                        >
-                            {item.value}
-                        </button>
-                    );
-                })}
-            </div>
-            <div className="sm:hidden px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                {currentPage} / {totalPages}
-            </div>
-            <button
-                onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className={`p-1.5 sm:p-2 rounded-lg border transition-all ${currentPage === totalPages
-                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
-                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                    }`}
-                title="Next page"
-            >
-                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </button>
-        </div>
-    );
-};
-
 const LeadPanel: React.FC<LeadPanelProps> = ({
     leads = [],
     onAddLead,
@@ -313,7 +385,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     onPageSizeChange,
     currentUser
 }) => {
-    // console.log("Rendering LeadPanel with leads:", leads);
+    const dispatch = useDispatch<any>();
     const [activeTab, setActiveTab] = useState('list');
     const [searchTerm, setSearchTerm] = useState('');
     const [internalCurrentPage, setInternalCurrentPage] = useState(1);
@@ -329,119 +401,49 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
-    const dispatch = useDispatch<any>();
 
-    useEffect(() => {
-        setShowBulkActions(selectedLeads.length > 1);
-    }, [selectedLeads]);
+    const getCategoryFromTab = (tabId: string) => {
+        const tabToCategory: Record<string, string> = {
+            'list': '',
+            'todayFollowup': 'today',
+            'pendingFollowup': 'pending',
+            'freshLead': 'fresh',
+            'hotLead': 'hot',
+            'warmLead': 'warm',
+            'coldLead': 'cold',
+            'dumpLead': 'dump'
+        };
+        return tabToCategory[tabId] || '';
+    };
 
     const currentPage = externalCurrentPage || internalCurrentPage;
     const pageSize = externalPageSize || internalPageSize;
     const columns = getColumnsBasedOnRole(currentUser?.roleId || 0);
 
-    const tabCounts = useMemo(() => ({
-        allLeads: leads.length,
-        todayFollowup: leads.filter(l => l.nextFollowUp?.toLowerCase().includes('today')).length,
-        pendingFollowup: leads.filter(l => l.status?.toLowerCase().includes('pending')).length,
-        freshLead: leads.filter(l =>
-            l.stage?.toLowerCase() === 'lead' ||
-            l.status?.toLowerCase() === 'fresh' ||
-            l.leadStage?.toLowerCase() === 'fresh'
-        ).length,
-        hotLead: leads.filter(l =>
-            l.status?.toLowerCase() === 'hot' ||
-            l.stage?.toLowerCase() === 'hot' ||
-            l.leadStage?.toLowerCase() === 'hot'
-        ).length,
-        warmLead: leads.filter(l =>
-            l.status?.toLowerCase() === 'warm' ||
-            l.stage?.toLowerCase() === 'warm' ||
-            l.leadStage?.toLowerCase() === 'warm'
-        ).length,
-        coldLead: leads.filter(l =>
-            l.status?.toLowerCase() === 'cold' ||
-            l.stage?.toLowerCase() === 'cold' ||
-            l.leadStage?.toLowerCase() === 'cold'
-        ).length,
-        dumpLead: leads.filter(l =>
-            l.status?.toLowerCase().includes('dump') ||
-            l.stage?.toLowerCase().includes('dump')
-        ).length,
-    }), [leads]);
+    useEffect(() => {
+        const category = getCategoryFromTab(activeTab);
+        const params = {
+            page: currentPage,
+            limit: pageSize,
+            searchValue: searchTerm,
+            ...(category && { category })
+        };
+        dispatch(fetchLeads(params));
+    }, [dispatch, currentPage, pageSize, searchTerm, activeTab]);
 
     const tabs = [
-        { id: 'list', label: `All Leads`, icon: ListFilter, count: tabCounts.allLeads },
-        { id: 'freshLead', label: `Fresh Leads`, icon: Tag, count: tabCounts.freshLead },
-        { id: 'hotLead', label: `Hot`, icon: AlertTriangle, count: tabCounts.hotLead },
-        { id: 'warmLead', label: `Warm`, icon: AlertTriangle, count: tabCounts.warmLead },
-        { id: 'coldLead', label: `Cold`, icon: AlertTriangle, count: tabCounts.coldLead },
-        { id: 'todayFollowup', label: `Today FollowUp`, icon: Calendar, count: tabCounts.todayFollowup },
-        { id: 'pendingFollowup', label: `Pending FollowUp`, icon: Clock, count: tabCounts.pendingFollowup },
-        { id: 'dumpLead', label: `Dump`, icon: EyeOff, count: tabCounts.dumpLead },
+        { id: 'list', label: `All Leads`, icon: ListFilter, },
+        { id: 'freshLead', label: `Fresh Leads`, icon: Tag, },
+        { id: 'hotLead', label: `Hot`, icon: AlertTriangle, },
+        { id: 'warmLead', label: `Warm`, icon: AlertTriangle, },
+        { id: 'coldLead', label: `Cold`, icon: AlertTriangle, },
+        { id: 'todayFollowup', label: `Today FollowUp`, icon: Calendar, },
+        { id: 'pendingFollowup', label: `Pending FollowUp`, icon: Clock, },
+        { id: 'dumpLead', label: `Dump`, icon: EyeOff, },
     ];
 
     const { filteredLeads, sortedLeads, currentItems } = useMemo(() => {
-        let filtered = [...leads];
-
-        switch (activeTab) {
-            case 'todayFollowup':
-                filtered = leads.filter(lead =>
-                    lead.nextFollowUp?.toLowerCase().includes('today') ||
-                    lead.status?.toLowerCase().includes('followup')
-                );
-                break;
-            case 'pendingFollowup':
-                filtered = leads.filter(lead =>
-                    lead.status?.toLowerCase().includes('pending')
-                );
-                break;
-            case 'freshLead':
-                filtered = leads.filter(lead =>
-                    lead.stage?.toLowerCase() === 'lead' ||
-                    lead.status?.toLowerCase() === 'fresh' ||
-                    lead.leadStage?.toLowerCase() === 'fresh'
-                );
-                break;
-            case 'hotLead':
-                filtered = leads.filter(lead =>
-                    lead.status?.toLowerCase() === 'hot' ||
-                    lead.stage?.toLowerCase() === 'hot' ||
-                    lead.leadStage?.toLowerCase() === 'hot'
-                );
-                break;
-            case 'warmLead':
-                filtered = leads.filter(lead =>
-                    lead.status?.toLowerCase() === 'warm' ||
-                    lead.stage?.toLowerCase() === 'warm' ||
-                    lead.leadStage?.toLowerCase() === 'warm'
-                );
-                break;
-            case 'coldLead':
-                filtered = leads.filter(lead =>
-                    lead.status?.toLowerCase() === 'cold' ||
-                    lead.stage?.toLowerCase() === 'cold' ||
-                    lead.leadStage?.toLowerCase() === 'cold'
-                );
-                break;
-            case 'dumpLead':
-                filtered = leads.filter(lead =>
-                    lead.status?.toLowerCase().includes('dump') ||
-                    lead.stage?.toLowerCase().includes('dump')
-                );
-                break;
-            default:
-                filtered = leads;
-        }
-
-        if (searchTerm) {
-            filtered = filtered.filter(lead =>
-                Object.values(lead).some(val =>
-                    String(val).toLowerCase().includes(searchTerm.toLowerCase())
-                )
-            );
-        }
-
-        const sorted = [...filtered].sort((a, b) => {
+        const sorted = [...leads].sort((a, b) => {
             if (!sortConfig) return 0;
             const aValue = String(a[sortConfig.key] || '');
             const bValue = String(b[sortConfig.key] || '');
@@ -450,13 +452,17 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             return 0;
         });
 
-        const totalPages = externalTotalPages || Math.ceil(filtered.length / pageSize);
+        const totalPages = externalTotalPages || Math.ceil(sorted.length / pageSize);
         const currentItems = externalPageSize
             ? sorted
             : sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-        return { filteredLeads: filtered, sortedLeads: sorted, currentItems };
-    }, [leads, activeTab, searchTerm, sortConfig, currentPage, pageSize, externalTotalPages, externalPageSize]);
+        return {
+            filteredLeads: sorted,
+            sortedLeads: sorted,
+            currentItems
+        };
+    }, [leads, sortConfig, currentPage, pageSize, externalTotalPages, externalPageSize]);
 
     const totalPages = externalTotalPages || Math.ceil(filteredLeads.length / pageSize);
     const totalRecords = externalTotalRecords || filteredLeads.length;
@@ -465,6 +471,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
         dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
+
+    useEffect(() => {
+        setShowBulkActions(selectedLeads.length > 0);
+    }, [selectedLeads]);
 
     const getLeadPermissions = () => {
         const leadPerm = rolePermissions?.permissions?.find(
@@ -587,7 +597,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700">
                 {lead.stage}
             </span>
-        )
+        ),
+        formattedCreatedAt: formatDate(lead?.createdAt),
+        formattedUpdatedAt: formatDate(lead?.updatedAt),
+        formattedNextFollowUp: formatDate(lead?.latestFollowUpDate)
     });
 
     return (
@@ -635,6 +648,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 onClick={() => {
                                     setActiveTab(tab.id);
                                     setSelectedLeads([]);
+                                    setInternalCurrentPage(1);
                                 }}
                                 className={`px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium
                                            flex items-center space-x-1 sm:space-x-2 whitespace-nowrap transition-all ${activeTab === tab.id
@@ -644,14 +658,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             >
                                 <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 <span>{tab.label}</span>
-                                {tab.count > 0 && (
-                                    <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${activeTab === tab.id
-                                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300'
-                                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
-                                        }`}>
-                                        {tab.count}
-                                    </span>
-                                )}
                             </button>
                         );
                     })}
@@ -667,7 +673,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     type="text"
                                     placeholder="Search leads by name, phone, email..."
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setInternalCurrentPage(1);
+                                    }}
                                     className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -732,8 +741,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             </div>
                             <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                                 <span>Filtered: <span className="font-semibold text-blue-600 dark:text-blue-400">{filteredLeads.length}</span></span>
-                                {/* <span>•</span> */}
-                                {/* <span>Total: <span className="font-semibold text-green-600 dark:text-green-400">{leads.length}</span></span> */}
                                 <span>•</span>
                                 <span>Page {currentPage} of {totalPages}</span>
                             </div>
@@ -830,6 +837,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     {currentItems.length > 0 ? (
                                         currentItems.map((lead) => {
                                             const formattedLead = formatLeadData(lead);
+                                            const followUpStatus = getFollowUpStatus(lead.latestFollowUpDate || lead.nextFollowUp || '');
                                             return (
                                                 <tr
                                                     key={`lead-${lead.id}`}
@@ -847,62 +855,67 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     {columns.map((column) => {
                                                         const accessor = column.accessor as keyof Lead;
                                                         const value = lead[accessor];
+                                                        if (accessor === 'createdAt') {
+                                                            return (
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
+                                                                    {formattedLead.formattedCreatedAt}
+                                                                </td>
+                                                            );
+                                                        }
+                                                        if (accessor === 'updatedAt') {
+                                                            return (
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
+                                                                    {formattedLead.formattedUpdatedAt}
+                                                                </td>
+                                                            );
+                                                        }
+                                                        if (accessor === 'nextFollowUp' || accessor === 'latestFollowUpDate') {
+                                                            return (
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
+                                                                    <div className={`inline-block ${followUpStatus.isDueSoon || followUpStatus.pulse ? 'animate-blink' : ''}`}>
+                                                                        {formattedLead.formattedNextFollowUp}
+                                                                    </div>
+                                                                </td>
+                                                            );
+                                                        }
                                                         if (accessor === 'status') {
                                                             return (
-                                                                <td
-                                                                    key={`lead-${lead.id}-${accessor}`}
-                                                                    className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                                >
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                                                                     {formattedLead.formattedStatus}
                                                                 </td>
                                                             );
                                                         }
                                                         if (accessor === 'source') {
                                                             return (
-                                                                <td
-                                                                    key={`lead-${lead.id}-${accessor}`}
-                                                                    className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                                >
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                                                                     {formattedLead.formattedSource}
                                                                 </td>
                                                             );
                                                         }
                                                         if (accessor === 'stage') {
                                                             return (
-                                                                <td
-                                                                    key={`lead-${lead.id}-${accessor}`}
-                                                                    className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                                >
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                                                                     {formattedLead.formattedStage}
                                                                 </td>
                                                             );
                                                         }
                                                         if (accessor === 'phone') {
                                                             return (
-                                                                <td
-                                                                    key={`lead-${lead.id}-${accessor}`}
-                                                                    className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                                >
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                                                                     {formattedLead.formattedPhone}
                                                                 </td>
                                                             );
                                                         }
                                                         if (accessor === 'email') {
                                                             return (
-                                                                <td
-                                                                    key={`lead-${lead.id}-${accessor}`}
-                                                                    className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                                >
+                                                                <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                                                                     {formattedLead.formattedEmail}
                                                                 </td>
                                                             );
                                                         }
                                                         return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400"
-                                                            >
-                                                                {formatValue(value)}
+                                                            <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                                                {value || 'N/A'}
                                                             </td>
                                                         );
                                                     })}
@@ -968,7 +981,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             {currentItems.length > 0 ? (
                                 currentItems.map((lead) => {
                                     const formattedLead = formatLeadData(lead);
-                                    const followUpStatus = getFollowUpStatus(lead.nextFollowUp || '');
+                                    const followUpStatus = getFollowUpStatus(lead.lastFollowUpDate || lead.nextFollowUp || '');
                                     return (
                                         <div
                                             key={`card-${lead.id}`}
@@ -986,12 +999,12 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                             onChange={() => handleSelectLead(lead.id)}
                                                             className="h-4 w-4 text-blue-400 focus:ring-blue-300 rounded bg-white/20 border-white/30"
                                                         />
-                                                        <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full ${followUpStatus.bgColor} ${followUpStatus.border}`}>
+                                                        <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full ${followUpStatus.bgColor} ${followUpStatus.border} ${followUpStatus.isDueSoon || followUpStatus.pulse ? 'animate-blink' : ''}`}>
                                                             {followUpStatus.icon}
                                                             <span className={`text-xs sm:text-sm font-medium ${followUpStatus.color}`}>
                                                                 <span className="hidden sm:inline">Next Follow-up: </span>
                                                                 <span className="font-semibold">
-                                                                    {followUpStatus.text}
+                                                                    {formattedLead.formattedNextFollowUp}
                                                                 </span>
                                                             </span>
                                                         </div>
@@ -1050,7 +1063,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                             <div>
                                                                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Assigned To</p>
                                                                 <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                    {lead.assignedTo || 'N/A'}
+                                                                    {lead.assignedUserName || lead.assignedTo || 'N/A'}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -1083,54 +1096,62 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     </div>
                                                 </div>
                                                 <div className="rounded-lg mt-4 p-3 sm:p-4 border bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-700">
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                                                         <div>
-                                                            <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Source</p>
-                                                            {formattedLead.formattedSource}
+                                                            <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Next Follow-up</p>
+                                                            <p className={`text-xs sm:text-sm text-gray-700 dark:text-gray-300 ${followUpStatus.isDueSoon || followUpStatus.pulse ? 'animate-blink' : ''}`}>
+                                                                {formattedLead.formattedNextFollowUp}
+                                                            </p>
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Interested In</p>
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${lead.interestedIn === 'not provided'
-                                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                                                : 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200'
-                                                                }`}>
-                                                                {lead.interestedIn || 'N/A'}
-                                                            </span>
+                                                            <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Created</p>
+                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                                                                {formattedLead.formattedCreatedAt}
+                                                            </p>
                                                         </div>
-                                                        {lead.plotNumber && (
+                                                        <div>
+                                                            <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Last Updated</p>
+                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                                                                {formattedLead.formattedUpdatedAt}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                                                             <div>
-                                                                <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Plot #</p>
-                                                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700">
-                                                                    {lead.plotNumber}
+                                                                <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Source</p>
+                                                                {formattedLead.formattedSource}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Interested In</p>
+                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${lead.interestedIn === 'not provided'
+                                                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                                                    : 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200'
+                                                                    }`}>
+                                                                    {lead.interestedIn || 'N/A'}
                                                                 </span>
                                                             </div>
-                                                        )}
-                                                        {lead.plotPrice && (
+                                                            {lead.plotNumber && (
+                                                                <div>
+                                                                    <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Plot #</p>
+                                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700">
+                                                                        {lead.plotNumber}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {lead.plotPrice && (
+                                                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                             <div>
-                                                                <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Plot Price</p>
+                                                                <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Plot Price</p>
                                                                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700 flex items-center">
                                                                     <IndianRupee className="h-3 w-3 mr-1" />
                                                                     {lead.plotPrice}
                                                                 </span>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                                                            <div>
-                                                                <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Last Updated</p>
-                                                                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                    {lead.lastFollowUpDate || 'N/A'}
-                                                                </p>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Created</p>
-                                                                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                    {lead.createdDate || 'N/A'}
-                                                                </p>
-                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                                 <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex flex-wrap gap-2">
@@ -1200,6 +1221,13 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                 }
                 .scrollbar-hide::-webkit-scrollbar {
                     display: none;
+                }
+                @keyframes blink {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+                .animate-blink {
+                    animation: blink 1s infinite;
                 }
                 @keyframes pulse {
                     0%, 100% { opacity: 1; }

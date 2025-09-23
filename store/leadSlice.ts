@@ -176,6 +176,9 @@ export interface Lead {
     leadStatus?: string;
     assignedUserName?: string;
     interestStatus?: string;
+    latestFollowUpDate?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 interface LeadState {
@@ -248,6 +251,9 @@ const leadSlice = createSlice({
                         leadStatus: item.leadStatus,
                         assignedUserName: item.assignedUserName,
                         interestStatus: item.interestStatus,
+                        latestFollowUpDate: item.latestFollowUpDate,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
                     })) || [];
 
             })
