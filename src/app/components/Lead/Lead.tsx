@@ -29,11 +29,8 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
-// Date formatting utility
 const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return 'N/A';
-
-    // If it's already a Date object
     if (dateString instanceof Date) {
         if (isNaN(dateString.getTime())) return 'N/A';
         return dateString.toLocaleDateString('en-GB', {
@@ -46,11 +43,8 @@ const formatDate = (dateString: string | Date | null) => {
             hour12: true
         });
     }
-
-    // If it's a string
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'N/A';
-
     return date.toLocaleDateString('en-GB', {
         weekday: 'short',
         day: '2-digit',
@@ -73,10 +67,14 @@ const LeadComponent: React.FC = () => {
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
-    const [searchValue, setSearchValue] = useState('');
+
+    // State management moved from LeadPanel to here
+    const [activeTab, setActiveTab] = useState('list');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
-    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [currentLead, setCurrentLead] = useState<any | null>(null);
@@ -103,46 +101,66 @@ const LeadComponent: React.FC = () => {
         setTheme(prefersDark ? 'dark' : 'light');
     }, []);
 
+    // Single useEffect to handle ALL API calls
     useEffect(() => {
+        const category = getCategoryFromTab(activeTab);
         dispatch(
-            fetchLeads({ page: currentPage, limit: pageSize, searchValue })
+            fetchLeads({
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchTerm,
+                fromDate,
+                toDate,
+                ...(category && { category })
+            })
         );
-    }, [dispatch, currentPage, pageSize, searchValue]);
+    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate]);
 
-    useEffect(() => {
-        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
-    }, [dispatch]);
-
-    const getLeadPermissions = () => {
-        const leadPerm = rolePermissions?.permissions?.find(
-            (p: any) => p.pageName === 'Lead'
-        );
-        return leadPerm?.permissionIds || [];
+    const getCategoryFromTab = (tabId: string) => {
+        const tabToCategory: Record<string, string> = {
+            'list': '',
+            'todayFollowup': 'today-followup',
+            'pendingFollowup': 'pending-followup',
+            'freshLead': 'fresh',
+            'hotLead': 'hot',
+            'warmLead': 'warm',
+            'coldLead': 'cold',
+            'dumpLead': 'dump'
+        };
+        return tabToCategory[tabId] || '';
     };
 
-    const leadPermissionIds = getLeadPermissions();
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        setCurrentPage(1); // Reset to page 1 when tab changes
+    };
 
-    const hasPermission = (permId: number, permName: string) => {
-        if (!leadPermissionIds.includes(permId)) return false;
-        const matched = allPermissions?.data?.permissions?.find(
-            (p: any) => p.id === permId
-        );
-        if (!matched) return false;
-        return (
-            matched.permissionName?.trim().toLowerCase() ===
-            permName.trim().toLowerCase()
-        );
+    const handleSearch = (term: string) => {
+        setSearchTerm(term);
+        setCurrentPage(1); // Reset to page 1 when searching
+    };
+
+    const handleDateChange = (newFromDate: string, newToDate: string) => {
+        setFromDate(newFromDate);
+        setToDate(newToDate);
+        setCurrentPage(1); // Reset to page 1 when date changes
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handlePageSizeChange = (size: number) => {
+        setPageSize(size);
+        setCurrentPage(1); // Reset to page 1 when page size changes
     };
 
     const transformLeadsForPanel = useMemo(() => {
         return (leadList || []).map((lead: any) => {
-            // Format dates properly
             const createdAt = lead.createdAt ? formatDate(lead.createdAt) : 'N/A';
             const updatedAt = lead.updatedAt ? formatDate(lead.updatedAt) : 'N/A';
             const latestFollowUpDate = lead.latestFollowUpDate ? formatDate(lead.latestFollowUpDate) : 'Not Scheduled';
             const lastFollowUpDate = lead.lastFollowUpDate ? formatDate(lead.lastFollowUpDate) : 'N/A';
-
             return {
                 id: lead.id,
                 name: lead.name || 'N/A',
@@ -167,10 +185,10 @@ const LeadComponent: React.FC = () => {
                 lastFollowUp: lead.lastFollowUp || 'DNP',
                 leadNo: `#${lead.id}`,
                 createdDate: createdAt,
-                createdAt: lead.createdAt || null, // Keep original for sorting
-                updatedAt: lead.updatedAt || null, // Keep original for sorting
+                createdAt: lead.createdAt || null,
+                updatedAt: lead.updatedAt || null,
                 lastFollowUpDate: lastFollowUpDate,
-                latestFollowUpDate: lead.latestFollowUpDate || lead.latestFollowUpDate || null, // For follow-up display
+                latestFollowUpDate: lead.latestFollowUpDate || null,
                 platformType: lead.platformType || 'N/A',
                 plotNumber: lead.plotNumber || 'N/A',
                 plotPrice: lead.plotPrice || 'N/A',
@@ -181,13 +199,159 @@ const LeadComponent: React.FC = () => {
         });
     }, [leadList]);
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Lead'
+        );
+        return leadPerm?.permissionIds || [];
     };
 
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(1);
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        if (!leadPermissionIds.includes(permId)) return false;
+        const matched = allPermissions?.data?.permissions?.find(
+            (p: any) => p.id === permId
+        );
+        if (!matched) return false;
+        return (
+            matched.permissionName?.trim().toLowerCase() ===
+            permName.trim().toLowerCase()
+        );
+    };
+
+    const handleAdd = () => {
+        setCurrentLead(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (lead: any) => {
+        setCurrentLead(lead);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = (lead: any) => {
+        setDeleteMode('single');
+        setDeleteTarget(lead);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            if (deleteMode === 'single') {
+                const id = (deleteTarget as { id: number }).id;
+                await dispatch(deleteLead(id.toString())).unwrap();
+                toast.success('Lead deleted successfully');
+            } else if (deleteMode === 'bulk') {
+                await dispatch(deleteBulkLeads(deleteTarget as number[])).unwrap();
+                setSelectedIds([]);
+                toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
+            }
+            // Refresh data after deletion
+            const category = getCategoryFromTab(activeTab);
+            dispatch(fetchLeads({
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchTerm,
+                fromDate,
+                toDate,
+                ...(category && { category })
+            }));
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to delete');
+        } finally {
+            setIsDeleteModalOpen(false);
+            setDeleteTarget(null);
+        }
+    };
+
+    const handleSaveLead = async (data: any) => {
+        setIsSaving(true);
+        const action = currentLead
+            ? updateLead({ id: currentLead.id, payload: data })
+            : createLead(data);
+        try {
+            await dispatch(action).unwrap();
+            toast.success(
+                currentLead ? 'Lead updated successfully' : 'Lead added successfully'
+            );
+            setIsModalOpen(false);
+            // Refresh data after save
+            const category = getCategoryFromTab(activeTab);
+            dispatch(fetchLeads({
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchTerm,
+                fromDate,
+                toDate,
+                ...(category && { category })
+            }));
+        } catch (error: any) {
+            console.error('Error saving lead:', error);
+            toast.error(error?.message || 'Failed to save lead');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleExport = () => {
+        if (transformLeadsForPanel.length === 0) {
+            toast.error('No data to export');
+            return;
+        }
+        setIsExportModalOpen(true);
+    };
+
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        if (!selectedIds || selectedIds.length === 0) {
+            toast.error('No leads selected for deletion');
+            return;
+        }
+        setDeleteMode('bulk');
+        setDeleteTarget(selectedIds.map(id => Number(id)));
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleBulkAssignRole = async (assignedTo: string | number) => {
+        if (!selectedIds || selectedIds?.length === 0) {
+            toast.error('No leads selected for assignment');
+            return;
+        }
+        const numericIds = selectedIds?.map(id => Number(id));
+        const numericAssignedTo = Number(assignedTo);
+        try {
+            await dispatch(transferSelectedLeads({
+                leadIds: numericIds,
+                assignedTo: numericAssignedTo
+            })).unwrap();
+            toast.success(`${numericIds.length} lead(s) transferred successfully`);
+            setSelectedIds([]);
+            // Refresh data after assignment
+            const category = getCategoryFromTab(activeTab);
+            dispatch(fetchLeads({
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchTerm,
+                fromDate,
+                toDate,
+                ...(category && { category })
+            }));
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to transfer selected leads');
+        } finally {
+            setIsAssignModalOpen(false);
+        }
+    };
+
+    const handleLeadClick = (lead: any) => {
+        setCurrentLead(lead);
+        setCurrentTimelineLead(lead);
+        setIsTimelineModalOpen(true);
+    };
+
+    const handleAssignLeads = (leadIds: number[]) => {
+        setSelectedIds(leadIds);
+        setIsAssignModalOpen(true);
     };
 
     const resetUploadStates = () => {
@@ -239,123 +403,21 @@ const LeadComponent: React.FC = () => {
             await dispatch(uploadLeads(selectedFile)).unwrap();
             toast.success('Leads uploaded successfully');
             resetUploadStates();
-            dispatch(
-                fetchLeads({ page: currentPage, limit: pageSize, searchValue })
-            );
+            // Refresh data after upload
+            const category = getCategoryFromTab(activeTab);
+            dispatch(fetchLeads({
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchTerm,
+                fromDate,
+                toDate,
+                ...(category && { category })
+            }));
         } catch (err: any) {
             toast.error(err?.message || 'Failed to upload leads');
         } finally {
             setUploadLoading(false);
         }
-    };
-
-    const handleAdd = () => {
-        setCurrentLead(null);
-        setIsModalOpen(true);
-    };
-
-    const handleEdit = (lead: any) => {
-        setCurrentLead(lead);
-        setIsModalOpen(true);
-    };
-
-    const handleDelete = (lead: any) => {
-        setDeleteMode('single');
-        setDeleteTarget(lead);
-        setIsDeleteModalOpen(true);
-    };
-
-    const confirmDelete = async () => {
-        try {
-            if (deleteMode === 'single') {
-                const id = (deleteTarget as { id: number }).id;
-                await dispatch(deleteLead(id.toString())).unwrap();
-                toast.success('Lead deleted successfully');
-            } else if (deleteMode === 'bulk') {
-                await dispatch(deleteBulkLeads(deleteTarget as number[])).unwrap();
-                setSelectedIds([]);
-                toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
-            }
-            dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
-        } catch (error: any) {
-            toast.error(error?.message || 'Failed to delete');
-        } finally {
-            setIsDeleteModalOpen(false);
-            setDeleteTarget(null);
-        }
-    };
-
-    const handleSaveLead = async (data: any) => {
-        setIsSaving(true);
-        const action = currentLead
-            ? updateLead({ id: currentLead.id, payload: data })
-            : createLead(data);
-        try {
-            await dispatch(action).unwrap();
-            toast.success(
-                currentLead ? 'Lead updated successfully' : 'Lead added successfully'
-            );
-            setIsModalOpen(false);
-            dispatch(
-                fetchLeads({ page: currentPage, limit: pageSize, searchValue })
-            );
-        } catch (error: any) {
-            console.error('Error saving lead:', error);
-            toast.error(error?.message || 'Failed to save lead');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const handleExport = () => {
-        if (transformLeadsForPanel.length === 0) {
-            toast.error('No data to export');
-            return;
-        }
-        setIsExportModalOpen(true);
-    };
-
-    const handleBulkDelete = (selectedIds: (string | number)[]) => {
-        if (!selectedIds || selectedIds.length === 0) {
-            toast.error('No leads selected for deletion');
-            return;
-        }
-        setDeleteMode('bulk');
-        setDeleteTarget(selectedIds.map(id => Number(id)));
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleBulkAssignRole = async (assignedTo: string | number) => {
-        if (!selectedIds || selectedIds?.length === 0) {
-            toast.error('No leads selected for assignment');
-            return;
-        }
-        const numericIds = selectedIds?.map(id => Number(id));
-        const numericAssignedTo = Number(assignedTo);
-        try {
-            await dispatch(transferSelectedLeads({
-                leadIds: numericIds,
-                assignedTo: numericAssignedTo
-            })).unwrap();
-            toast.success(`${numericIds.length} lead(s) transferred successfully`);
-            setSelectedIds([]);
-            dispatch(fetchLeads({ page: currentPage, limit: pageSize, searchValue }));
-        } catch (error: any) {
-            toast.error(error?.message || 'Failed to transfer selected leads');
-        } finally {
-            setIsAssignModalOpen(false);
-        }
-    };
-
-    const handleLeadClick = (lead: any) => {
-        setCurrentLead(lead);
-        setCurrentTimelineLead(lead);
-        setIsTimelineModalOpen(true);
-    };
-
-    const handleAssignLeads = (leadIds: number[]) => {
-        setSelectedIds(leadIds);
-        setIsAssignModalOpen(true);
     };
 
     const storedUser = localStorage.getItem('user');
@@ -423,7 +485,19 @@ const LeadComponent: React.FC = () => {
             <LeadPanel
                 leads={transformLeadsForPanel}
                 loading={loading}
-                title="Lead Panel"
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                searchTerm={searchTerm}
+                onSearch={handleSearch}
+                fromDate={fromDate}
+                toDate={toDate}
+                onDateChange={handleDateChange}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalRecords={total}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
                 onAddLead={hasPermission(21, 'add') ? handleAdd : undefined}
                 onEditLead={hasPermission(22, 'edit') ? handleEdit : undefined}
                 onDeleteLead={hasPermission(4, 'delete') ? handleDelete : undefined}
@@ -437,13 +511,7 @@ const LeadComponent: React.FC = () => {
                 hasEditPermission={hasPermission(22, 'edit')}
                 hasDeletePermission={hasPermission(4, 'delete')}
                 hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(4, 'delete')}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
                 currentUser={currentUser}
-                totalRecords={total}
             />
 
             <ComprehensiveLeadModal

@@ -37,6 +37,10 @@ interface LeadPanelProps {
     fromDate?: string;
     toDate?: string;
     onDateChange?: (fromDate: string, toDate: string) => void;
+    onTabChange?: (tab: string) => void;
+    activeTab?: string;
+    searchTerm?: string;
+    onSearch?: (term: string) => void;
 }
 
 interface Lead {
@@ -75,6 +79,92 @@ interface Lead {
     plotPrice?: string;
 }
 
+// Utility functions
+const isFollowUpDueSoon = (followUpDate: string) => {
+    if (!followUpDate) return false;
+    const now = new Date();
+    const followUpTime = new Date(followUpDate);
+    if (isNaN(followUpTime.getTime())) return false;
+    const diffMinutes = (followUpTime.getTime() - now.getTime()) / (1000 * 60);
+    return diffMinutes >= 0 && diffMinutes <= 60;
+};
+
+const formatDate = (dateString: string | any) => {
+    if (!dateString) return 'Not Scheduled';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    }).format(date);
+};
+
+const getFollowUpStatus = (nextFollowUp: string) => {
+    if (!nextFollowUp || nextFollowUp.toLowerCase().includes('not scheduled') || nextFollowUp.toLowerCase() === 'n/a') {
+        return {
+            text: 'Not Scheduled',
+            color: 'text-white',
+            bgColor: 'bg-red-600 dark:bg-red-700',
+            icon: <ShieldAlert className="h-4 w-4" />,
+            pulse: false,
+            border: 'border-2 border-red-700 dark:border-red-800',
+            isDueSoon: false
+        };
+    }
+    if (nextFollowUp.toLowerCase().includes('today')) {
+        const isDueSoon = isFollowUpDueSoon(nextFollowUp);
+        return {
+            text: nextFollowUp,
+            color: 'text-yellow-800 dark:text-yellow-200',
+            bgColor: 'bg-yellow-300 dark:bg-yellow-400',
+            icon: <Bell className="h-4 w-4" />,
+            pulse: isDueSoon,
+            border: 'border-2 border-yellow-400 dark:border-yellow-500',
+            isDueSoon: isDueSoon
+        };
+    }
+    const followUpDate = new Date(nextFollowUp);
+    const today = new Date();
+    if (isNaN(followUpDate.getTime())) {
+        return {
+            text: nextFollowUp,
+            color: 'text-gray-800 dark:text-gray-200',
+            bgColor: 'bg-gray-200 dark:bg-gray-700',
+            icon: <ShieldAlert className="h-4 w-4" />,
+            pulse: false,
+            border: 'border border-gray-300 dark:border-gray-600',
+            isDueSoon: false
+        };
+    }
+    const followUpDateOnly = new Date(followUpDate.getFullYear(), followUpDate.getMonth(), followUpDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (followUpDateOnly < todayOnly) {
+        return {
+            text: nextFollowUp,
+            color: 'text-orange-800 dark:text-orange-200',
+            bgColor: 'bg-orange-200 dark:bg-orange-300',
+            icon: <AlertTriangle className="h-4 w-4" />,
+            pulse: true,
+            border: 'border-2 border-orange-300 dark:border-orange-400',
+            isDueSoon: false
+        };
+    }
+    const isDueSoon = isFollowUpDueSoon(nextFollowUp);
+    return {
+        text: nextFollowUp,
+        color: 'text-green-800 dark:text-green-200',
+        bgColor: 'bg-green-100 dark:bg-green-900/30',
+        icon: <CheckCircle className="h-4 w-4" />,
+        pulse: isDueSoon,
+        border: 'border border-green-200 dark:border-green-700',
+        isDueSoon: isDueSoon
+    };
+};
+
 const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState<any>('all');
@@ -92,7 +182,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
         const today = new Date();
         let newFromDate = '';
         let newToDate = '';
-
         switch (option) {
             case 'today':
                 newFromDate = format(startOfDay(today), 'yyyy-MM-dd');
@@ -123,7 +212,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                 newToDate = customToDate;
                 break;
         }
-
         setSelectedOption(option);
         onDateChange(newFromDate, newToDate);
         setIsOpen(false);
@@ -131,7 +219,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
 
     const getDisplayText = () => {
         if (!fromDate && !toDate) return 'All Dates';
-
         if (selectedOption !== 'custom' && selectedOption !== 'all') {
             const options: any = {
                 today: 'Today',
@@ -142,12 +229,10 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
             };
             return options[selectedOption] || 'Custom Range';
         }
-
         if (fromDate && toDate) {
             try {
                 const from = parseISO(fromDate);
                 const to = parseISO(toDate);
-
                 if (format(from, 'yyyy-MM-dd') === format(to, 'yyyy-MM-dd')) {
                     return format(from, 'MMM dd, yyyy');
                 }
@@ -156,7 +241,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                 return 'Custom Range';
             }
         }
-
         return 'Custom Range';
     };
 
@@ -170,7 +254,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                 <span>{getDisplayText()}</span>
                 <ChevronUp className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
             </button>
-
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-200 dark:border-gray-700">
                     <div className="p-2 space-y-1">
@@ -197,7 +280,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                                 {option.label}
                             </button>
                         ))}
-
                         {selectedOption === 'custom' && (
                             <div className="pt-2 space-y-2">
                                 <div>
@@ -240,100 +322,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
     );
 };
 
-// Updated function to check if follow-up is due within 1 hour (60 minutes)
-const isFollowUpDueSoon = (followUpDate: string) => {
-    if (!followUpDate) return false;
-    const now = new Date();
-    const followUpTime = new Date(followUpDate);
-    if (isNaN(followUpTime.getTime())) return false;
-    // Calculate difference in minutes
-    const diffMinutes = (followUpTime.getTime() - now.getTime()) / (1000 * 60);
-    // Return true if follow-up is within next 60 minutes (1 hour)
-    return diffMinutes >= 0 && diffMinutes <= 60;
-};
-
-// Date formatting utility
-const formatDate = (dateString: string | any) => {
-    if (!dateString) return 'Not Scheduled';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid Date';
-    return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    }).format(date);
-};
-
-// Updated function to determine follow-up status with blinking logic
-const getFollowUpStatus = (nextFollowUp: string) => {
-    if (!nextFollowUp || nextFollowUp.toLowerCase().includes('not scheduled') || nextFollowUp.toLowerCase() === 'n/a') {
-        return {
-            text: 'Not Scheduled',
-            color: 'text-white',
-            bgColor: 'bg-red-600 dark:bg-red-700',
-            icon: <ShieldAlert className="h-4 w-4" />,
-            pulse: false,
-            border: 'border-2 border-red-700 dark:border-red-800',
-            isDueSoon: false
-        };
-    }
-    // Handle "today" case with time checking
-    if (nextFollowUp.toLowerCase().includes('today')) {
-        const isDueSoon = isFollowUpDueSoon(nextFollowUp);
-        return {
-            text: nextFollowUp,
-            color: 'text-yellow-800 dark:text-yellow-200',
-            bgColor: 'bg-yellow-300 dark:bg-yellow-400',
-            icon: <Bell className="h-4 w-4" />,
-            pulse: isDueSoon,
-            border: 'border-2 border-yellow-400 dark:border-yellow-500',
-            isDueSoon: isDueSoon
-        };
-    }
-    const followUpDate = new Date(nextFollowUp);
-    const today = new Date();
-    if (isNaN(followUpDate.getTime())) {
-        return {
-            text: nextFollowUp,
-            color: 'text-gray-800 dark:text-gray-200',
-            bgColor: 'bg-gray-200 dark:bg-gray-700',
-            icon: <ShieldAlert className="h-4 w-4" />,
-            pulse: false,
-            border: 'border border-gray-300 dark:border-gray-600',
-            isDueSoon: false
-        };
-    }
-    // Reset time to compare only dates
-    const followUpDateOnly = new Date(followUpDate.getFullYear(), followUpDate.getMonth(), followUpDate.getDate());
-    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    // Check if the date is in the past (overdue)
-    if (followUpDateOnly < todayOnly) {
-        return {
-            text: nextFollowUp,
-            color: 'text-orange-800 dark:text-orange-200',
-            bgColor: 'bg-orange-200 dark:bg-orange-300',
-            icon: <AlertTriangle className="h-4 w-4" />,
-            pulse: true,
-            border: 'border-2 border-orange-300 dark:border-orange-400',
-            isDueSoon: false
-        };
-    }
-    // Future date - check if due soon (within 60 minutes)
-    const isDueSoon = isFollowUpDueSoon(nextFollowUp);
-    return {
-        text: nextFollowUp,
-        color: 'text-green-800 dark:text-green-200',
-        bgColor: 'bg-green-100 dark:bg-green-900/30',
-        icon: <CheckCircle className="h-4 w-4" />,
-        pulse: isDueSoon,
-        border: 'border border-green-200 dark:border-green-700',
-        isDueSoon: isDueSoon
-    };
-};
-
 const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
     currentPage: number;
     totalPages: number;
@@ -369,6 +357,7 @@ const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
         }
         return pages;
     };
+
     return (
         <div className="flex items-center space-x-1">
             <button
@@ -445,7 +434,6 @@ const getColumnsBasedOnRole = (roleId: number) => {
             ...commonColumns,
             { label: 'Platform', accessor: 'platformType', sortable: true, minWidth: 120 },
             { label: 'Plot Number', accessor: 'plotNumber', sortable: true, minWidth: 120 },
-            // { label: 'Plot Price', accessor: 'plotPrice', sortable: true, minWidth: 120 },
             { label: 'City', accessor: 'city', sortable: true, minWidth: 120 },
             { label: 'State', accessor: 'state', sortable: true, minWidth: 120 },
         ];
@@ -535,20 +523,24 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     hasEditPermission = true,
     hasDeletePermission = true,
     hasBulkPermission = true,
-    currentPage: externalCurrentPage,
-    totalPages: externalTotalPages,
-    pageSize: externalPageSize,
-    totalRecords: externalTotalRecords,
+    currentPage: externalCurrentPage = 1,
+    totalPages: externalTotalPages = 1,
+    pageSize: externalPageSize = 10,
+    totalRecords: externalTotalRecords = 0,
     onPageChange,
     onPageSizeChange,
     currentUser,
-    fromDate: externalFromDate,
-    toDate: externalToDate,
-    onDateChange: externalOnDateChange
+    fromDate: externalFromDate = "",
+    toDate: externalToDate = "",
+    onDateChange: externalOnDateChange,
+    onTabChange,
+    activeTab: externalActiveTab = "list",
+    searchTerm: externalSearchTerm = "",
+    onSearch
 }) => {
     const dispatch = useDispatch<any>();
-    const [activeTab, setActiveTab] = useState('list');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [internalActiveTab, setInternalActiveTab] = useState(externalActiveTab);
+    const [internalSearchTerm, setInternalSearchTerm] = useState(externalSearchTerm);
     const [internalCurrentPage, setInternalCurrentPage] = useState(1);
     const [internalPageSize, setInternalPageSize] = useState(10);
     const [sortConfig, setSortConfig] = useState<{ key: keyof Lead; direction: 'asc' | 'desc' } | null>(null);
@@ -565,25 +557,56 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         (state: RootState) => state.permissions
     );
 
-    const fromDate = externalFromDate || internalFromDate;
-    const toDate = externalToDate || internalToDate;
+    // Use external props if available, otherwise fall back to internal state
+    const currentPage = externalCurrentPage !== undefined ? externalCurrentPage : internalCurrentPage;
+    const pageSize = externalPageSize !== undefined ? externalPageSize : internalPageSize;
+    const fromDate = externalFromDate !== undefined ? externalFromDate : internalFromDate;
+    const toDate = externalToDate !== undefined ? externalToDate : internalToDate;
+    const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
+    const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
 
-    const handleDateChange = (newFromDate: string, newToDate: string) => {
-        if (externalOnDateChange) {
-            externalOnDateChange(newFromDate, newToDate);
-        } else {
-            setInternalFromDate(newFromDate);
-            setInternalToDate(newToDate);
+    // Update internal state when external props change
+    useEffect(() => {
+        if (externalActiveTab !== undefined) {
+            setInternalActiveTab(externalActiveTab);
         }
-        setInternalCurrentPage(1);
-        setSelectedLeads([]);
-    };
+    }, [externalActiveTab]);
+
+    useEffect(() => {
+        if (externalCurrentPage !== undefined) {
+            setInternalCurrentPage(externalCurrentPage);
+        }
+    }, [externalCurrentPage]);
+
+    useEffect(() => {
+        if (externalPageSize !== undefined) {
+            setInternalPageSize(externalPageSize);
+        }
+    }, [externalPageSize]);
+
+    useEffect(() => {
+        if (externalFromDate !== undefined) {
+            setInternalFromDate(externalFromDate);
+        }
+    }, [externalFromDate]);
+
+    useEffect(() => {
+        if (externalToDate !== undefined) {
+            setInternalToDate(externalToDate);
+        }
+    }, [externalToDate]);
+
+    useEffect(() => {
+        if (externalSearchTerm !== undefined) {
+            setInternalSearchTerm(externalSearchTerm);
+        }
+    }, [externalSearchTerm]);
 
     const getCategoryFromTab = (tabId: string) => {
         const tabToCategory: Record<string, string> = {
             'list': '',
-            'todayFollowup': 'today',
-            'pendingFollowup': 'pending',
+            'todayFollowup': 'today-followup',
+            'pendingFollowup': 'pending-followup',
             'freshLead': 'fresh',
             'hotLead': 'hot',
             'warmLead': 'warm',
@@ -593,84 +616,38 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         return tabToCategory[tabId] || '';
     };
 
-    const currentPage = externalCurrentPage || internalCurrentPage;
-    const pageSize = externalPageSize || internalPageSize;
-    const columns = getColumnsBasedOnRole(currentUser?.roleId || 0);
+    // Handle tab changes - notify parent and reset page
+    const handleTabChange = (tabId: string) => {
+        if (onTabChange) {
+            onTabChange(tabId);
+        } else {
+            setInternalActiveTab(tabId);
+        }
+        setSelectedLeads([]);
 
-    useEffect(() => {
-        const category = getCategoryFromTab(activeTab);
-        const params = {
-            page: currentPage,
-            limit: pageSize,
-            searchValue: searchTerm,
-            fromDate: fromDate,
-            toDate: toDate,
-            ...(category && { category })
-        };
-        dispatch(fetchLeads(params));
-    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate]);
-
-    const tabs = [
-        { id: 'list', label: `All Leads`, icon: ListFilter, },
-        { id: 'freshLead', label: `Fresh Leads`, icon: Tag, },
-        { id: 'hotLead', label: `Hot`, icon: AlertTriangle, },
-        { id: 'warmLead', label: `Warm`, icon: AlertTriangle, },
-        { id: 'coldLead', label: `Cold`, icon: AlertTriangle, },
-        { id: 'todayFollowup', label: `Today FollowUp`, icon: Calendar, },
-        { id: 'pendingFollowup', label: `Pending FollowUp`, icon: Clock, },
-        { id: 'dumpLead', label: `Dump`, icon: EyeOff, },
-    ];
-
-    const { filteredLeads, sortedLeads, currentItems } = useMemo(() => {
-        const sorted = [...leads].sort((a, b) => {
-            if (!sortConfig) return 0;
-            const aValue = String(a[sortConfig.key] || '');
-            const bValue = String(b[sortConfig.key] || '');
-            if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-        const totalPages = externalTotalPages || Math.ceil(sorted.length / pageSize);
-        const currentItems = externalPageSize
-            ? sorted
-            : sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-        return {
-            filteredLeads: sorted,
-            sortedLeads: sorted,
-            currentItems
-        };
-    }, [leads, sortConfig, currentPage, pageSize, externalTotalPages, externalPageSize]);
-
-    const totalPages = externalTotalPages || Math.ceil(filteredLeads.length / pageSize);
-    const totalRecords = externalTotalRecords || filteredLeads.length;
-
-    useEffect(() => {
-        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
-    }, [dispatch]);
-
-    useEffect(() => {
-        setShowBulkActions(selectedLeads.length > 0);
-    }, [selectedLeads]);
-
-    const getLeadPermissions = () => {
-        const leadPerm = rolePermissions?.permissions?.find(
-            (p: any) => p.pageName === 'Lead'
-        );
-        return leadPerm?.permissionIds || [];
+        // Reset to page 1 when tab changes
+        if (onPageChange) {
+            onPageChange(1);
+        } else {
+            setInternalCurrentPage(1);
+        }
     };
 
-    const leadPermissionIds = getLeadPermissions();
-    const hasPermission = (permId: number, permName: string) => {
-        if (!leadPermissionIds.includes(permId)) return false;
-        const matched = allPermissions?.data?.permissions?.find(
-            (p: any) => p.id === permId
-        );
-        if (!matched) return false;
-        return (
-            matched.permissionName?.trim().toLowerCase() ===
-            permName.trim().toLowerCase()
-        );
+    const handleDateChange = (newFromDate: string, newToDate: string) => {
+        if (externalOnDateChange) {
+            externalOnDateChange(newFromDate, newToDate);
+        } else {
+            setInternalFromDate(newFromDate);
+            setInternalToDate(newToDate);
+        }
+        setSelectedLeads([]);
+
+        // Reset to page 1 when date changes
+        if (onPageChange) {
+            onPageChange(1);
+        } else {
+            setInternalCurrentPage(1);
+        }
     };
 
     const handlePageChange = (page: number) => {
@@ -692,6 +669,21 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         setSelectedLeads([]);
     };
 
+    const handleSearch = (term: string) => {
+        if (onSearch) {
+            onSearch(term);
+        } else {
+            setInternalSearchTerm(term);
+        }
+
+        // Reset to page 1 when searching
+        if (onPageChange) {
+            onPageChange(1);
+        } else {
+            setInternalCurrentPage(1);
+        }
+    };
+
     const handleSort = (key: keyof Lead) => {
         let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -701,10 +693,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     };
 
     const handleSelectAll = () => {
-        if (selectedLeads.length === currentItems.length) {
+        if (selectedLeads.length === leads.length) {
             setSelectedLeads([]);
         } else {
-            const allIds = currentItems.map(lead => lead.id);
+            const allIds = leads.map(lead => lead.id);
             setSelectedLeads(allIds);
         }
     };
@@ -743,8 +735,45 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     };
 
     useEffect(() => {
-        setSelectedLeads([]);
-    }, [activeTab, searchTerm]);
+        setShowBulkActions(selectedLeads.length > 0);
+    }, [selectedLeads]);
+
+    const getLeadPermissions = () => {
+        const leadPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Lead'
+        );
+        return leadPerm?.permissionIds || [];
+    };
+
+    const leadPermissionIds = getLeadPermissions();
+
+    const hasPermission = (permId: number, permName: string) => {
+        if (!leadPermissionIds.includes(permId)) return false;
+        const matched = allPermissions?.data?.permissions?.find(
+            (p: any) => p.id === permId
+        );
+        if (!matched) return false;
+        return (
+            matched.permissionName?.trim().toLowerCase() ===
+            permName.trim().toLowerCase()
+        );
+    };
+
+    const tabs = [
+        { id: 'list', label: `All Leads`, icon: ListFilter, },
+        { id: 'freshLead', label: `Fresh Leads`, icon: Tag, },
+        { id: 'hotLead', label: `Hot`, icon: AlertTriangle, },
+        { id: 'warmLead', label: `Warm`, icon: AlertTriangle, },
+        { id: 'coldLead', label: `Cold`, icon: AlertTriangle, },
+        { id: 'todayFollowup', label: `Today FollowUp`, icon: Calendar, },
+        { id: 'pendingFollowup', label: `Pending FollowUp`, icon: Clock, },
+        { id: 'dumpLead', label: `Dump`, icon: EyeOff, },
+    ];
+
+    const columns = getColumnsBasedOnRole(currentUser?.roleId || 0);
+
+    const totalPages = externalTotalPages || Math.ceil(leads.length / pageSize);
+    const totalRecords = externalTotalRecords || leads.length;
 
     const formatLeadData = (lead: Lead) => ({
         ...lead,
@@ -788,7 +817,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             <div className="flex items-center space-x-2">
                                 <span className="font-medium">Showing:</span>
                                 <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded-md font-semibold">
-                                    {currentItems.length > 0 ?
+                                    {leads.length > 0 ?
                                         `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalRecords)}` :
                                         '0'
                                     }
@@ -813,6 +842,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     </div>
                 </div>
             )}
+
             <div className="mb-4">
                 <div className="flex space-x-1 sm:space-x-2 overflow-x-auto pb-2 scrollbar-hide">
                     {tabs.map(tab => {
@@ -820,11 +850,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                         return (
                             <button
                                 key={`tab-${tab.id}`}
-                                onClick={() => {
-                                    setActiveTab(tab.id);
-                                    setSelectedLeads([]);
-                                    setInternalCurrentPage(1);
-                                }}
+                                onClick={() => handleTabChange(tab.id)}
                                 className={`px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium
                                            flex items-center space-x-1 sm:space-x-2 whitespace-nowrap transition-all ${activeTab === tab.id
                                         ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg transform scale-[1.02]'
@@ -838,6 +864,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     })}
                 </div>
             </div>
+
             <div className="rounded-lg shadow-sm border mb-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <div className="p-2 sm:p-3">
                     <div className="flex flex-col gap-2 sm:gap-3">
@@ -847,10 +874,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     type="text"
                                     placeholder="Search leads by name, phone, email..."
                                     value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        setInternalCurrentPage(1);
-                                    }}
+                                    onChange={(e) => handleSearch(e.target.value)}
                                     className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -905,12 +929,12 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 <input
                                     type="checkbox"
                                     id="selectAll"
-                                    checked={currentItems.length > 0 && selectedLeads.length === currentItems.length}
+                                    checked={leads.length > 0 && selectedLeads.length === leads.length}
                                     onChange={handleSelectAll}
                                     className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
                                 />
                                 <label htmlFor="selectAll" className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Select All ({currentItems.length})
+                                    Select All ({leads.length})
                                 </label>
                                 {selectedLeads.length > 0 && (
                                     <span className="text-xs sm:text-sm text-blue-500 dark:text-blue-400 font-semibold">
@@ -919,7 +943,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 )}
                             </div>
                             <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                                <span>Filtered: <span className="font-semibold text-blue-600 dark:text-blue-400">{filteredLeads.length}</span></span>
+                                <span>Filtered: <span className="font-semibold text-blue-600 dark:text-blue-400">{leads.length}</span></span>
                                 <span>•</span>
                                 <span>Page {currentPage} of {totalPages}</span>
                             </div>
@@ -927,6 +951,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     </div>
                 </div>
             </div>
+
             {showBulkActions && (
                 <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:right-6 sm:left-auto z-50 transition-all duration-300 ease-in-out">
                     <div className="rounded-lg shadow-lg p-2.5 sm:p-3 border flex items-center space-x-2 sm:space-x-3 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -969,6 +994,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     </div>
                 </div>
             )}
+
             {loading ? (
                 <div className="rounded-lg p-8 sm:p-12 text-center bg-white dark:bg-gray-800">
                     <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4 sm:mb-6"></div>
@@ -984,7 +1010,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider w-8 sm:w-12">
                                             <input
                                                 type="checkbox"
-                                                checked={currentItems.length > 0 && selectedLeads.length === currentItems.length}
+                                                checked={leads.length > 0 && selectedLeads.length === leads.length}
                                                 onChange={handleSelectAll}
                                                 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
                                             />
@@ -1011,8 +1037,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                    {currentItems.length > 0 ? (
-                                        currentItems.map((lead) => {
+                                    {leads.length > 0 ? (
+                                        leads.map((lead) => {
                                             const formattedLead = formatLeadData(lead);
                                             const followUpStatus = getFollowUpStatus(lead.latestFollowUpDate || lead.nextFollowUp || '');
                                             return (
@@ -1154,8 +1180,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     )}
                     {viewMode === 'card' && (
                         <div className="space-y-3 sm:space-y-4">
-                            {currentItems.length > 0 ? (
-                                currentItems.map((lead) => {
+                            {leads.length > 0 ? (
+                                leads.map((lead) => {
                                     const formattedLead = formatLeadData(lead);
                                     const followUpStatus = getFollowUpStatus(lead.lastFollowUpDate || lead.nextFollowUp || '');
                                     return (
@@ -1202,10 +1228,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                             <div className="p-3 sm:p-5">
                                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-6">
                                                     <div className="flex-1">
-                                                        <h3
-                                                            className="text-lg sm:text-xl font-bold mb-1.5 text-gray-900 dark:text-gray-50 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
-                                                            onClick={() => onLeadClick?.(lead)}
-                                                        >
+                                                        <h3 className="text-lg sm:text-xl font-bold mb-1.5 text-gray-900 dark:text-gray-50 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">
                                                             {lead.name}
                                                         </h3>
                                                         <div className="space-y-1.5 mb-3">
@@ -1247,7 +1270,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     <div className="w-full sm:w-auto sm:min-w-[200px] space-y-1.5">
                                                         {lead.leadNo && (
                                                             <div>
-                                                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Lead #</p>
+                                                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Lead</p>
                                                                 <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200">
                                                                     {lead.leadNo}
                                                                 </p>
@@ -1298,36 +1321,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                                 <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Source</p>
                                                                 {formattedLead.formattedSource}
                                                             </div>
-                                                            <div>
-                                                                <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Interested In</p>
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${lead.interestedIn === 'not provided'
-                                                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                                                    : 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200'
-                                                                    }`}>
-                                                                    {lead.interestedIn || 'N/A'}
-                                                                </span>
-                                                            </div>
-                                                            {lead.plotNumber && (
-                                                                <div>
-                                                                    <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Plot #</p>
-                                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700">
-                                                                        {lead.plotNumber}
-                                                                    </span>
-                                                                </div>
-                                                            )}
                                                         </div>
                                                     </div>
-                                                    {/* {lead.plotPrice && (
-                                                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                                            <div>
-                                                                <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Plot Price</p>
-                                                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700 flex items-center">
-                                                                    <IndianRupee className="h-3 w-3 mr-1" />
-                                                                    {lead.plotPrice}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    )} */}
                                                 </div>
                                                 <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex flex-wrap gap-2">
@@ -1337,7 +1332,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                                 className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md"
                                                             >
                                                                 <Phone className="h-3.5 w-3.5" />
-                                                                <span>Call</span>
+                                                                <span>Follow Up</span>
                                                             </button>
                                                         )}
                                                         {hasEditPermission && onEditLead && (
@@ -1389,6 +1384,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     )}
                 </>
             )}
+
             <style jsx>{`
                 .scrollbar-hide {
                     -ms-overflow-style: none;
