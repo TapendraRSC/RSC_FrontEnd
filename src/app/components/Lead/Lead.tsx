@@ -199,6 +199,11 @@ const LeadComponent: React.FC = () => {
         });
     }, [leadList]);
 
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar());
+    }, [dispatch]);
+
     const getLeadPermissions = () => {
         const leadPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Lead'
