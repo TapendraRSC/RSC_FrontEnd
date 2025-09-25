@@ -16,7 +16,8 @@ interface CommonDropdownProps {
     placeholder?: string;
     className?: string;
     error?: boolean;
-    allowClear?: boolean; // New prop to allow clearing selection
+    allowClear?: boolean;
+    disabled?: boolean; // New prop for disabled state
 }
 
 export default function CommonDropdown({
@@ -27,7 +28,8 @@ export default function CommonDropdown({
     placeholder = 'Select...',
     className = '',
     error = false,
-    allowClear = true, // Default to true
+    allowClear = true,
+    disabled = false, // Default to false
 }: CommonDropdownProps) {
     const [open, setOpen] = useState(false);
 
@@ -39,6 +41,8 @@ export default function CommonDropdown({
     };
 
     const handleSelect = (option: Option) => {
+        if (disabled) return;
+
         if (isMulti) {
             const selectedArray = Array.isArray(selected) ? selected : [];
             const exists = selectedArray.find((item) => item.value === option.value);
@@ -48,7 +52,6 @@ export default function CommonDropdown({
                 onChange([...selectedArray, option]);
             }
         } else {
-            // If same option is clicked again and allowClear is true, deselect it
             if (allowClear && (selected as Option)?.value === option.value) {
                 onChange(null);
             } else {
@@ -59,8 +62,14 @@ export default function CommonDropdown({
     };
 
     const handleClear = (e: React.MouseEvent) => {
+        if (disabled) return;
         e.stopPropagation();
         onChange(isMulti ? [] : null);
+    };
+
+    const toggleDropdown = () => {
+        if (disabled) return;
+        setOpen(!open);
     };
 
     const hasSelection = isMulti
@@ -76,8 +85,10 @@ export default function CommonDropdown({
                     error
                         ? "border-red-500 focus:ring-red-500 text-red-500 dark:text-red-400 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:shadow-sm",
+                    disabled && "opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-800 hover:shadow-none"
                 )}
-                onClick={() => setOpen(!open)}
+                onClick={toggleDropdown}
+                disabled={disabled}
             >
                 <span className={clsx("truncate", error && "text-red-500 dark:text-red-400")}>
                     {isMulti && Array.isArray(selected)
@@ -86,9 +97,8 @@ export default function CommonDropdown({
                             : placeholder
                         : (selected as Option)?.label || placeholder}
                 </span>
-
                 <div className="flex items-center gap-1">
-                    {allowClear && hasSelection && (
+                    {allowClear && hasSelection && !disabled && (
                         <div
                             onClick={handleClear}
                             className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors cursor-pointer"
@@ -96,16 +106,15 @@ export default function CommonDropdown({
                             <X size={14} className="text-gray-500 dark:text-gray-400" />
                         </div>
                     )}
-
-                    {open ? (
+                    {!disabled && (open ? (
                         <ChevronUp size={18} className="text-gray-500 dark:text-gray-400" />
                     ) : (
                         <ChevronDown size={18} className="text-gray-500 dark:text-gray-400" />
-                    )}
+                    ))}
                 </div>
             </button>
 
-            {open && (
+            {open && !disabled && (
                 <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl shadow-lg max-h-48 overflow-y-auto scrollbar-thin">
                     {/* Default "Select" option for single select */}
                     {!isMulti && (
