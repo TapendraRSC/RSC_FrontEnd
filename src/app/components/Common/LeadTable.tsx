@@ -738,6 +738,11 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         setShowBulkActions(selectedLeads.length > 0);
     }, [selectedLeads]);
 
+    useEffect(() => {
+        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+        dispatch(fetchRolePermissionsSidebar());
+    }, [dispatch]);
+
     const getLeadPermissions = () => {
         const leadPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Lead'
