@@ -525,7 +525,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     hasBulkPermission = true,
     currentPage: externalCurrentPage = 1,
     totalPages: externalTotalPages = 1,
-    pageSize: externalPageSize = 10,
+    pageSize: externalPageSize = 5,
     totalRecords: externalTotalRecords = 0,
     onPageChange,
     onPageSizeChange,
@@ -891,7 +891,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                                     className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                    {[10, 25, 50, 100].map(size => (
+                                    {[5, 15, 50, 100].map(size => (
                                         <option key={`page-size-${size}`} value={size} className="bg-white dark:bg-gray-800 text-black dark:text-white">
                                             {size}
                                         </option>
