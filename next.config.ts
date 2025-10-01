@@ -13,7 +13,7 @@ try {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+  // swcMinify: true,
   images: {
     domains: ["res.cloudinary.com"],
     formats: ["image/avif", "image/webp"],
@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizeCss,
   },
+  output: "export",
+  distDir: 'out',
 };
 
 export default nextConfig;
