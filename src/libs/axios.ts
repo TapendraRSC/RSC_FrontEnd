@@ -1,12 +1,103 @@
+// libs/axios.ts - Updated with URL and cookie fixes
 import axios from "axios";
+import { CapacitorHttp, CapacitorCookies } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
+// ✅ Fixed base URL with trailing slash
 const axiosInstance = axios.create({
-    baseURL:
-        process.env.NEXT_PUBLIC_API_URL
-        ||
-        "http://localhost:8000/",
+    baseURL: Capacitor.isNativePlatform()
+        ? "https://backend.rscgroupdholera.in/"  // ✅ Production backend
+        : "http://localhost:8000/",              // Local dev
     withCredentials: true,
+    timeout: 30000,
 });
+
+
+// Custom adapter for Capacitor with cookie handling
+async function capacitorAdapter(config: any) {
+    // ✅ Ensure proper URL formation
+    let url = config.url;
+    if (!url.startsWith('http')) {
+        const baseURL = config.baseURL?.endsWith('/') ? config.baseURL : `${config.baseURL}/`;
+        const endpoint = url.startsWith('/') ? url.substring(1) : url;
+        url = `${baseURL}${endpoint}`;
+    }
+
+    try {
+        // Handle cookies for authentication
+        if (Capacitor.isNativePlatform()) {
+            // Get existing cookies
+            const cookies = await CapacitorCookies.getCookies({ url });
+            console.log('🍪 Existing cookies:', cookies);
+        }
+
+        const response = await CapacitorHttp.request({
+            url: url,
+            method: config.method?.toUpperCase() || 'GET',
+            headers: {
+                ...config.headers,
+                'Content-Type': 'application/json',
+            },
+            data: config.data,
+            webFetchExtra: {
+                credentials: 'include' // Important for cookies
+            }
+        });
+
+        console.log('✅ Response status:', response.status);
+
+        // Handle cookies from response
+        if (Capacitor.isNativePlatform() && response.headers) {
+            const setCookieHeader = response.headers['set-cookie'] || response.headers['Set-Cookie'];
+            if (setCookieHeader) {
+                console.log('🍪 Setting cookies:', setCookieHeader);
+            }
+        }
+
+        return {
+            data: response.data,
+            status: response.status,
+            statusText: response.status >= 200 && response.status < 300 ? 'OK' : 'Error',
+            headers: response.headers || {},
+            config: config,
+            request: {},
+        };
+    } catch (error: any) {
+        console.error('❌ Capacitor HTTP Error:', error);
+        const axiosError = new Error(`Request failed: ${error.message}`);
+        (axiosError as any).config = config;
+        (axiosError as any).response = {
+            status: error.status || 500,
+            data: error.data || { message: error.message }
+        };
+        throw axiosError;
+    }
+}
+
+// Apply adapter only for native platforms
+if (Capacitor.isNativePlatform()) {
+    axiosInstance.defaults.adapter = capacitorAdapter;
+}
+
+// Storage helper
+const storage = {
+    getItem: (key: string): string | null => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(key);
+        }
+        return null;
+    },
+    setItem: (key: string, value: string): void => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(key, value);
+        }
+    },
+    clear: (): void => {
+        if (typeof window !== 'undefined') {
+            localStorage.clear();
+        }
+    }
+};
 
 let lastRefreshTime: number | null = null;
 let refreshingPromise: Promise<string | null> | null = null;
@@ -33,7 +124,7 @@ const isTokenExpiringSoon = (token: string | null) => {
 
 const shouldRefreshToken = () => {
     const now = Date.now();
-    const minInterval = 1 * 60 * 1000; // don't refresh again for 1 min
+    const minInterval = 1 * 60 * 1000;
 
     if (!lastRefreshTime || now - lastRefreshTime > minInterval) {
         return true;
@@ -41,31 +132,39 @@ const shouldRefreshToken = () => {
     return false;
 };
 
-// libs/axios.ts
 const refreshAccessToken = async (): Promise<string | null> => {
     if (refreshingPromise) return refreshingPromise;
 
     refreshingPromise = (async () => {
         try {
-            const refreshToken = localStorage.getItem("refreshToken");
+            const refreshToken = storage.getItem("refreshToken");
             if (!refreshToken) throw new Error("Refresh token missing");
 
-            const response = await axios.post(
-                `${axiosInstance.defaults.baseURL}auth/refreshToken`,
-                { refreshToken }, // JSON me send
-                { headers: { "Content-Type": "application/json" }, withCredentials: true } // important
+            console.log('🔄 Refreshing token...');
+
+            const response = await axiosInstance.post(
+                "auth/refreshToken", // No leading slash
+                { refreshToken },
+                {
+                    headers: { "Content-Type": "application/json" },
+                    withCredentials: true
+                }
             );
 
             const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
 
-            if (newAccessToken) localStorage.setItem("accessToken", newAccessToken);
-            if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
+            if (newAccessToken) storage.setItem("accessToken", newAccessToken);
+            if (newRefreshToken) storage.setItem("refreshToken", newRefreshToken);
 
             lastRefreshTime = Date.now();
+            console.log('✅ Token refreshed successfully');
             return newAccessToken;
         } catch (err) {
-            localStorage.clear();
-            window.location.href = "/login";
+            console.error('❌ Token refresh failed:', err);
+            storage.clear();
+            if (typeof window !== 'undefined') {
+                window.location.href = "/login";
+            }
             return null;
         } finally {
             refreshingPromise = null;
@@ -75,11 +174,10 @@ const refreshAccessToken = async (): Promise<string | null> => {
     return refreshingPromise;
 };
 
-
-// ✅ Request Interceptor
+// Request Interceptor
 axiosInstance.interceptors.request.use(
     async (config) => {
-        let accessToken = localStorage.getItem("accessToken");
+        let accessToken = storage.getItem("accessToken");
 
         if (accessToken && isTokenExpiringSoon(accessToken) && shouldRefreshToken()) {
             console.log("⏰ Token expiring soon, refreshing...");
@@ -98,7 +196,7 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// ✅ Response Interceptor
+// Response Interceptor
 axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {

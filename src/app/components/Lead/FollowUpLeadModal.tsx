@@ -178,6 +178,8 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     nextFollowUpDate: new Date().toISOString().slice(0, 16),
                     remark: "",
                 });
+                onClose();
+
             } else {
                 const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
                 setToast({ message: errorMessage, type: "error" });
@@ -239,11 +241,9 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                         </div>
                     </div>
 
-                    {/* Form section with updates */}
                     <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-                                {/* Inquiry Status - remains the same */}
                                 <div>
                                     <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                                         Inquiry Status <span className="text-red-500">*</span>
@@ -261,7 +261,6 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                     )}
                                 </div>
 
-                                {/* Next Followup Date - updated to clear when disabled */}
                                 <div>
                                     <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                                         Next Followup Date {isDisabledStatus ? "" : <span className="text-red-500">*</span>}
@@ -381,14 +380,19 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                                         {index + 1}
                                                     </td>
                                                     <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-800 dark:text-gray-100 font-medium">
-                                                        {f.followUpDate ? new Date(f.followUpDate).toLocaleString("en-IN", {
-                                                            day: "2-digit",
-                                                            month: "short",
-                                                            year: "numeric",
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        }) : "N/A"}
+                                                        {f.followUpDate
+                                                            ? new Date(f.followUpDate).toLocaleString("en-IN", {
+                                                                day: "2-digit",
+                                                                month: "short",
+                                                                year: "numeric",
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                                hour12: true,
+                                                                timeZone: "UTC",   // 🔑 force UTC
+                                                            })
+                                                            : "N/A"}
                                                     </td>
+
                                                     <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 dark:text-gray-300 max-w-[120px] sm:max-w-xs truncate">
                                                         {f.remark || "No remark"}
                                                     </td>
