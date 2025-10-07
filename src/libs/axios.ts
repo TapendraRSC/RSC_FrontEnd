@@ -5,13 +5,13 @@ import { Capacitor } from '@capacitor/core';
 
 // ✅ Fixed base URL with trailing slash
 const axiosInstance = axios.create({
-    baseURL: Capacitor.isNativePlatform()
-        ? "https://backend.rscgroupdholera.in/"  // ✅ Production backend
-        : "http://localhost:8000/",              // Local dev
+    baseURL:
+        process.env.NEXT_PUBLIC_API_URL
+        ||
+        "http://localhost:8000/",
     withCredentials: true,
-    timeout: 30000,
+    timeout: 30000, // 30 seconds timeout
 });
-
 
 // Custom adapter for Capacitor with cookie handling
 async function capacitorAdapter(config: any) {
@@ -22,6 +22,8 @@ async function capacitorAdapter(config: any) {
         const endpoint = url.startsWith('/') ? url.substring(1) : url;
         url = `${baseURL}${endpoint}`;
     }
+
+    console.log('📡 Capacitor HTTP Request:', config.method?.toUpperCase(), url);
 
     try {
         // Handle cookies for authentication
