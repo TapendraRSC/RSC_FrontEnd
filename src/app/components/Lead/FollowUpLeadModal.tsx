@@ -178,6 +178,8 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     nextFollowUpDate: new Date().toISOString().slice(0, 16),
                     remark: "",
                 });
+                onClose();
+
             } else {
                 const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
                 setToast({ message: errorMessage, type: "error" });
