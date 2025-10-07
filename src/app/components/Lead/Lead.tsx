@@ -460,7 +460,7 @@ const LeadComponent: React.FC = () => {
                             <span className="hidden sm:inline">Export</span>
                         </button>
                     )}
-                    {hasPermission(20, 'upload') && (
+                    {hasPermission(26, 'upload') && (
                         <button
                             onClick={handleOpenUploadPreview}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm

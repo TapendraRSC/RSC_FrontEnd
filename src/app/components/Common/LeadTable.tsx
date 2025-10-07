@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Search, Eye, EyeOff, ChevronLeft, ChevronRight, ChevronUp, Phone, Home,
     Briefcase, DollarSign, User, FileText, Calendar, Tag, ListFilter, Plus, Edit,
@@ -13,6 +13,7 @@ import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermission
 import { fetchLeads } from '../../../../store/leadSlice';
 import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
 
+// Interfaces remain unchanged
 interface LeadPanelProps {
     leads?: Lead[];
     onAddLead?: () => void;
@@ -79,7 +80,7 @@ interface Lead {
     plotPrice?: string;
 }
 
-// Utility functions
+// Utility functions remain unchanged
 const isFollowUpDueSoon = (followUpDate: string) => {
     if (!followUpDate) return false;
     const now = new Date();
@@ -165,6 +166,7 @@ const getFollowUpStatus = (nextFollowUp: string) => {
     };
 };
 
+// DateFilterDropdown remains unchanged
 const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState<any>('all');
@@ -322,6 +324,7 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
     );
 };
 
+// PaginationButtons remains unchanged
 const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
     currentPage: number;
     totalPages: number;
@@ -412,6 +415,7 @@ const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
     );
 };
 
+// Other utility functions remain unchanged
 const getColumnsBasedOnRole = (roleId: number) => {
     const commonColumns = [
         { label: 'Name', accessor: 'name', sortable: true, minWidth: 150 },
@@ -509,6 +513,18 @@ const getSourceColor = (source: string) => {
     }
 };
 
+// NEW: Status to Tab Mapping
+const statusToTabMap: Record<string, string> = {
+    'hot': 'hotLead',
+    'warm': 'warmLead',
+    'cold': 'coldLead',
+    'fresh': 'freshLead',
+    'dump': 'dumpLead',
+    'pending': 'pendingFollowup',
+    'in followup': 'todayFollowup',
+    'followup': 'todayFollowup'
+};
+
 const LeadPanel: React.FC<LeadPanelProps> = ({
     leads = [],
     onAddLead,
@@ -549,7 +565,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const [showBulkActions, setShowBulkActions] = useState(false);
     const [internalFromDate, setInternalFromDate] = useState('');
     const [internalToDate, setInternalToDate] = useState('');
-
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
@@ -557,7 +572,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         (state: RootState) => state.permissions
     );
 
-    // Use external props if available, otherwise fall back to internal state
     const currentPage = externalCurrentPage !== undefined ? externalCurrentPage : internalCurrentPage;
     const pageSize = externalPageSize !== undefined ? externalPageSize : internalPageSize;
     const fromDate = externalFromDate !== undefined ? externalFromDate : internalFromDate;
@@ -565,7 +579,28 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
     const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
 
-    // Update internal state when external props change
+    const handleFollowUp = async (lead: Lead) => {
+        if (!onFollowUp) return;
+
+        await onFollowUp(lead); // Execute the original follow-up logic
+
+        const leadStatus = lead.status?.toLowerCase();
+        const targetTab = leadStatus && statusToTabMap[leadStatus] ? statusToTabMap[leadStatus] : 'list';
+
+        if (onTabChange) {
+            onTabChange(targetTab);
+        } else {
+            setInternalActiveTab(targetTab);
+        }
+
+        if (onPageChange) {
+            onPageChange(1);
+        } else {
+            setInternalCurrentPage(1);
+        }
+    };
+
+
     useEffect(() => {
         if (externalActiveTab !== undefined) {
             setInternalActiveTab(externalActiveTab);
@@ -616,16 +651,14 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         return tabToCategory[tabId] || '';
     };
 
-    // Handle tab changes - notify parent and reset page
     const handleTabChange = (tabId: string) => {
+        // console.log("Switching to tab:", tabId);
         if (onTabChange) {
             onTabChange(tabId);
         } else {
             setInternalActiveTab(tabId);
         }
         setSelectedLeads([]);
-
-        // Reset to page 1 when tab changes
         if (onPageChange) {
             onPageChange(1);
         } else {
@@ -641,8 +674,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             setInternalToDate(newToDate);
         }
         setSelectedLeads([]);
-
-        // Reset to page 1 when date changes
         if (onPageChange) {
             onPageChange(1);
         } else {
@@ -675,8 +706,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         } else {
             setInternalSearchTerm(term);
         }
-
-        // Reset to page 1 when searching
         if (onPageChange) {
             onPageChange(1);
         } else {
@@ -751,7 +780,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     };
 
     const leadPermissionIds = getLeadPermissions();
-
     const hasPermission = (permId: number, permName: string) => {
         if (!leadPermissionIds.includes(permId)) return false;
         const matched = allPermissions?.data?.permissions?.find(
@@ -776,19 +804,18 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     ];
 
     const columns = getColumnsBasedOnRole(currentUser?.roleId || 0);
-
     const totalPages = externalTotalPages || Math.ceil(leads.length / pageSize);
     const totalRecords = externalTotalRecords || leads.length;
 
     const formatLeadData = (lead: Lead) => ({
         ...lead,
         formattedPhone: lead.phone ? (
-            <a href={`tel:${lead.phone}`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <a className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 {lead.phone}
             </a>
         ) : 'N/A',
         formattedEmail: lead.email ? (
-            <a href={`mailto:${lead.email}`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <a className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 {lead.email}
             </a>
         ) : 'N/A',
@@ -1130,7 +1157,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium flex space-x-1">
                                                         {onFollowUp && (
                                                             <button
-                                                                onClick={() => onFollowUp(lead)}
+                                                                onClick={() => handleFollowUp(lead)}  // CHANGED: Now uses handleFollowUp instead of onFollowUp
                                                                 className="p-1.5 rounded-full text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
                                                                 title="Follow Up"
                                                             >
@@ -1183,6 +1210,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             </table>
                         </div>
                     )}
+
                     {viewMode === 'card' && (
                         <div className="space-y-3 sm:space-y-4">
                             {leads.length > 0 ? (
@@ -1333,7 +1361,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     <div className="flex flex-wrap gap-2">
                                                         {onFollowUp && (
                                                             <button
-                                                                onClick={() => onFollowUp(lead)}
+                                                                onClick={() => handleFollowUp(lead)}  // CHANGED: Now uses handleFollowUp instead of onFollowUp
                                                                 className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md"
                                                             >
                                                                 <Phone className="h-3.5 w-3.5" />
