@@ -429,16 +429,25 @@ const LeadComponent: React.FC = () => {
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
     const exportColumns = [
-        { label: 'Name', key: 'name' },
-        { label: 'Phone', key: 'phone' },
-        { label: 'Email', key: 'email' },
-        { label: 'Status', key: 'status' },
-        { label: 'Stage', key: 'stage' },
-        { label: 'Assigned To', key: 'assignedTo' },
-        { label: 'Source', key: 'source' },
-        { label: 'Created Date', key: 'createdDate' },
-        { label: 'Next Follow Up', key: 'nextFollowUp' },
+        { label: 'Name', accessor: 'name' },          // 'accessor' instead of 'key'
+        { label: 'Phone', accessor: 'phone' },
+        { label: 'Email', accessor: 'email' },
+        { label: 'Status', accessor: 'status' },
+        { label: 'Stage', accessor: 'stage' },
+        { label: 'Assigned To', accessor: 'assignedTo' },
+        { label: 'Source', accessor: 'source' },
+        { label: 'Created Date', accessor: 'createdDate' },
+        { label: 'Next Follow Up', accessor: 'nextFollowUp' },
+        { label: 'Profession', accessor: 'profession' },
+        { label: 'Address', accessor: 'address' },
+        { label: 'City', accessor: 'city' },
+        { label: 'State', accessor: 'state' },
+        { label: 'Budget', accessor: 'budget' },
+        { label: 'Plot Number', accessor: 'plotNumber' },
+        { label: 'Plot Price', accessor: 'plotPrice' },
+        { label: 'Remark', accessor: 'remark' },
     ];
+
 
     return (
         <div className="space-y-8 p-3 sm:p-6 dark:bg-gray-900 dark:text-gray-100">
