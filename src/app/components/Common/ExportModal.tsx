@@ -8,6 +8,7 @@ import {
     CheckCircle2,
     Info,
     AlertCircle,
+    AlertTriangle,
     Table,
     FileSpreadsheet
 } from 'lucide-react';
@@ -30,7 +31,10 @@ interface ExportModalProps {
     onClose: () => void;
     data: any[];
     fileName?: string;
-    columns: any[];
+    columns: {
+        label: string;
+        accessor: string;
+    }[];
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({
@@ -47,20 +51,38 @@ const ExportModal: React.FC<ExportModalProps> = ({
     if (!isOpen) return null;
 
     const exportableColumns = columns.filter(
-        (col) => col.accessor && col.accessor !== 'actions'
+        (col) => col.accessor
     );
 
     const formatDataForExport = (row: any, accessor: string) => {
-        const value = row[accessor];
-        if (value === null || value === undefined) return '';
-        if (typeof value === 'object') return JSON.stringify(value);
-        return String(value).replace(/<[^>]*>/g, '');
+        // First try to get the value directly
+        if (row[accessor] !== undefined) {
+            const value = row[accessor];
+            if (value === null || value === undefined) return '';
+            if (typeof value === 'object') return JSON.stringify(value);
+            return String(value).replace(/<[^>]*>/g, '');
+        }
+
+        // If not found, try to find in nested properties (for backward compatibility)
+        for (const key in row) {
+            if (key.toLowerCase().includes(accessor.toLowerCase())) {
+                const value = row[key];
+                if (value !== null && value !== undefined) {
+                    if (typeof value === 'object') return JSON.stringify(value);
+                    return String(value).replace(/<[^>]*>/g, '');
+                }
+            }
+        }
+
+        return '';
     };
 
     const exportToPDF = async () => {
         setIsExporting(true);
         setError(null);
         try {
+            if (data.length === 0) throw new Error('No data to export');
+
             const pdf = new jsPDF('l', 'mm', 'a4');
             pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
@@ -69,10 +91,12 @@ const ExportModal: React.FC<ExportModalProps> = ({
             pdf.setFont('helvetica', 'normal');
             pdf.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
             pdf.text(`Total Records: ${data.length}`, 14, 38);
+
             const tableColumns = exportableColumns.map((col) => col.label);
             const tableRows = data.map((row) =>
                 exportableColumns.map((col) => formatDataForExport(row, col.accessor))
             );
+
             autoTable(pdf, {
                 head: [tableColumns],
                 body: tableRows,
@@ -94,10 +118,11 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 margin: { top: 50, right: 10, bottom: 10, left: 10 },
                 tableWidth: 'auto',
             });
+
             pdf.save(`${fileName}.pdf`);
         } catch (error) {
             console.error(error);
-            setError('Error generating PDF. Please try again.');
+            setError(error instanceof Error ? error.message : 'Error generating PDF. Please try again.');
         } finally {
             setIsExporting(false);
             onClose();
@@ -108,6 +133,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
         setIsExporting(true);
         setError(null);
         try {
+            if (data.length === 0) throw new Error('No data to export');
+
             const tableRows = [
                 new TableRow({
                     children: exportableColumns.map(
@@ -142,6 +169,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                         })
                 ),
             ];
+
             const doc = new Document({
                 styles: {
                     paragraphStyles: [
@@ -169,11 +197,12 @@ const ExportModal: React.FC<ExportModalProps> = ({
                     },
                 ],
             });
+
             const blob = await Packer.toBlob(doc);
             saveAs(blob, `${fileName}.docx`);
         } catch (error) {
             console.error(error);
-            setError('Error generating Word document. Please try again.');
+            setError(error instanceof Error ? error.message : 'Error generating Word document. Please try again.');
         } finally {
             setIsExporting(false);
             onClose();
@@ -184,24 +213,45 @@ const ExportModal: React.FC<ExportModalProps> = ({
         setIsExporting(true);
         setError(null);
         try {
+            if (data.length === 0) throw new Error('No data to export');
+
             const workbook = XLSX.utils.book_new();
+
             const excelData = data.map(row => {
-                const excelRow: any = {};
+                const excelRow: Record<string, any> = {};
                 exportableColumns.forEach(col => {
-                    excelRow[col.label] = formatDataForExport(row, col.accessor);
+                    const value = formatDataForExport(row, col.accessor);
+                    // Try to maintain number formatting if possible
+                    if (!isNaN(value as any) && value.trim() !== '') {
+                        excelRow[col.label] = parseFloat(value);
+                    } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+                        excelRow[col.label] = value.toLowerCase() === 'true';
+                    } else {
+                        excelRow[col.label] = value;
+                    }
                 });
                 return excelRow;
             });
+
             const worksheet = XLSX.utils.json_to_sheet(excelData);
-            const colWidths = exportableColumns.map(col => ({
-                wch: Math.max(col.label.length, 15)
-            }));
+
+            // Auto-calculate column widths
+            const colWidths = exportableColumns.map(col => {
+                const maxLength = Math.max(
+                    col.label.length,
+                    ...data.map(row =>
+                        String(formatDataForExport(row, col.accessor)).length
+                    )
+                );
+                return { wch: Math.min(Math.max(maxLength, 10), 50) };
+            });
+
             worksheet['!cols'] = colWidths;
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Leads Data');
             XLSX.writeFile(workbook, `${fileName}.xlsx`);
         } catch (error) {
             console.error(error);
-            setError('Error generating Excel file. Please try again.');
+            setError(error instanceof Error ? error.message : 'Error generating Excel file. Please try again.');
         } finally {
             setIsExporting(false);
             onClose();
@@ -212,21 +262,30 @@ const ExportModal: React.FC<ExportModalProps> = ({
         setIsExporting(true);
         setError(null);
         try {
-            const csvHeaders = exportableColumns.map(col => col.label).join(',');
+            if (data.length === 0) throw new Error('No data to export');
+
+            const csvHeaders = exportableColumns.map(col =>
+                `"${col.label.replace(/"/g, '""')}"`
+            ).join(',');
+
             const csvRows = data.map(row =>
                 exportableColumns.map(col => {
                     const value = formatDataForExport(row, col.accessor);
-                    return value.includes(',') || value.includes('"')
-                        ? `"${value.replace(/"/g, '""')}"`
-                        : value;
+                    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value;
                 }).join(',')
             );
-            const csvContent = [csvHeaders, ...csvRows].join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+            const csvContent = [csvHeaders, ...csvRows].join('\r\n');
+            const blob = new Blob(["\uFEFF", csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
             saveAs(blob, `${fileName}.csv`);
         } catch (error) {
             console.error(error);
-            setError('Error generating CSV file. Please try again.');
+            setError(error instanceof Error ? error.message : 'Error generating CSV file. Please try again.');
         } finally {
             setIsExporting(false);
             onClose();
@@ -234,10 +293,16 @@ const ExportModal: React.FC<ExportModalProps> = ({
     };
 
     const handleExport = () => {
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             setError('No data to export.');
             return;
         }
+
+        if (exportableColumns.length === 0) {
+            setError('No columns defined for export.');
+            return;
+        }
+
         switch (exportType) {
             case 'pdf':
                 exportToPDF();
@@ -279,7 +344,14 @@ const ExportModal: React.FC<ExportModalProps> = ({
             icon: <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />,
             gradient: 'from-green-500 to-green-600'
         },
-
+        {
+            type: 'csv',
+            label: 'CSV',
+            color: 'text-yellow-500 dark:text-yellow-400',
+            bgColor: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700',
+            icon: <Table className="w-4 h-4 sm:w-5 sm:h-5" />,
+            gradient: 'from-yellow-500 to-yellow-600'
+        },
     ];
 
     return (
@@ -385,10 +457,10 @@ const ExportModal: React.FC<ExportModalProps> = ({
                         </button>
                         <button
                             onClick={handleExport}
-                            disabled={isExporting || data.length === 0}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${isExporting || data.length === 0
-                                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover:shadow-lg transform hover:scale-[1.02]'
+                            disabled={isExporting || !data || data.length === 0}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${isExporting || !data || data.length === 0
+                                    ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover:shadow-lg transform hover:scale-[1.02]'
                                 }`}
                         >
                             {isExporting ? (

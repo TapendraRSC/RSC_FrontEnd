@@ -94,15 +94,18 @@ const formatDate = (dateString: string | any) => {
     if (!dateString) return 'Not Scheduled';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Invalid Date';
+
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true
+        hour12: true,
+        timeZone: 'Asia/Kolkata' // ✅ Force IST timezone
     }).format(date);
 };
+
 
 const getFollowUpStatus = (nextFollowUp: string) => {
     if (!nextFollowUp || nextFollowUp.toLowerCase().includes('not scheduled') || nextFollowUp.toLowerCase() === 'n/a') {
@@ -1072,6 +1075,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     {leads.length > 0 ? (
                                         leads.map((lead) => {
                                             const formattedLead = formatLeadData(lead);
+                                            // console.log("Rendering lead:", formattedLead.formattedCreatedAt);
                                             const followUpStatus = getFollowUpStatus(lead.latestFollowUpDate || lead.nextFollowUp || '');
                                             return (
                                                 <tr
@@ -1216,6 +1220,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             {leads.length > 0 ? (
                                 leads.map((lead) => {
                                     const formattedLead = formatLeadData(lead);
+                                    console.log("Rendering lead:", formattedLead.formattedCreatedAt);
                                     const followUpStatus = getFollowUpStatus(lead.lastFollowUpDate || lead.nextFollowUp || '');
                                     return (
                                         <div

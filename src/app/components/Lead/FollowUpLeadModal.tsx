@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from "react";
-import { X, Calendar, IndianRupee, CheckCircle, AlertCircle, Users, Phone } from "lucide-react";
+import { X, Calendar, IndianRupee, CheckCircle, AlertCircle, Users, Phone, Clock, TrendingUp } from "lucide-react";
 import { useForm } from "react-hook-form";
 import CommonDropdown from "../Common/CommonDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,7 +26,6 @@ interface FollowUpLeadModalProps {
     lead: { id: number; name?: string; phone?: string };
 }
 
-// Status mapping for display purposes only
 const statusMappingReverse: Record<number, string> = {
     1: "New Lead",
     2: "in follow up",
@@ -45,7 +44,6 @@ const statusMappingReverse: Record<number, string> = {
     15: "closed",
 };
 
-// Toast Component
 const Toast: React.FC<{
     message: string;
     type: "success" | "error";
@@ -57,21 +55,21 @@ const Toast: React.FC<{
     }, [onClose]);
 
     return (
-        <div className="fixed top-4 right-4 z-[60] animate-in slide-in-from-right duration-300">
+        <div className="fixed top-6 right-6 z-[60] animate-in slide-in-from-right duration-300">
             <div
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border max-w-sm ${type === "success"
-                    ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900 dark:text-green-200 dark:border-green-700"
-                    : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
+                className={`flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border backdrop-blur-xl max-w-sm ${type === "success"
+                    ? "bg-emerald-50/90 border-emerald-300 text-emerald-900 dark:bg-emerald-900/90 dark:text-emerald-100 dark:border-emerald-600"
+                    : "bg-rose-50/90 border-rose-300 text-rose-900 dark:bg-rose-900/90 dark:text-rose-100 dark:border-rose-600"
                     }`}
             >
                 {type === "success" ? (
-                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    <AlertCircle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
                 )}
-                <span className="text-sm font-medium">{message}</span>
-                <button onClick={onClose} className="ml-2 hover:opacity-70">
-                    <X className="w-4 h-4" />
+                <span className="text-sm font-medium flex-1">{message}</span>
+                <button onClick={onClose} className="ml-2 hover:opacity-70 transition-opacity">
+                    <X className="w-5 h-5" />
                 </button>
             </div>
         </div>
@@ -106,7 +104,6 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         if (isOpen && lead?.id) dispatch(fetchFollowUps(lead.id));
     }, [dispatch, lead, isOpen]);
 
-    // Clear next follow-up date when status changes to "not interested" or "closed"
     useEffect(() => {
         const subscription = watch((value, { name }) => {
             if (name === "inquiryStatus") {
@@ -115,7 +112,6 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     setValue("nextFollowUpDate", "");
                     setValue("budgetUpto", null);
                 } else if (!value.nextFollowUpDate) {
-                    // Set default date if status changes back to something else and date is empty
                     setValue("nextFollowUpDate", new Date().toISOString().slice(0, 16));
                 }
             }
@@ -179,7 +175,6 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     remark: "",
                 });
                 onClose();
-
             } else {
                 const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
                 setToast({ message: errorMessage, type: "error" });
@@ -203,50 +198,69 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
 
     return (
         <>
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4" style={{ margin: "0px" }}>
-                <div className="bg-white dark:bg-gray-900 w-full max-w-md sm:max-w-2xl md:max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700 max-h-[95vh] flex flex-col">
-                    {/* Header and other sections remain the same */}
-                    <div className="flex justify-between items-center bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white px-4 sm:px-6 py-3 sm:py-5 shadow-sm">
-                        <div>
-                            <h2 className="text-lg sm:text-xl font-semibold">Lead Follow-up</h2>
-                            <p className="text-blue-100 dark:text-blue-200 text-xs sm:text-sm mt-1">
-                                Track and manage customer interactions
-                            </p>
-                        </div>
-                        <button
-                            onClick={handleClose}
-                            className="hover:bg-white/10 p-1.5 sm:p-2 rounded-lg transition-colors"
-                        >
-                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </button>
-                    </div>
-
-                    {/* Customer Info section remains the same */}
-                    <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 text-xs sm:text-sm">
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-700 dark:text-gray-300">
-                                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-                                <span className="font-medium">Customer:</span>
-                                <span className="text-gray-900 dark:text-gray-100 font-semibold">
-                                    {lead.name || "N/A"}
-                                </span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4" style={{ margin: "0px" }}>
+                <div className="bg-white dark:bg-gray-900 w-full max-w-md sm:max-w-2xl md:max-w-5xl rounded-3xl shadow-2xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 max-h-[95vh] flex flex-col animate-in zoom-in-95 duration-300">
+                    {/* Modern Header with Gradient */}
+                    <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 dark:from-blue-800 dark:via-blue-900 dark:to-indigo-950 text-white px-6 sm:px-8 py-6 sm:py-8">
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
+                        <div className="relative flex justify-between items-start">
+                            <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
+                                        <TrendingUp className="w-6 h-6" />
+                                    </div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Lead Follow-up</h2>
+                                </div>
+                                <p className="text-blue-100 dark:text-blue-200 text-sm sm:text-base ml-14">
+                                    Track and manage customer interactions
+                                </p>
                             </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-700 dark:text-gray-300">
-                                <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-                                <span className="font-medium">Phone:</span>
-                                <span className="text-gray-900 dark:text-gray-100 font-semibold">
-                                    {lead.phone || "N/A"}
-                                </span>
-                            </div>
+                            <button
+                                onClick={handleClose}
+                                className="hover:bg-white/20 p-2.5 rounded-xl transition-all duration-200 hover:rotate-90"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+                    {/* Customer Info Card */}
+                    <div className="px-6 sm:px-8 py-5 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border-b border-gray-200/50 dark:border-gray-700/50">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
+                                    <Users className="w-5 h-5 text-blue-700 dark:text-blue-300" />
+                                </div>
                                 <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-                                        Inquiry Status <span className="text-red-500">*</span>
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Customer Name</p>
+                                    <p className="text-base font-bold text-gray-900 dark:text-gray-100">
+                                        {lead.name || "N/A"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl">
+                                    <Phone className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Phone Number</p>
+                                    <p className="text-base font-bold text-gray-900 dark:text-gray-100">
+                                        {lead.phone || "N/A"}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 sm:py-8 space-y-8">
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                            {/* Form Fields */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                                {/* Inquiry Status */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Inquiry Status <span className="text-rose-500">*</span>
                                     </label>
                                     <CommonDropdown
                                         options={inquiryOptions}
@@ -255,15 +269,17 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                         placeholder="Select Inquiry Status"
                                     />
                                     {errors.inquiryStatus && (
-                                        <p className="text-red-500 text-xs mt-1">
+                                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                                            <AlertCircle className="w-3.5 h-3.5" />
                                             Inquiry Status is required
                                         </p>
                                     )}
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-                                        Next Followup Date {isDisabledStatus ? "" : <span className="text-red-500">*</span>}
+                                {/* Next Follow-up Date */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Next Followup Date {isDisabledStatus ? "" : <span className="text-rose-500">*</span>}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -273,21 +289,24 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             })}
                                             disabled={isDisabledStatus}
                                             value={isDisabledStatus ? "" : watch("nextFollowUpDate")}
-                                            className={`w-full rounded-lg border px-2.5 py-2 text-xs sm:px-3 sm:py-2.5 sm:text-sm shadow-sm pr-8 sm:pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 transition-colors ${errors.nextFollowUpDate
-                                                ? "border-red-300 dark:border-red-600"
-                                                : "border-gray-300 dark:border-gray-600"
-                                                } ${isDisabledStatus ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""}`}
+                                            className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 ${errors.nextFollowUpDate
+                                                ? "border-rose-300 dark:border-rose-600"
+                                                : "border-gray-200 dark:border-gray-700"
+                                                } ${isDisabledStatus ? "bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed opacity-60" : "hover:border-blue-400"}`}
                                         />
-                                        <Calendar className="absolute right-2 sm:right-3 top-2.5 sm:top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 dark:text-gray-300" />
+                                        <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
                                     </div>
                                     {errors.nextFollowUpDate && (
-                                        <p className="text-red-500 text-xs mt-1">{errors.nextFollowUpDate.message}</p>
+                                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                                            <AlertCircle className="w-3.5 h-3.5" />
+                                            {errors.nextFollowUpDate.message}
+                                        </p>
                                     )}
                                 </div>
 
-                                {/* Budget Upto - remains the same */}
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+                                {/* Budget */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                                         Budget Upto
                                     </label>
                                     <div className="relative">
@@ -298,88 +317,97 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             placeholder="Select Budget"
                                             disabled={isDisabledStatus}
                                         />
-                                        <IndianRupee className="absolute right-2 sm:right-3 top-2.5 sm:top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 dark:text-gray-300 pointer-events-none" />
+                                        <IndianRupee className="absolute right-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Remark section - remains the same */}
-                            <div>
-                                <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-                                    Remark {isDisabledStatus ? "" : <span className="text-red-500">*</span>}
+                            {/* Remark */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Remark {isDisabledStatus ? "" : <span className="text-rose-500">*</span>}
                                 </label>
                                 <textarea
                                     {...register("remark", {
                                         required: !isDisabledStatus ? "Remark is required" : false
                                     })}
-                                    rows={3}
-                                    className={`w-full rounded-lg border px-2.5 py-2 text-xs sm:px-3 sm:py-2.5 sm:text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 transition-colors resize-none ${errors.remark
-                                        ? "border-red-300 dark:border-red-600"
-                                        : "border-gray-300 dark:border-gray-600"
+                                    rows={4}
+                                    className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 resize-none ${errors.remark
+                                        ? "border-rose-300 dark:border-rose-600"
+                                        : "border-gray-200 dark:border-gray-700 hover:border-blue-400"
                                         }`}
-                                    placeholder="Enter detailed remarks about the follow-up..."
+                                    placeholder="Enter detailed remarks about the follow-up interaction..."
                                 />
                                 {errors.remark && (
-                                    <p className="text-red-500 text-xs mt-1">{errors.remark.message}</p>
+                                    <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        {errors.remark.message}
+                                    </p>
                                 )}
                             </div>
 
-                            {/* Save Button and rest of the component remains the same */}
-                            <div className="flex justify-end pt-1 sm:pt-2">
+                            {/* Save Button */}
+                            <div className="flex justify-end pt-2">
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className={`px-6 sm:px-8 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 dark:hover:from-blue-900 dark:hover:to-blue-950 focus:ring-4 focus:ring-blue-200 transition-all duration-200 ${loading ? "opacity-70 cursor-not-allowed" : "hover:shadow-xl transform hover:-translate-y-0.5"
+                                    className={`px-8 py-3.5 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 dark:from-blue-700 dark:via-blue-800 dark:to-indigo-900 text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl focus:ring-4 focus:ring-blue-300 transition-all duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:-translate-y-1 hover:shadow-2xl"
                                         }`}
                                 >
                                     {loading ? (
-                                        <span className="flex items-center gap-1.5 sm:gap-2">
-                                            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="flex items-center gap-2">
+                                            <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
                                             Saving...
                                         </span>
                                     ) : (
-                                        "Save Follow-up"
+                                        <span className="flex items-center gap-2">
+                                            <CheckCircle className="w-5 h-5" />
+                                            Save Follow-up
+                                        </span>
                                     )}
                                 </button>
                             </div>
                         </form>
 
-                        {/* Follow-up Table and rest of the component remains the same */}
-                        <div className="border-t border-gray-200 dark:border-gray-700 mt-3 sm:mt-4">
-                            <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 px-4 sm:px-6 py-2.5 sm:py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-xs sm:text-sm">
-                                    Recent Follow-up History
-                                </h3>
+                        {/* Follow-up History Table */}
+                        <div className="border-2 border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
+                            <div className="bg-gradient-to-r from-gray-100 via-gray-50 to-blue-50 dark:from-gray-800 dark:via-gray-800 dark:to-blue-900/20 px-6 py-4 border-b-2 border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center gap-3">
+                                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">
+                                        Recent Follow-up History
+                                    </h3>
+                                </div>
                             </div>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-xs sm:text-sm">
-                                    <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-gray-50 dark:bg-gray-800/50 border-b-2 border-gray-200 dark:border-gray-700">
                                         <tr>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                            <th className="px-5 py-4 text-left font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">
                                                 S.No.
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                            <th className="px-5 py-4 text-left font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">
                                                 Next Follow-up Date
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                            <th className="px-5 py-4 text-left font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">
                                                 Remark
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                            <th className="px-5 py-4 text-left font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">
                                                 Budget
                                             </th>
-                                            <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                            <th className="px-5 py-4 text-left font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">
                                                 Status
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
                                         {followUps.length > 0 ? (
                                             followUps.map((f: any, index: number) => (
-                                                <tr key={`${f.id}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 dark:text-gray-300">
+                                                <tr key={`${f.id}-${index}`} className="hover:bg-blue-50/50 dark:hover:bg-gray-800/70 transition-colors duration-150">
+                                                    <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">
                                                         {index + 1}
                                                     </td>
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-800 dark:text-gray-100 font-medium">
+                                                    <td className="px-5 py-4 text-gray-900 dark:text-gray-100 font-semibold">
                                                         {f.followUpDate
                                                             ? new Date(f.followUpDate).toLocaleString("en-IN", {
                                                                 day: "2-digit",
@@ -388,19 +416,18 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                                                 hour: "2-digit",
                                                                 minute: "2-digit",
                                                                 hour12: true,
-                                                                timeZone: "UTC",   // 🔑 force UTC
+                                                                timeZone: "UTC",
                                                             })
                                                             : "N/A"}
                                                     </td>
-
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 dark:text-gray-300 max-w-[120px] sm:max-w-xs truncate">
+                                                    <td className="px-5 py-4 text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
                                                         {f.remark || "No remark"}
                                                     </td>
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 dark:text-gray-300 font-medium">
+                                                    <td className="px-5 py-4 text-gray-800 dark:text-gray-200 font-semibold">
                                                         {f.budget || "Not specified"}
                                                     </td>
-                                                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
-                                                        <span className="inline-flex px-2 py-1 text-[10px] sm:text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                                    <td className="px-5 py-4">
+                                                        <span className="inline-flex px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 dark:from-blue-900/50 dark:to-indigo-900/50 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
                                                             {f.followUpStatus || "N/A"}
                                                         </span>
                                                     </td>
@@ -408,16 +435,20 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             ))
                                         ) : (
                                             <tr key="no-followups">
-                                                <td colSpan={5} className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
-                                                    <div className="flex flex-col items-center gap-1.5 sm:gap-2">
-                                                        <Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300 dark:text-gray-500" />
-                                                        <span className="text-xs sm:text-sm">No follow-ups found</span>
+                                                <td colSpan={5} className="text-center py-12 text-gray-500 dark:text-gray-400">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-full">
+                                                            <Users className="w-10 h-10 text-gray-400 dark:text-gray-500" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-base mb-1">No follow-ups yet</p>
+                                                            <p className="text-sm text-gray-400">Start tracking your customer interactions</p>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>
                                         )}
                                     </tbody>
-
                                 </table>
                             </div>
                         </div>
