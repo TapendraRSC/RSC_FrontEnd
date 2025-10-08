@@ -92,18 +92,22 @@ const isFollowUpDueSoon = (followUpDate: string) => {
 
 const formatDate = (dateString: string | any) => {
     if (!dateString) return 'Not Scheduled';
+
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Invalid Date';
 
-    return new Intl.DateTimeFormat('en-US', {
+    // Format exactly as backend UTC shows, readable style
+    const options: Intl.DateTimeFormatOptions = {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         hour12: true,
-        timeZone: 'Asia/Kolkata' // ✅ Force IST timezone
-    }).format(date);
+        timeZone: 'UTC' // ✅ Keep exact backend time
+    };
+
+    return new Intl.DateTimeFormat('en-US', options).format(date);
 };
 
 
