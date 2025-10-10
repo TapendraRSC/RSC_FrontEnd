@@ -80,7 +80,6 @@ interface Lead {
     plotPrice?: string;
 }
 
-// Utility functions remain unchanged
 const isFollowUpDueSoon = (followUpDate: string) => {
     if (!followUpDate) return false;
     const now = new Date();
@@ -173,7 +172,6 @@ const getFollowUpStatus = (nextFollowUp: string) => {
     };
 };
 
-// DateFilterDropdown remains unchanged
 const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState<any>('all');
@@ -529,7 +527,8 @@ const statusToTabMap: Record<string, string> = {
     'dump': 'dumpLead',
     'pending': 'pendingFollowup',
     'in followup': 'todayFollowup',
-    'followup': 'todayFollowup'
+    'followup': 'todayFollowup',
+    "future-followup": "future-followup"
 };
 
 const LeadPanel: React.FC<LeadPanelProps> = ({
@@ -653,7 +652,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             'hotLead': 'hot',
             'warmLead': 'warm',
             'coldLead': 'cold',
-            'dumpLead': 'dump'
+            'dumpLead': 'dump',
+            'future-followup': 'future-followup'
         };
         return tabToCategory[tabId] || '';
     };
@@ -808,6 +808,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         { id: 'todayFollowup', label: `Today FollowUp`, icon: Calendar, },
         { id: 'pendingFollowup', label: `Pending FollowUp`, icon: Clock, },
         { id: 'dumpLead', label: `Dump`, icon: EyeOff, },
+        { id: 'future-followup', label: `Future Followup`, icon: EyeOff, },
     ];
 
     const columns = getColumnsBasedOnRole(currentUser?.roleId || 0);
@@ -854,7 +855,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 sm:p-3 gap-3">
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             <div className="flex items-center space-x-2">
-                                <span className="font-medium">Showing:</span>
+                                <span className="font-medium">Showing :</span>
                                 <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded-md font-semibold">
                                     {leads.length > 0 ?
                                         `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalRecords)}` :
