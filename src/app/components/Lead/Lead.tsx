@@ -68,7 +68,6 @@ const LeadComponent: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
-    // State management moved from LeadPanel to here
     const [activeTab, setActiveTab] = useState('list');
     const [searchTerm, setSearchTerm] = useState('');
     const [fromDate, setFromDate] = useState('');
@@ -125,7 +124,8 @@ const LeadComponent: React.FC = () => {
             'hotLead': 'hot',
             'warmLead': 'warm',
             'coldLead': 'cold',
-            'dumpLead': 'dump'
+            'dumpLead': 'dump',
+            "future-followup": "future-followup",
         };
         return tabToCategory[tabId] || '';
     };
