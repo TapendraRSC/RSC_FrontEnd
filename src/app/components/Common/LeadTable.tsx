@@ -12,8 +12,9 @@ import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { fetchLeads } from '../../../../store/leadSlice';
 import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
+import TableFilter from './TableFilter';
 
-// Interfaces remain unchanged
+
 interface LeadPanelProps {
     leads?: Lead[];
     onAddLead?: () => void;
@@ -95,7 +96,6 @@ const formatDate = (dateString: string | any) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Invalid Date';
 
-    // Format exactly as backend UTC shows, readable style
     const options: Intl.DateTimeFormatOptions = {
         year: 'numeric',
         month: 'short',
@@ -103,12 +103,11 @@ const formatDate = (dateString: string | any) => {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true,
-        timeZone: 'UTC' // ✅ Keep exact backend time
+        timeZone: 'UTC'
     };
 
     return new Intl.DateTimeFormat('en-US', options).format(date);
 };
-
 
 const getFollowUpStatus = (nextFollowUp: string) => {
     if (!nextFollowUp || nextFollowUp.toLowerCase().includes('not scheduled') || nextFollowUp.toLowerCase() === 'n/a') {
@@ -858,7 +857,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 <span className="font-medium">Showing :</span>
                                 <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded-md font-semibold">
                                     {leads.length > 0 ?
-                                        `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalRecords)}` :
+                                        `${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalRecords)}` :
                                         '0'
                                     }
                                 </span>
@@ -1225,7 +1224,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             {leads.length > 0 ? (
                                 leads.map((lead) => {
                                     const formattedLead = formatLeadData(lead);
-                                    console.log("Rendering lead:", formattedLead.formattedCreatedAt);
                                     const followUpStatus = getFollowUpStatus(lead.lastFollowUpDate || lead.nextFollowUp || '');
                                     return (
                                         <div

@@ -60,6 +60,10 @@ const Users: React.FC = () => {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+    // API se total aur totalPages lein
+    const totalRecords = users?.data?.total || 0;
+    const totalPages = users?.data?.totalPages || 1;
+
     useEffect(() => {
         dispatch(getRoles({ page: 1, limit: 100, searchValue: '' }));
     }, [dispatch]);
@@ -114,52 +118,10 @@ const Users: React.FC = () => {
         return map;
     }, [roles]);
 
-    const actualUsersData = useMemo(() => {
-        if (Array.isArray(users)) {
-            return users;
-        }
-        if (users?.data) {
-            if (Array.isArray(users.data)) {
-                return users.data;
-            }
-            if (users.data?.data && Array.isArray(users.data.data)) {
-                return users.data.data;
-            }
-        }
-        return [];
-    }, [users]);
-
-    const filteredData = useMemo(() => {
-        if (!searchValue) return actualUsersData;
-        return actualUsersData.filter((user: any) =>
-            Object.values(user).some((val) =>
-                String(val).toLowerCase().includes(searchValue.toLowerCase())
-            )
-        );
-    }, [searchValue, actualUsersData]);
-
-    const sortedData = useMemo(() => {
-        const dataArray = Array.isArray(filteredData) ? filteredData : [];
-        if (!sortConfig) return dataArray;
-        return [...dataArray].sort((a, b) => {
-            const aVal = a[sortConfig.key];
-            const bVal = b[sortConfig.key];
-            if (typeof aVal === 'number' && typeof bVal === 'number') {
-                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-            }
-            const comparison = String(aVal).localeCompare(String(bVal));
-            return sortConfig.direction === 'asc' ? comparison : -comparison;
-        });
-    }, [filteredData, sortConfig]);
-
+    // API response se direct data lein
     const paginatedData = useMemo(() => {
-        const dataArray = Array.isArray(sortedData) ? sortedData : [];
-        const startIndex = (currentPage - 1) * pageSize;
-        return dataArray.slice(startIndex, startIndex + pageSize);
-    }, [sortedData, currentPage, pageSize]);
-
-    const totalPages = Math.ceil((Array.isArray(sortedData) ? sortedData.length : 0) / pageSize);
-    const totalRecords = Array.isArray(sortedData) ? sortedData.length : 0;
+        return users?.data?.data || [];
+    }, [users]);
 
     const handleSort = (config: any) => setSortConfig(config);
     const handlePageChange = (page: number) => setCurrentPage(page);
@@ -260,7 +222,7 @@ const Users: React.FC = () => {
     };
 
     const handleExport = () => {
-        if (sortedData.length === 0) {
+        if (paginatedData.length === 0) {
             toast.error('No data to export');
             return;
         }
@@ -381,7 +343,6 @@ const Users: React.FC = () => {
         },
     ];
 
-
     const { permissions: rolePermissions, loading: rolePermissionsLoading } =
         useSelector((state: RootState) => state.sidebarPermissions);
     const { list: allPermissions } = useSelector(
@@ -496,6 +457,7 @@ const Users: React.FC = () => {
                     </div>
                 </div>
             </div>
+
             {/* Mobile Action Button */}
             <div className="sticky top-16 z-20 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
                 <div className="flex items-center gap-2">
@@ -518,6 +480,7 @@ const Users: React.FC = () => {
                     )}
                 </div>
             </div>
+
             {/* Desktop Header */}
             <div className="hidden lg:block p-6">
                 <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -551,6 +514,8 @@ const Users: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Main Content */}
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
@@ -573,7 +538,7 @@ const Users: React.FC = () => {
                         ) : (
                             <>
                                 <div className="grid gap-4">
-                                    {paginatedData.map((user) => (
+                                    {paginatedData.map((user: any) => (
                                         <UserCard key={user.id} user={user} />
                                     ))}
                                 </div>
@@ -629,6 +594,8 @@ const Users: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Table View */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
                     <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
                         <CustomTable<User>
@@ -680,6 +647,7 @@ const Users: React.FC = () => {
                     </div>
                 </div>
             </div>
+
             {/* Modals */}
             <UsersModal
                 isOpen={modalOpen}
@@ -698,8 +666,8 @@ const Users: React.FC = () => {
             <ExportModal
                 isOpen={isExportModalOpen}
                 onClose={() => setIsExportModalOpen(false)}
-                data={sortedData}
-                fileName={`leads_export_${new Date().toISOString().split('T')[0]}`}
+                data={paginatedData}
+                fileName={`users_export_${new Date().toISOString().split('T')[0]}`}
                 columns={columns}
             />
         </div>
