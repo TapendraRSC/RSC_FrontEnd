@@ -206,7 +206,7 @@ export default function RolesPage() {
                 </div>
             </div>
             <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-                {hasPermission(22, "edit") && (
+                {hasPermission(28, "edit") && (
                     <button
                         onClick={() => handleEdit(role)}
                         className="flex-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors flex items-center justify-center gap-2"
@@ -215,7 +215,7 @@ export default function RolesPage() {
                         Edit
                     </button>
                 )}
-                {hasPermission(4, "delete") && (
+                {hasPermission(29, "delete") && (
                     <button
                         onClick={() => handleDelete(role)}
                         className="flex-1 bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 dark:hover:bg-red-800 transition-colors flex items-center justify-center gap-2"
@@ -250,7 +250,7 @@ export default function RolesPage() {
             </div>
             {/* Mobile Actions */}
             <div className="sticky top-16 z-20 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
-                {hasPermission(21, "add") && (
+                {hasPermission(30, "add") && (
                     <button
                         onClick={handleAdd}
                         className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
@@ -272,7 +272,7 @@ export default function RolesPage() {
                         </p>
                     </div>
                     <div>
-                        {hasPermission(21, "add") && (
+                        {hasPermission(30, "add") && (
                             <button
                                 onClick={handleAdd}
                                 className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -372,7 +372,7 @@ export default function RolesPage() {
                             columns={columns}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    {hasPermission(22, "edit") && (
+                                    {hasPermission(28, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
                                             className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 rounded transition-colors"
@@ -381,7 +381,7 @@ export default function RolesPage() {
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
                                     )}
-                                    {hasPermission(4, "delete") && (
+                                    {hasPermission(29, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
                                             className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded transition-colors"

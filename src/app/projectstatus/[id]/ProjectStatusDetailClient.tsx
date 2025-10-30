@@ -350,7 +350,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                 </div>
             </div>
             <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
-                {hasPermission(22, "edit") && (
+                {hasPermission(28, "edit") && (
                     <button
                         onClick={() => handleOpenEdit(plot)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -361,7 +361,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                         Edit
                     </button>
                 )}
-                {hasPermission(4, "delete") && (
+                {hasPermission(29, "delete") && (
                     <button
                         onClick={() => handleOpenDelete(plot)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -422,7 +422,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                             Upload
                         </button>
                     )}
-                    {hasPermission(21, "add") && (
+                    {hasPermission(30, "add") && (
                         <button
                             onClick={handleOpenAdd}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
@@ -478,7 +478,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                                 Upload
                             </button>
                         )}
-                        {hasPermission(21, "add") && (
+                        {hasPermission(30, "add") && (
                             <button
                                 onClick={handleOpenAdd}
                                 className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
@@ -606,7 +606,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    {hasPermission(22, "edit") && (
+                                    {hasPermission(28, "edit") && (
                                         <button
                                             onClick={() => handleOpenEdit(row)}
                                             className="p-1 transition-colors text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
@@ -615,7 +615,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
                                     )}
-                                    {hasPermission(4, "delete") && (
+                                    {hasPermission(29, "delete") && (
                                         <button
                                             onClick={() => handleOpenDelete(row)}
                                             className="p-1 transition-colors text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 cursor-pointer"

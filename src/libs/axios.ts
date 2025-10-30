@@ -3,19 +3,17 @@ import axios from "axios";
 import { CapacitorHttp, CapacitorCookies } from '@capacitor/core';
 import { Capacitor } from '@capacitor/core';
 
-// ✅ Fixed base URL with trailing slash
 const axiosInstance = axios.create({
     baseURL:
-        process.env.NEXT_PUBLIC_API_URL
-        ||
-        "http://localhost:8000/",
+        "https://service.dholerasmartproperty.com"
+    // ||
+    // "http://localhost:8000/",
+    ,
     withCredentials: true,
-    timeout: 30000, // 30 seconds timeout
+    timeout: 30000,
 });
 
-// Custom adapter for Capacitor with cookie handling
 async function capacitorAdapter(config: any) {
-    // ✅ Ensure proper URL formation
     let url = config.url;
     if (!url.startsWith('http')) {
         const baseURL = config.baseURL?.endsWith('/') ? config.baseURL : `${config.baseURL}/`;
@@ -26,9 +24,7 @@ async function capacitorAdapter(config: any) {
     console.log('📡 Capacitor HTTP Request:', config.method?.toUpperCase(), url);
 
     try {
-        // Handle cookies for authentication
         if (Capacitor.isNativePlatform()) {
-            // Get existing cookies
             const cookies = await CapacitorCookies.getCookies({ url });
             console.log('🍪 Existing cookies:', cookies);
         }
@@ -42,7 +38,7 @@ async function capacitorAdapter(config: any) {
             },
             data: config.data,
             webFetchExtra: {
-                credentials: 'include' // Important for cookies
+                credentials: 'include'
             }
         });
 
@@ -76,7 +72,6 @@ async function capacitorAdapter(config: any) {
     }
 }
 
-// Apply adapter only for native platforms
 if (Capacitor.isNativePlatform()) {
     axiosInstance.defaults.adapter = capacitorAdapter;
 }

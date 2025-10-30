@@ -197,7 +197,7 @@ const Land: React.FC = () => {
             </div>
             <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
                 {/* Edit Button */}
-                {hasPermission(22, "edit") && (
+                {hasPermission(28, "edit") && (
                     <button
                         onClick={() => handleEdit(land)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -209,7 +209,7 @@ const Land: React.FC = () => {
                     </button>
                 )}
                 {/* Delete Button */}
-                {hasPermission(4, "delete") && (
+                {hasPermission(29, "delete") && (
                     <button
                         onClick={() => handleDelete(land)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -254,7 +254,7 @@ const Land: React.FC = () => {
 
             {/* Mobile Action Button */}
             <div className="sticky top-16 z-20 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
-                {hasPermission(21, "add") && (
+                {hasPermission(30, "add") && (
                     <button
                         onClick={handleAdd}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
@@ -279,7 +279,7 @@ const Land: React.FC = () => {
                         </p>
                     </div>
                     <div>
-                        {hasPermission(21, "add") && (
+                        {hasPermission(30, "add") && (
                             <button
                                 onClick={handleAdd}
                                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
@@ -405,7 +405,7 @@ const Land: React.FC = () => {
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
                                     {/* Edit Button */}
-                                    {hasPermission(22, "edit") && (
+                                    {hasPermission(28, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
                                             className="p-1 rounded text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
@@ -415,7 +415,7 @@ const Land: React.FC = () => {
                                         </button>
                                     )}
                                     {/* Delete Button */}
-                                    {hasPermission(4, "delete") && (
+                                    {hasPermission(29, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
                                             className="p-1 rounded text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 cursor-pointer"

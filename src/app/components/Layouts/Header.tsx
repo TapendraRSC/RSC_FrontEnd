@@ -83,10 +83,9 @@ const Header = () => {
                                        ltr:mr-2 rtl:ml-2 lg:hidden w-full">
                             <div className="flex items-center flex-1">
                                 <Link href="/" className="main-logo flex shrink-0 items-center">
-                                    <span className="text-xl font-semibold transition-all duration-300
+                                    <span className="text-sm font-semibold transition-all duration-300
                                                    dark:text-white truncate max-w-[150px]">
-                                        RSC Group
-                                    </span>
+                                        Dholera Property                                    </span>
                                 </Link>
                             </div>
                             <button

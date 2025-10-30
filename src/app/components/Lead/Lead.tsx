@@ -459,7 +459,7 @@ const LeadComponent: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {hasPermission(24, 'export') && (
+                    {hasPermission(31, 'export') && (
                         <button
                             onClick={handleExport}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
@@ -469,7 +469,7 @@ const LeadComponent: React.FC = () => {
                             <span className="hidden sm:inline">Export</span>
                         </button>
                     )}
-                    {hasPermission(26, 'upload') && (
+                    {hasPermission(32, 'upload') && (
                         <button
                             onClick={handleOpenUploadPreview}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
@@ -483,7 +483,7 @@ const LeadComponent: React.FC = () => {
                             <span className="hidden sm:inline">Upload</span>
                         </button>
                     )}
-                    {hasPermission(21, 'add') && (
+                    {hasPermission(30, 'add') && (
                         <button
                             onClick={handleAdd}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
@@ -512,19 +512,19 @@ const LeadComponent: React.FC = () => {
                 totalRecords={total}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                onAddLead={hasPermission(21, 'add') ? handleAdd : undefined}
-                onEditLead={hasPermission(22, 'edit') ? handleEdit : undefined}
-                onDeleteLead={hasPermission(4, 'delete') ? handleDelete : undefined}
-                onBulkDelete={hasPermission(4, 'delete') ? handleBulkDelete : undefined}
+                onAddLead={hasPermission(30, 'add') ? handleAdd : undefined}
+                onEditLead={hasPermission(28, 'edit') ? handleEdit : undefined}
+                onDeleteLead={hasPermission(29, 'delete') ? handleDelete : undefined}
+                onBulkDelete={hasPermission(29, 'delete') ? handleBulkDelete : undefined}
                 onBulkAssign={hasPermission(25, 'bulk assign') ? handleAssignLeads : undefined}
                 onLeadClick={handleLeadClick}
                 onFollowUp={(lead: any) => {
                     setSelectedLeadId(lead);
                     setIsFollowUpModalOpen(true);
                 }}
-                hasEditPermission={hasPermission(22, 'edit')}
-                hasDeletePermission={hasPermission(4, 'delete')}
-                hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(4, 'delete')}
+                hasEditPermission={hasPermission(28, 'edit')}
+                hasDeletePermission={hasPermission(29, 'delete')}
+                hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(29, 'delete')}
                 currentUser={currentUser}
             />
 

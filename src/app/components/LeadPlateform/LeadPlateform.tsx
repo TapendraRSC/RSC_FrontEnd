@@ -50,7 +50,7 @@ const LeadPlatformCard = ({
             </div>
         </div>
         <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-            {hasPermission(22, "edit") && (
+            {hasPermission(28, "edit") && (
                 <button
                     onClick={onEdit}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium
@@ -61,7 +61,7 @@ const LeadPlatformCard = ({
                     Edit
                 </button>
             )}
-            {hasPermission(4, "delete") && (
+            {hasPermission(29, "delete") && (
                 <button
                     onClick={onDelete}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium
@@ -221,7 +221,7 @@ const LeadPlateform: React.FC = () => {
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lead Platform Master</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and track your lead platforms</p>
                     </div>
-                    {hasPermission(21, "add") && (
+                    {hasPermission(30, "add") && (
                         <button
                             onClick={handleAdd}
                             className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
@@ -262,7 +262,7 @@ const LeadPlateform: React.FC = () => {
 
             {/* Sticky Add Button for Mobile */}
             <div className="sticky top-16 z-20 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
-                {hasPermission(21, "add") && (
+                {hasPermission(30, "add") && (
                     <button
                         onClick={handleAdd}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
@@ -399,7 +399,7 @@ const LeadPlateform: React.FC = () => {
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row: LeadPlatform) => (
                                 <div className="flex gap-2">
-                                    {hasPermission(22, "edit") && (
+                                    {hasPermission(28, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
                                             className="p-1 rounded text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
@@ -408,7 +408,7 @@ const LeadPlateform: React.FC = () => {
                                             <Pencil className="w-4 h-4" />
                                         </button>
                                     )}
-                                    {hasPermission(4, "delete") && (
+                                    {hasPermission(29, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
                                             className="p-1 rounded text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 cursor-pointer"

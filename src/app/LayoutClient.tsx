@@ -93,7 +93,7 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
                 const pagePermission = rolePermissions.permissions.find(
                     (p: any) => p.pageName === pageName
                 );
-                const hasViewPermission = pagePermission && pagePermission.permissionIds.includes(17);
+                const hasViewPermission = pagePermission && pagePermission.permissionIds.includes(27);
 
                 if (!hasViewPermission) {
                     router.replace("/");

@@ -408,7 +408,7 @@ const Users: React.FC = () => {
                 </div>
             )}
             <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-                {hasPermission(22, "edit") && (
+                {hasPermission(28, "edit") && (
                     <button
                         onClick={() => handleEdit(user)}
                         className="flex-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors flex items-center justify-center gap-2"
@@ -417,7 +417,7 @@ const Users: React.FC = () => {
                         Edit
                     </button>
                 )}
-                {hasPermission(4, "delete") && (
+                {hasPermission(29, "delete") && (
                     <button
                         onClick={() => handleDelete(user)}
                         className="flex-1 bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 dark:hover:bg-red-800 transition-colors flex items-center justify-center gap-2"
@@ -461,7 +461,7 @@ const Users: React.FC = () => {
             {/* Mobile Action Button */}
             <div className="sticky top-16 z-20 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
                 <div className="flex items-center gap-2">
-                    {hasPermission(21, "add") && (
+                    {hasPermission(30, "add") && (
                         <button
                             onClick={handleAdd}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg duration-200"
@@ -470,7 +470,7 @@ const Users: React.FC = () => {
                             <span>Add New User</span>
                         </button>
                     )}
-                    {hasPermission(24, "export") && (
+                    {hasPermission(31, "export") && (
                         <button
                             onClick={handleExport}
                             className="flex items-center justify-center gap-2 p-2.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors shadow-md hover:shadow-lg duration-200"
@@ -493,7 +493,7 @@ const Users: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                        {hasPermission(24, "export") && (
+                        {hasPermission(31, "export") && (
                             <button
                                 onClick={handleExport}
                                 className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base bg-purple-500 hover:bg-purple-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
@@ -502,7 +502,7 @@ const Users: React.FC = () => {
                                 <span className="hidden sm:inline">Export</span>
                             </button>
                         )}
-                        {hasPermission(21, "add") && (
+                        {hasPermission(30, "add") && (
                             <button
                                 onClick={handleAdd}
                                 className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg duration-200"
@@ -623,7 +623,7 @@ const Users: React.FC = () => {
                             onColumnVisibilityChange={handleColumnVisibilityChange}
                             actions={(row) => (
                                 <div className="flex gap-1 sm:gap-2">
-                                    {hasPermission(22, "edit") && (
+                                    {hasPermission(28, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
                                             className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 rounded transition-colors"
@@ -632,7 +632,7 @@ const Users: React.FC = () => {
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
                                     )}
-                                    {hasPermission(4, "delete") && (
+                                    {hasPermission(29, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
                                             className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded transition-colors"

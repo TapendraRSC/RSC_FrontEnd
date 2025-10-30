@@ -284,7 +284,7 @@ const ProjectStatusComponent: React.FC = () => {
                     <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="hidden sm:inline">View</span>
                 </Link>
-                {hasPermission(22, "edit") && (
+                {hasPermission(28, "edit") && (
                     <button
                         onClick={() => handleEdit(project)}
                         className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 sm:gap-2 transition-colors bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800"
@@ -293,7 +293,7 @@ const ProjectStatusComponent: React.FC = () => {
                         <span className="hidden sm:inline">Edit</span>
                     </button>
                 )}
-                {hasPermission(4, "delete") && (
+                {hasPermission(29, "delete") && (
                     <button
                         onClick={() => handleDelete(project)}
                         className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 transition-colors bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-800"
@@ -337,7 +337,7 @@ const ProjectStatusComponent: React.FC = () => {
             {/* Mobile Actions */}
             <div className="sticky top-10 sm:top-12 z-20 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-3 py-2 lg:hidden">
                 <div className="flex items-center gap-1 sm:gap-2">
-                    {hasPermission(21, "add") && (
+                    {hasPermission(30, "add") && (
                         <button
                             onClick={handleAdd}
                             disabled={isSaving}
@@ -380,7 +380,7 @@ const ProjectStatusComponent: React.FC = () => {
                             <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span>Export</span>
                         </button>
-                        {hasPermission(21, "add") && (
+                        {hasPermission(30, "add") && (
                             <button
                                 onClick={handleAdd}
                                 disabled={isSaving}
@@ -520,7 +520,7 @@ const ProjectStatusComponent: React.FC = () => {
                             onColumnVisibilityChange={setHiddenColumns}
                             actions={(row) => (
                                 <div className="flex gap-1">
-                                    {hasPermission(22, "edit") && (
+                                    {hasPermission(28, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
                                             title="Edit"
@@ -529,7 +529,7 @@ const ProjectStatusComponent: React.FC = () => {
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>
                                     )}
-                                    {hasPermission(4, "delete") && (
+                                    {hasPermission(29, "delete") && (
                                         <button
                                             onClick={() => handleDelete(row)}
                                             title="Delete"
