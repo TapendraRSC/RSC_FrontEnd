@@ -43,6 +43,7 @@ interface LeadPanelProps {
     activeTab?: string;
     searchTerm?: string;
     onSearch?: (term: string) => void;
+    onRefetch?: () => void;
 }
 
 interface Lead {
@@ -328,7 +329,6 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
     );
 };
 
-// PaginationButtons remains unchanged
 const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
     currentPage: number;
     totalPages: number;
@@ -419,7 +419,6 @@ const PaginationButtons = ({ currentPage, totalPages, onPageChange }: {
     );
 };
 
-// Other utility functions remain unchanged
 const getColumnsBasedOnRole = (roleId: number) => {
     const commonColumns = [
         { label: 'Name', accessor: 'name', sortable: true, minWidth: 150 },
@@ -517,7 +516,6 @@ const getSourceColor = (source: string) => {
     }
 };
 
-// NEW: Status to Tab Mapping
 const statusToTabMap: Record<string, string> = {
     'hot': 'hotLead',
     'warm': 'warmLead',
@@ -557,7 +555,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     onTabChange,
     activeTab: externalActiveTab = "list",
     searchTerm: externalSearchTerm = "",
-    onSearch
+    onSearch,
+    onRefetch
 }) => {
     const dispatch = useDispatch<any>();
     const [internalActiveTab, setInternalActiveTab] = useState(externalActiveTab);
@@ -587,24 +586,13 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const handleFollowUp = async (lead: Lead) => {
         if (!onFollowUp) return;
 
-        await onFollowUp(lead); // Execute the original follow-up logic
+        await onFollowUp(lead);
 
-        const leadStatus = lead.status?.toLowerCase();
-        const targetTab = leadStatus && statusToTabMap[leadStatus] ? statusToTabMap[leadStatus] : 'list';
-
-        if (onTabChange) {
-            onTabChange(targetTab);
-        } else {
-            setInternalActiveTab(targetTab);
-        }
-
-        if (onPageChange) {
-            onPageChange(1);
-        } else {
-            setInternalCurrentPage(1);
+        // Refetch data to update the current tab
+        if (onRefetch) {
+            onRefetch();
         }
     };
-
 
     useEffect(() => {
         if (externalActiveTab !== undefined) {
@@ -658,7 +646,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     };
 
     const handleTabChange = (tabId: string) => {
-        // console.log("Switching to tab:", tabId);
         if (onTabChange) {
             onTabChange(tabId);
         } else {
@@ -748,6 +735,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             try {
                 await onBulkDelete(selectedLeads);
                 setSelectedLeads([]);
+                // Refetch data after bulk delete
+                if (onRefetch) {
+                    onRefetch();
+                }
             } catch (error) {
                 console.error("Bulk delete failed:", error);
             }
@@ -755,10 +746,14 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     };
 
     const handleBulkAssign = async () => {
-        setSelectedLeads([]);
         if (onBulkAssign) {
             try {
                 await onBulkAssign(selectedLeads);
+                setSelectedLeads([]);
+                // Refetch data after bulk assign
+                if (onRefetch) {
+                    onRefetch();
+                }
             } catch (error) {
                 console.error("Bulk assign failed:", error);
             }
@@ -1079,7 +1074,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     {leads.length > 0 ? (
                                         leads.map((lead) => {
                                             const formattedLead = formatLeadData(lead);
-                                            // console.log("Rendering lead:", formattedLead.formattedCreatedAt);
                                             const followUpStatus = getFollowUpStatus(lead.latestFollowUpDate || lead.nextFollowUp || '');
                                             return (
                                                 <tr
@@ -1165,7 +1159,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium flex space-x-1">
                                                         {onFollowUp && (
                                                             <button
-                                                                onClick={() => handleFollowUp(lead)}  // CHANGED: Now uses handleFollowUp instead of onFollowUp
+                                                                onClick={() => handleFollowUp(lead)}
                                                                 className="p-1.5 rounded-full text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
                                                                 title="Follow Up"
                                                             >
@@ -1369,7 +1363,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     <div className="flex flex-wrap gap-2">
                                                         {onFollowUp && (
                                                             <button
-                                                                onClick={() => handleFollowUp(lead)}  // CHANGED: Now uses handleFollowUp instead of onFollowUp
+                                                                onClick={() => handleFollowUp(lead)}
                                                                 className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md"
                                                             >
                                                                 <Phone className="h-3.5 w-3.5" />

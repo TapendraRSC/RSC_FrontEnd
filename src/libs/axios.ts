@@ -5,10 +5,10 @@ import { Capacitor } from '@capacitor/core';
 
 const axiosInstance = axios.create({
     baseURL:
-        "https://service.dholerasmartproperty.com"
-    // ||
-    // "http://localhost:8000/",
-    ,
+        // "https://service.dholerasmartproperty.com"
+        // ||
+        "http://localhost:8001/",
+
     withCredentials: true,
     timeout: 30000,
 });

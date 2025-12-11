@@ -36,6 +36,13 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { list: stageList } = useSelector((state: RootState) => state.leadStages);
   const { list: statusList } = useSelector((state: RootState) => state.statuses);
 
+  // Get current user and role from Redux instead of localStorage
+  const currentUser = useSelector((state: RootState) => state.auth?.user || {});
+  const currentRole = useSelector((state: RootState) => state.auth?.role || "");
+
+
+  console.log(currentRole, "currentRole");
+
   const actualUsersData = useMemo(() => {
     if (Array.isArray(users)) return users;
     if (users?.data) {
@@ -73,21 +80,19 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     ],
     []
   );
-  const currentUser = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
+
+  const isAdmin = useMemo(() => {
+    return currentRole?.toLowerCase() === "Admin";
+  }, [currentRole]);
 
   const filteredAssignedToOptions = useMemo(() => {
-    if (currentUser.roleId === 36) {
+    // If not Admin, only show current user in dropdown
+    if (currentRole?.toLowerCase() !== "Admin") {
       const userOption = assignedToOptions.find((u: any) => u.value === currentUser.id);
       return userOption ? [userOption] : [];
     }
     return assignedToOptions;
-  }, [assignedToOptions, currentUser]);
+  }, [assignedToOptions, currentUser, currentRole]);
 
   const defaultValues = useMemo(
     () => ({
@@ -96,7 +101,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       phone: "",
       city: "",
       state: "",
-      assignedTo: currentUser.roleId === 36 ? currentUser.id : null,
+      assignedTo: !isAdmin ? currentUser.id : null,
       platformId: null,
       projectStatusId: null,
       plotId: null,
@@ -104,7 +109,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       leadStatusId: null,
       interestStatus: null,
     }),
-    [currentUser]
+    [currentUser, isAdmin]
   );
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch, control, clearErrors } = useForm({
@@ -144,7 +149,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           state: initialData.state || "",
           interestStatus: initialData.interestStatus || null,
           projectStatusId: initialData.plotProjectId || null,
-          // We'll set these after options are loaded
           assignedTo: null,
           platformId: null,
           plotId: null,
@@ -200,6 +204,12 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, [plots, initialData, setValue]);
 
+  useEffect(() => {
+    if (!isAdmin && currentUser?.id) {
+      setValue('assignedTo', currentUser.id);
+    }
+  }, [isAdmin, currentUser, setValue]);
+
   const handleClose = () => {
     reset(defaultValues);
     onClose();
@@ -239,7 +249,33 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
         <form onSubmit={handleSubmit(onSubmit)} className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <FormInput name="name" label="Name" required placeholder="Enter Name" register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput name="email" label="Email" type="email" placeholder="Enter Email" register={register} errors={errors} clearErrors={clearErrors} />
+
+            <FormInput
+              name="email"
+              label="Email"
+              placeholder="Enter email"
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              validation={{
+                validate: {
+                  validEmail: (value: string) => {
+                    if (!value || value.trim() === "" || value.toUpperCase() === "N/A") {
+                      return true;
+                    }
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return emailRegex.test(value) || "Please enter a valid email address";
+                  }
+                },
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                  const value = e.target.value;
+                  if (value.toUpperCase() === "N/A") {
+                    setValue("email", "");
+                  }
+                }
+              }}
+            />
+
             <FormPhoneInput
               name="phone"
               label="Phone"
@@ -279,21 +315,39 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               <label className="block text-sm font-medium mb-1">
                 Assigned To <span className="text-red-500">*</span>
               </label>
-              <Controller
-                name="assignedTo"
-                control={control}
-                rules={{ required: "Assigned To is required" }}
-                render={({ field }) => (
-                  <CommonDropdown
-                    options={filteredAssignedToOptions}
-                    selected={filteredAssignedToOptions.find((opt: any) => opt.value === field.value) || null}
-                    onChange={(value: any) => field.onChange(value?.value || null)}
-                    placeholder="Select Assignee"
-                    error={!!errors.assignedTo}
-                    allowClear={true}
+
+              {isAdmin ? (
+                <Controller
+                  name="assignedTo"
+                  control={control}
+                  rules={{ required: "Assigned To is required" }}
+                  render={({ field }) => (
+                    <CommonDropdown
+                      options={filteredAssignedToOptions}
+                      selected={filteredAssignedToOptions.find((opt: any) => opt.value === field.value) || null}
+                      onChange={(value: any) => field.onChange(value?.value || null)}
+                      placeholder="Select Assignee"
+                      error={!!errors.assignedTo}
+                      allowClear={true}
+                    />
+                  )}
+                />
+              ) : (
+                <>
+                  <Controller
+                    name="assignedTo"
+                    control={control}
+                    rules={{ required: "Assigned To is required" }}
+                    render={({ field }) => (
+                      <input type="hidden" {...field} />
+                    )}
                   />
-                )}
-              />
+                  <div className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-not-allowed">
+                    {currentUser?.name || 'Current User'}
+                  </div>
+                </>
+              )}
+
               {errors.assignedTo && <p className="mt-1 text-sm text-red-600">{errors.assignedTo.message as string}</p>}
             </div>
             <div>
@@ -317,40 +371,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.platformId && <p className="mt-1 text-sm text-red-600">{errors.platformId.message as string}</p>}
             </div>
-            {/* <div>
-              <label className="block text-sm font-medium mb-1">Project</label>
-              <Controller
-                name="projectStatusId"
-                control={control}
-                render={({ field }) => (
-                  <CommonDropdown
-                    options={projectStatusOptions}
-                    selected={projectStatusOptions.find((opt: any) => opt.value === field.value) || null}
-                    onChange={(value: any) => field.onChange(value?.value || null)}
-                    placeholder="Select Project"
-                    error={!!errors.projectStatusId}
-                    allowClear={true}
-                  />
-                )}
-              />
-              {errors.projectStatusId && <p className="mt-1 text-sm text-red-600">{errors.projectStatusId.message as string}</p>}
-            </div> */}
-            {/* <div>
-              <label className="block text-sm font-medium mb-1">Plot</label>
-              <Controller
-                name="plotId"
-                control={control}
-                render={({ field }) => (
-                  <CommonDropdown
-                    options={plotOptions}
-                    selected={plotOptions.find((opt: any) => opt.value === field.value) || null}
-                    onChange={(val: any) => field.onChange(val?.value || null)}
-                    placeholder="Select Plot"
-                    allowClear={true}
-                  />
-                )}
-              />
-            </div> */}
 
             <div>
               <label className="block text-sm font-medium mb-1">Lead Status</label>

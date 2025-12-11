@@ -9,6 +9,7 @@ interface AuthState {
     loading: boolean;
     error: string | null;
     isAuthenticated: boolean;
+    role: string | null;
 }
 
 // ---------------------- Initialize from localStorage ----------------------
@@ -17,11 +18,13 @@ const getInitialAuthState = (): AuthState => {
         const token = localStorage.getItem('accessToken');
         const refreshToken = localStorage.getItem('refreshToken');
         const user = localStorage.getItem('user');
+        const role = localStorage.getItem('role');
 
         return {
             user: user ? JSON.parse(user) : null,
             token,
             refreshToken,
+            role,
             loading: false,
             error: null,
             isAuthenticated: !!(token && user),
@@ -31,6 +34,7 @@ const getInitialAuthState = (): AuthState => {
         user: null,
         token: null,
         refreshToken: null,
+        role: null,
         loading: false,
         error: null,
         isAuthenticated: false,
@@ -72,6 +76,7 @@ export const logoutUser = createAsyncThunk(
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
                 localStorage.removeItem('user');
+                localStorage.removeItem('role');
             }
             return null;
         } catch (err) {
@@ -79,6 +84,7 @@ export const logoutUser = createAsyncThunk(
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
                 localStorage.removeItem('user');
+                localStorage.removeItem('role');
             }
             return null;
         }
@@ -94,6 +100,7 @@ export const checkAuthStatus = createAsyncThunk(
 
             const token = localStorage.getItem('accessToken');
             const user = localStorage.getItem('user');
+            const role = localStorage.getItem('role');
 
             if (!token || !user) {
                 throw new Error("No valid session found");
@@ -103,6 +110,7 @@ export const checkAuthStatus = createAsyncThunk(
                 token,
                 user: JSON.parse(user),
                 refreshToken: localStorage.getItem('refreshToken'),
+                role,
             };
         } catch (err: any) {
             return thunkAPI.rejectWithValue(err.message);
@@ -121,11 +129,13 @@ const authSlice = createSlice({
             state.refreshToken = null;
             state.isAuthenticated = false;
             state.error = null;
+            state.role = null;
 
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
                 localStorage.removeItem('user');
+                localStorage.removeItem('role');
             }
         },
         updateTokens(state, action) {
@@ -140,6 +150,13 @@ const authSlice = createSlice({
         },
         clearError(state) {
             state.error = null;
+        },
+        // Add this reducer to set user and role directly from Redux
+        setUserAndRole(state, action) {
+            const { user, role } = action.payload;
+            state.user = user;
+            state.role = role;
+            state.isAuthenticated = true;
         }
     },
     extraReducers: (builder) => {
@@ -150,7 +167,7 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
-                const { accessToken, refreshToken, user } = action.payload;
+                const { accessToken, refreshToken, user, role } = action.payload;
 
                 state.user = user;
                 state.token = accessToken;
@@ -158,11 +175,13 @@ const authSlice = createSlice({
                 state.isAuthenticated = true;
                 state.loading = false;
                 state.error = null;
+                state.role = role;
 
                 try {
                     if (typeof window !== 'undefined') {
                         localStorage.setItem('accessToken', accessToken);
                         localStorage.setItem('user', JSON.stringify(user));
+                        localStorage.setItem('role', role);
                         if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
                     }
                 } catch { }
@@ -181,6 +200,7 @@ const authSlice = createSlice({
                 state.isAuthenticated = false;
                 state.loading = false;
                 state.error = null;
+                state.role = null;
             })
 
             // Check auth
@@ -189,11 +209,13 @@ const authSlice = createSlice({
                     state.user = action.payload.user;
                     state.token = action.payload.token;
                     state.refreshToken = action.payload.refreshToken;
+                    state.role = action.payload.role;
                     state.isAuthenticated = true;
                 } else {
                     state.user = null;
                     state.token = null;
                     state.refreshToken = null;
+                    state.role = null;
                     state.isAuthenticated = false;
                 }
             })
@@ -201,12 +223,13 @@ const authSlice = createSlice({
                 state.user = null;
                 state.token = null;
                 state.refreshToken = null;
+                state.role = null;
                 state.isAuthenticated = false;
             });
     }
 });
 
-export const { clearAuth, updateTokens, clearError } = authSlice.actions;
+export const { clearAuth, updateTokens, clearError, setUserAndRole } = authSlice.actions;
 export default authSlice.reducer;
 
 // ---------------------- Selectors ----------------------
@@ -214,3 +237,4 @@ export const selectIsAuthenticated = (state: any) => state.auth.isAuthenticated;
 export const selectUser = (state: any) => state.auth.user;
 export const selectAuthLoading = (state: any) => state.auth.loading;
 export const selectAuthError = (state: any) => state.auth.error;
+export const selectUserRole = (state: any) => state.auth.role;
