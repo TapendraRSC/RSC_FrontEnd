@@ -3,12 +3,9 @@ import axios from "axios";
 import { CapacitorHttp, CapacitorCookies } from '@capacitor/core';
 import { Capacitor } from '@capacitor/core';
 
-// ✅ Fixed base URL with trailing slash
+// ✅ Fixed base URL with trailing slash (use env var fallback)
 const axiosInstance = axios.create({
-    baseURL:
-        process.env.NEXT_PUBLIC_API_URL
-        ||
-        "http://localhost:8000/",
+    baseURL: (process.env.REACT_APP_BASE_URL || "https://backend.rscgroupdholera.in/"),
     withCredentials: true,
     timeout: 30000, // 30 seconds timeout
 });
