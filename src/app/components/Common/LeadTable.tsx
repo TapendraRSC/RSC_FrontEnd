@@ -43,7 +43,7 @@ interface LeadPanelProps {
     activeTab?: string;
     searchTerm?: string;
     onSearch?: (term: string) => void;
-    onRefetch?: () => void;
+    onRefetch?: (searchTerm?: string) => void;  // ✅ Added searchTerm parameter
 }
 
 interface Lead {
@@ -583,14 +583,47 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
     const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
 
+    // ✅ CRITICAL FIX: Pass current searchTerm to onRefetch
     const handleFollowUp = async (lead: Lead) => {
         if (!onFollowUp) return;
 
         await onFollowUp(lead);
 
-        // Refetch data to update the current tab
+        // Refetch data while maintaining the current search term
         if (onRefetch) {
-            onRefetch();
+            console.log('🔍 Refetching with search term:', searchTerm);
+            onRefetch(searchTerm);  // ✅ Pass searchTerm explicitly
+        }
+    };
+
+    // ✅ Also update bulk operations to maintain search
+    const handleBulkDelete = async () => {
+        if (selectedLeads.length > 0 && onBulkDelete) {
+            try {
+                await onBulkDelete(selectedLeads);
+                setSelectedLeads([]);
+                if (onRefetch) {
+                    console.log('🔍 Refetching after bulk delete with search term:', searchTerm);
+                    onRefetch(searchTerm);  // ✅ Pass searchTerm
+                }
+            } catch (error) {
+                console.error("Bulk delete failed:", error);
+            }
+        }
+    };
+
+    const handleBulkAssign = async () => {
+        if (onBulkAssign) {
+            try {
+                await onBulkAssign(selectedLeads);
+                setSelectedLeads([]);
+                if (onRefetch) {
+                    console.log('🔍 Refetching after bulk assign with search term:', searchTerm);
+                    onRefetch(searchTerm);  // ✅ Pass searchTerm
+                }
+            } catch (error) {
+                console.error("Bulk assign failed:", error);
+            }
         }
     };
 
@@ -728,36 +761,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             ? selectedLeads.filter(id => id !== leadId)
             : [...selectedLeads, leadId];
         setSelectedLeads(newSelection);
-    };
-
-    const handleBulkDelete = async () => {
-        if (selectedLeads.length > 0 && onBulkDelete) {
-            try {
-                await onBulkDelete(selectedLeads);
-                setSelectedLeads([]);
-                // Refetch data after bulk delete
-                if (onRefetch) {
-                    onRefetch();
-                }
-            } catch (error) {
-                console.error("Bulk delete failed:", error);
-            }
-        }
-    };
-
-    const handleBulkAssign = async () => {
-        if (onBulkAssign) {
-            try {
-                await onBulkAssign(selectedLeads);
-                setSelectedLeads([]);
-                // Refetch data after bulk assign
-                if (onRefetch) {
-                    onRefetch();
-                }
-            } catch (error) {
-                console.error("Bulk assign failed:", error);
-            }
-        }
     };
 
     const clearSelection = () => {

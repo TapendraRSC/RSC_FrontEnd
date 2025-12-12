@@ -100,7 +100,7 @@ const LeadComponent: React.FC = () => {
         setTheme(prefersDark ? 'dark' : 'light');
     }, []);
 
-    // Single useEffect to handle ALL API calls
+    // ✅ MAIN API CALL - Single useEffect to handle ALL API calls
     useEffect(() => {
         const category = getCategoryFromTab(activeTab);
         dispatch(
@@ -130,20 +130,49 @@ const LeadComponent: React.FC = () => {
         return tabToCategory[tabId] || '';
     };
 
+    // ✅ CRITICAL: Refetch function that maintains search term
+    const handleRefetch = (maintainSearchTerm?: string) => {
+        const category = getCategoryFromTab(activeTab);
+
+        // Use the search term parameter if provided, otherwise use state
+        const effectiveSearchTerm = maintainSearchTerm !== undefined
+            ? maintainSearchTerm
+            : searchTerm;
+
+        console.log('🔄 Refetching with params:', {
+            page: currentPage,
+            limit: pageSize,
+            category,
+            searchTerm: effectiveSearchTerm,
+            fromDate,
+            toDate
+        });
+
+        dispatch(fetchLeads({
+            page: currentPage,
+            limit: pageSize,
+            searchValue: effectiveSearchTerm,  // ✅ CRITICAL: Pass search term
+            fromDate,
+            toDate,
+            ...(category && { category })
+        }));
+    };
+
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
-        setCurrentPage(1); // Reset to page 1 when tab changes
+        setCurrentPage(1);
     };
 
     const handleSearch = (term: string) => {
+        console.log('🔍 Search term changed to:', term);
         setSearchTerm(term);
-        setCurrentPage(1); // Reset to page 1 when searching
+        setCurrentPage(1);
     };
 
     const handleDateChange = (newFromDate: string, newToDate: string) => {
         setFromDate(newFromDate);
         setToDate(newToDate);
-        setCurrentPage(1); // Reset to page 1 when date changes
+        setCurrentPage(1);
     };
 
     const handlePageChange = (page: number) => {
@@ -152,7 +181,7 @@ const LeadComponent: React.FC = () => {
 
     const handlePageSizeChange = (size: number) => {
         setPageSize(size);
-        setCurrentPage(1); // Reset to page 1 when page size changes
+        setCurrentPage(1);
     };
 
     const transformLeadsForPanel = useMemo(() => {
@@ -252,16 +281,8 @@ const LeadComponent: React.FC = () => {
                 setSelectedIds([]);
                 toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
             }
-            // Refresh data after deletion
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            // ✅ Use handleRefetch to maintain search
+            handleRefetch(searchTerm);
         } catch (error: any) {
             toast.error(error?.message || 'Failed to delete');
         } finally {
@@ -281,16 +302,8 @@ const LeadComponent: React.FC = () => {
                 currentLead ? 'Lead updated successfully' : 'Lead added successfully'
             );
             setIsModalOpen(false);
-            // Refresh data after save
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            // ✅ Use handleRefetch to maintain search
+            handleRefetch(searchTerm);
         } catch (error: any) {
             console.error('Error saving lead:', error);
             toast.error(error?.message || 'Failed to save lead');
@@ -331,16 +344,8 @@ const LeadComponent: React.FC = () => {
             })).unwrap();
             toast.success(`${numericIds.length} lead(s) transferred successfully`);
             setSelectedIds([]);
-            // Refresh data after assignment
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            // ✅ Use handleRefetch to maintain search
+            handleRefetch(searchTerm);
         } catch (error: any) {
             toast.error(error?.message || 'Failed to transfer selected leads');
         } finally {
@@ -408,16 +413,8 @@ const LeadComponent: React.FC = () => {
             await dispatch(uploadLeads(selectedFile)).unwrap();
             toast.success('Leads uploaded successfully');
             resetUploadStates();
-            // Refresh data after upload
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            // ✅ Use handleRefetch to maintain search
+            handleRefetch(searchTerm);
         } catch (err: any) {
             toast.error(err?.message || 'Failed to upload leads');
         } finally {
@@ -429,7 +426,7 @@ const LeadComponent: React.FC = () => {
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
     const exportColumns = [
-        { label: 'Name', accessor: 'name' },          // 'accessor' instead of 'key'
+        { label: 'Name', accessor: 'name' },
         { label: 'Phone', accessor: 'phone' },
         { label: 'Email', accessor: 'email' },
         { label: 'Status', accessor: 'status' },
@@ -447,7 +444,6 @@ const LeadComponent: React.FC = () => {
         { label: 'Plot Price', accessor: 'plotPrice' },
         { label: 'Remark', accessor: 'remark' },
     ];
-
 
     return (
         <div className="space-y-8 p-3 sm:p-6 dark:bg-gray-900 dark:text-gray-100">
@@ -489,12 +485,14 @@ const LeadComponent: React.FC = () => {
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
                             bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
                         >
-                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:w-4" />
                             <span className="hidden sm:inline">Add New</span>
                         </button>
                     )}
                 </div>
             </div>
+
+
 
             <LeadPanel
                 leads={transformLeadsForPanel}
@@ -522,6 +520,7 @@ const LeadComponent: React.FC = () => {
                     setSelectedLeadId(lead);
                     setIsFollowUpModalOpen(true);
                 }}
+                onRefetch={handleRefetch}  // ✅ CRITICAL: Pass refetch function
                 hasEditPermission={hasPermission(28, 'edit')}
                 hasDeletePermission={hasPermission(29, 'delete')}
                 hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(29, 'delete')}
@@ -539,7 +538,11 @@ const LeadComponent: React.FC = () => {
             {selectedLeadId && (
                 <FollowUpLeadModal
                     isOpen={isFollowUpModalOpen}
-                    onClose={() => setIsFollowUpModalOpen(false)}
+                    onClose={() => {
+                        setIsFollowUpModalOpen(false);
+                        // ✅ Refetch when follow-up modal closes
+                        handleRefetch(searchTerm);
+                    }}
                     lead={selectedLeadId}
                 />
             )}

@@ -82,17 +82,17 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   );
 
   const isAdmin = useMemo(() => {
-    return currentRole?.toLowerCase() === "Admin";
+    return currentRole?.toLowerCase() === "admin";
   }, [currentRole]);
 
   const filteredAssignedToOptions = useMemo(() => {
     // If not Admin, only show current user in dropdown
-    if (currentRole?.toLowerCase() !== "Admin") {
+    if (!isAdmin) {
       const userOption = assignedToOptions.find((u: any) => u.value === currentUser.id);
       return userOption ? [userOption] : [];
     }
     return assignedToOptions;
-  }, [assignedToOptions, currentUser, currentRole]);
+  }, [assignedToOptions, currentUser, isAdmin]);
 
   const defaultValues = useMemo(
     () => ({
@@ -257,21 +257,14 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               register={register}
               errors={errors}
               setValue={setValue}
+              clearErrors={clearErrors}
               validation={{
-                validate: {
-                  validEmail: (value: string) => {
-                    if (!value || value.trim() === "" || value.toUpperCase() === "N/A") {
-                      return true;
-                    }
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    return emailRegex.test(value) || "Please enter a valid email address";
+                validate: (value: string) => {
+                  if (!value || value.trim() === "" || value.toUpperCase() === "N/A") {
+                    return true;
                   }
-                },
-                onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                  const value = e.target.value;
-                  if (value.toUpperCase() === "N/A") {
-                    setValue("email", "");
-                  }
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  return emailRegex.test(value) || "Please enter a valid email address";
                 }
               }}
             />
