@@ -194,7 +194,7 @@ const LeadComponent: React.FC = () => {
                 id: lead.id,
                 name: lead.name || 'N/A',
                 phone: lead.phone || 'N/A',
-                email: lead.email || 'N/A',
+                email: lead.email || '',
                 profession: lead.profession || 'Not Provided',
                 address: lead.address || 'Not Provided',
                 city: lead.city || 'Not Provided',

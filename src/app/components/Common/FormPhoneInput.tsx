@@ -8,7 +8,6 @@ import {
     UseFormSetValue,
     useWatch,
     Control,
-    UseFormWatch,
 } from "react-hook-form";
 
 interface Country {
@@ -28,7 +27,6 @@ interface FormPhoneInputProps<T extends Record<string, any>> {
     clearErrors: UseFormClearErrors<T>;
     setValue: UseFormSetValue<T>;
     control: Control<T>;
-    watch: UseFormWatch<T>;
     className?: string;
     disabled?: boolean;
     maxLength?: number;
@@ -289,7 +287,6 @@ const FormPhoneInput = <T extends Record<string, any>>({
     clearErrors,
     setValue,
     control,
-    watch,
     className = "",
     disabled = false,
     maxLength = 10,
@@ -436,16 +433,16 @@ const FormPhoneInput = <T extends Record<string, any>>({
         // Update the form value with new country code
         if (inputValue) {
             const fullNumber = `${country.dial_code} ${inputValue}`;
-            setValue(name, fullNumber as any);
+            setValue?.(name, fullNumber as any);
         } else {
-            setValue(name, `${country.dial_code} ` as any);
+            setValue?.(name, `${country.dial_code} ` as any);
         }
 
-        if (error) clearErrors(name);
+        if (error) clearErrors?.(name);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (error) clearErrors(name);
+        if (error) clearErrors?.(name);
 
         let digits = e.target.value.replace(/\D/g, "");
 
@@ -457,7 +454,7 @@ const FormPhoneInput = <T extends Record<string, any>>({
 
         // Store with country code in form
         const fullNumber = digits ? `${selectedCountry.dial_code} ${digits}` : `${selectedCountry.dial_code} `;
-        setValue(name, fullNumber as any);
+        setValue?.(name, fullNumber as any);
     };
 
     const toggleDropdown = () => {
