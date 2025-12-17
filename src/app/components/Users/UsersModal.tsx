@@ -42,7 +42,10 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
     const { data: roles = [] } = useSelector((state: RootState) => state.roles);
     const [showPassword, setShowPassword] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    // ✅ Fixed: Separate preview and originalImage states
     const [preview, setPreview] = useState<string | null>(null);
+    const [originalImage, setOriginalImage] = useState<string | null>(null);
+
     const { register, handleSubmit, watch, formState: { errors }, reset, setValue, clearErrors } = useForm<UserFormData>();
     const password = watch('password') || '';
     const roleId = watch('roleId');
@@ -62,6 +65,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
         }
     }, [isOpen, dispatch]);
 
+    // ✅ Fixed: Proper image state management on user change
     useEffect(() => {
         if (user) {
             reset({
@@ -72,11 +76,18 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                 password: user.password,
                 status: user.status || 'active',
             });
-            if (user.profileImage) setPreview(user.profileImage);
+
+            // Store original image URL
+            if (user.profileImage) {
+                setOriginalImage(user.profileImage);
+                setPreview(user.profileImage); // Show original image initially
+            }
+            setSelectedFile(null); // Clear any new file selection
         } else {
             reset({ status: 'active' });
-            setPreview(null);
             setSelectedFile(null);
+            setPreview(null);
+            setOriginalImage(null);
         }
     }, [user, reset]);
 
@@ -88,12 +99,19 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
         setSelectedFile(file);
-        if (file) setPreview(URL.createObjectURL(file));
+        if (file) {
+            setPreview(URL.createObjectURL(file));
+        } else {
+            // ✅ Fixed: Revert to original image if no new file selected
+            setPreview(originalImage);
+        }
     };
 
+    // ✅ Fixed: Proper cleanup on close
     const handleClose = () => {
         reset();
         setPreview(null);
+        setOriginalImage(null);
         setSelectedFile(null);
         onClose();
     };
@@ -113,6 +131,9 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
         { label: 'Active', value: 'active' },
         { label: 'Inactive', value: 'inactive' },
     ];
+
+    // ✅ Fixed: Always show image preview (original or new file)
+    const showImagePreview = preview || (user?.profileImage && !selectedFile);
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
@@ -259,8 +280,11 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                 {errors.status && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.status.message}</p>}
                             </div>
                         </div>
-                        {/* Profile Image */}
+                        {/* Profile Image - ✅ Fixed Preview Logic */}
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Profile Image
+                            </label>
                             <div className="flex flex-col sm:flex-row sm:items-start sm:space-x-4 space-y-3 sm:space-y-0">
                                 <div className="flex-1">
                                     <input
@@ -269,11 +293,16 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                         onChange={handleImageChange}
                                         className="file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 dark:file:bg-slate-700 dark:file:text-blue-300 w-full"
                                     />
+                                    {/* {showImagePreview && !selectedFile && (
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Current image shown below
+                                        </p>
+                                    )} */}
                                 </div>
-                                {preview && (
+                                {showImagePreview && (
                                     <div className="flex-shrink-0">
                                         <Image
-                                            src={preview}
+                                            src={preview || user?.profileImage || ''}
                                             alt="Profile Preview"
                                             width={80}
                                             height={80}

@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from "react";
 import {
-    UseFormRegister,
     FieldErrors,
     Path,
     RegisterOptions,
@@ -24,7 +23,6 @@ interface FormPhoneInputProps<T extends Record<string, any>> {
     placeholder?: string;
     required?: boolean;
     validation?: any;
-    register: UseFormRegister<T>;
     errors: FieldErrors<T>;
     clearErrors: UseFormClearErrors<T>;
     setValue: UseFormSetValue<T>;
@@ -285,7 +283,6 @@ const FormPhoneInput = <T extends Record<string, any>>({
     placeholder,
     required = false,
     validation = {},
-    register,
     errors,
     clearErrors,
     setValue,
@@ -311,12 +308,15 @@ const FormPhoneInput = <T extends Record<string, any>>({
         name,
     });
 
+    // Initialize and parse existing values
     useEffect(() => {
         if (fieldValue && !isInitialized) {
             let parsedCountry = selectedCountry;
             let parsedPhoneNumber = "";
 
+            // Check for space format: "+91 1234567890"
             const spaceMatch = fieldValue.match(/^(\+\d{1,4})\s+(.+)$/);
+            // Check for dash format: "+91-1234567890"
             const dashMatch = fieldValue.match(/^(\+\d{1,4})-(.+)$/);
 
             if (spaceMatch) {
@@ -333,36 +333,19 @@ const FormPhoneInput = <T extends Record<string, any>>({
                     parsedCountry = country;
                     parsedPhoneNumber = phoneNumber.replace(/\D/g, "");
                 }
-            } // Replace this entire else if block:
-            else if (fieldValue.startsWith("+")) {
-                let foundCountry = null;
-                let phoneNumber = "";
-
-                const sortedCountries = [...countriesData].sort((a, b) => b.dial_code.length - a.dial_code.length);
-
-                for (const country of sortedCountries) {
-                    if (fieldValue.startsWith(country.dial_code)) {
-                        foundCountry = country;
-                        phoneNumber = fieldValue.substring(country.dial_code.length);
-                        break;
-                    }
-                }
-
-                if (foundCountry) {
-                    parsedCountry = foundCountry;
-                    parsedPhoneNumber = phoneNumber.replace(/\D/g, "");
-                }
             }
-
+            // Check for concatenated format: "+911234567890"
             else if (fieldValue.startsWith("+")) {
                 let foundCountry = null;
                 let phoneNumber = "";
 
+                // Sort countries by dial code length (longest first) for accurate matching
                 const sortedCountries = [...countriesData].sort((a, b) => b.dial_code.length - a.dial_code.length);
 
                 for (const country of sortedCountries) {
                     if (fieldValue.startsWith(country.dial_code)) {
                         phoneNumber = fieldValue.substring(country.dial_code.length);
+                        // Verify the remaining part looks like a valid phone number (at least 6 digits)
                         if (phoneNumber && phoneNumber.replace(/\D/g, "").length >= 6) {
                             foundCountry = country;
                             break;
@@ -375,6 +358,7 @@ const FormPhoneInput = <T extends Record<string, any>>({
                     parsedPhoneNumber = phoneNumber.replace(/\D/g, "");
                 }
             } else {
+                // No country code found, assume it's just the phone number
                 parsedPhoneNumber = fieldValue.replace(/\D/g, "");
             }
 
@@ -382,9 +366,9 @@ const FormPhoneInput = <T extends Record<string, any>>({
             setInputValue(parsedPhoneNumber);
             setIsInitialized(true);
         }
-    }, [fieldValue, isInitialized]);
+    }, [fieldValue, isInitialized, selectedCountry]);
 
-    // Updated validation rules - fixed country code validation
+    // Updated validation rules
     const rules: RegisterOptions<T, Path<T>> = {
         ...validation,
         required: required ? validation.required || `${label} is required` : undefined,
@@ -403,7 +387,7 @@ const FormPhoneInput = <T extends Record<string, any>>({
                 if (!phoneNumberPart || phoneNumberPart.length === 0) return true;
 
                 const digits = phoneNumberPart.replace(/\D/g, "");
-                if (digits.length === 0) return true; // No digits entered yet
+                if (digits.length === 0) return true;
 
                 return (
                     (digits.length >= 6 && digits.length <= 15) ||
@@ -446,31 +430,31 @@ const FormPhoneInput = <T extends Record<string, any>>({
         setIsDropdownOpen(false);
         setSearchTerm("");
 
-        // Update the form value with proper format
+        // Update the form value with new country code
         if (inputValue) {
             const fullNumber = `${country.dial_code} ${inputValue}`;
-            setValue(name, fullNumber as any);
+            setValue?.(name, fullNumber as any);
         } else {
-            setValue(name, `${country.dial_code} ` as any);
+            setValue?.(name, `${country.dial_code} ` as any);
         }
 
-        // Clear any existing errors
-        if (error) clearErrors(name);
+        if (error) clearErrors?.(name);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (error) clearErrors(name);
+        if (error) clearErrors?.(name);
 
         let digits = e.target.value.replace(/\D/g, "");
+
         if (maxLength && digits.length > maxLength) {
             digits = digits.slice(0, maxLength);
         }
 
         setInputValue(digits);
 
-        // Always set the value with country code in proper format
+        // Store with country code in form
         const fullNumber = digits ? `${selectedCountry.dial_code} ${digits}` : `${selectedCountry.dial_code} `;
-        setValue(name, fullNumber as any);
+        setValue?.(name, fullNumber as any);
     };
 
     const toggleDropdown = () => {
@@ -533,7 +517,7 @@ const FormPhoneInput = <T extends Record<string, any>>({
                             </div>
                             <div className="overflow-y-auto max-h-64">
                                 {filteredCountries.length ? (
-                                    filteredCountries?.map((country) => (
+                                    filteredCountries.map((country) => (
                                         <button
                                             key={country.code}
                                             type="button"
@@ -543,9 +527,9 @@ const FormPhoneInput = <T extends Record<string, any>>({
                                                 : "text-gray-900 dark:text-gray-100"
                                                 }`}
                                         >
-                                            <span className="text-lg flex-shrink-0">{country?.flag}</span>
+                                            <span className="text-lg flex-shrink-0">{country.flag}</span>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-medium truncate">{country?.name}</div>
+                                                <div className="font-medium truncate">{country.name}</div>
                                             </div>
                                             <span className="font-medium text-gray-500 dark:text-gray-400 text-sm flex-shrink-0">
                                                 {country.dial_code}
@@ -562,8 +546,8 @@ const FormPhoneInput = <T extends Record<string, any>>({
                     )}
                 </div>
 
+                {/* Phone input - NO register prop */}
                 <input
-                    {...register(name, rules)}
                     type="tel"
                     value={inputValue}
                     onChange={handleInputChange}

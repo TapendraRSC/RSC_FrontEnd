@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Pencil, Trash2, Plus, Upload, Loader2, Download, UserPlus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,6 +14,8 @@ import {
 } from '../../../../store/leadSlice';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
+import { fetchLeadPlatforms } from '../../../../store/leadPlateformSlice';
+import { exportUsers } from '../../../../store/userSlice';
 import { RootState } from '../../../../store/store';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import ComprehensiveLeadModal from './LeadModal';
@@ -58,9 +60,7 @@ const formatDate = (dateString: string | Date | null) => {
 
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
-    const { list: leadList, loading, totalPages, total } = useSelector(
-        (state: RootState) => state.leads
-    );
+    const { list: leadList, loading, totalPages, total } = useSelector((state: RootState) => state.leads);
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
@@ -94,26 +94,13 @@ const LeadComponent: React.FC = () => {
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
+    const [selectedPlatform, setSelectedPlatform] = useState("");
+    const [selectedAssignedTo, setSelectedAssignedTo] = useState("");
 
     useEffect(() => {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         setTheme(prefersDark ? 'dark' : 'light');
     }, []);
-
-    // Single useEffect to handle ALL API calls
-    useEffect(() => {
-        const category = getCategoryFromTab(activeTab);
-        dispatch(
-            fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            })
-        );
-    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate]);
 
     const getCategoryFromTab = (tabId: string) => {
         const tabToCategory: Record<string, string> = {
@@ -130,20 +117,64 @@ const LeadComponent: React.FC = () => {
         return tabToCategory[tabId] || '';
     };
 
+    // Main API call - ONLY in LeadComponent
+    const fetchLeadsData = useCallback(() => {
+        const category = getCategoryFromTab(activeTab);
+        const params: any = {
+            page: currentPage,
+            limit: pageSize,
+            searchValue: searchTerm,
+            fromDate,
+            toDate,
+            ...(category && { category }),
+        };
+
+        if (selectedPlatform) {
+            params.platformId = selectedPlatform;
+        }
+
+        if (selectedAssignedTo) {
+            params.assignedTo = selectedAssignedTo;
+        }
+
+        console.log("Fetching leads with params:", params);
+        dispatch(fetchLeads(params));
+    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
+
+    // Only fetch when parameters change
+    useEffect(() => {
+        fetchLeadsData();
+    }, [fetchLeadsData]);
+
+    // Refetch function that maintains all filters
+    const handleRefetch = useCallback(() => {
+        fetchLeadsData();
+    }, [fetchLeadsData]);
+
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
-        setCurrentPage(1); // Reset to page 1 when tab changes
+        setCurrentPage(1);
     };
 
     const handleSearch = (term: string) => {
         setSearchTerm(term);
-        setCurrentPage(1); // Reset to page 1 when searching
+        setCurrentPage(1);
     };
 
     const handleDateChange = (newFromDate: string, newToDate: string) => {
         setFromDate(newFromDate);
         setToDate(newToDate);
-        setCurrentPage(1); // Reset to page 1 when date changes
+        setCurrentPage(1);
+    };
+
+    const handlePlatformChange = (platform: string) => {
+        setSelectedPlatform(platform);
+        setCurrentPage(1);
+    };
+
+    const handleAssignedToChange = (assignedTo: string) => {
+        setSelectedAssignedTo(assignedTo);
+        setCurrentPage(1);
     };
 
     const handlePageChange = (page: number) => {
@@ -152,7 +183,7 @@ const LeadComponent: React.FC = () => {
 
     const handlePageSizeChange = (size: number) => {
         setPageSize(size);
-        setCurrentPage(1); // Reset to page 1 when page size changes
+        setCurrentPage(1);
     };
 
     const transformLeadsForPanel = useMemo(() => {
@@ -165,7 +196,7 @@ const LeadComponent: React.FC = () => {
                 id: lead.id,
                 name: lead.name || 'N/A',
                 phone: lead.phone || 'N/A',
-                email: lead.email || 'N/A',
+                email: lead.email || '',
                 profession: lead.profession || 'Not Provided',
                 address: lead.address || 'Not Provided',
                 city: lead.city || 'Not Provided',
@@ -202,6 +233,9 @@ const LeadComponent: React.FC = () => {
     useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
         dispatch(fetchRolePermissionsSidebar());
+        // Fetch master data for dropdowns
+        dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: '' }));
+        dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
     }, [dispatch]);
 
     const getLeadPermissions = () => {
@@ -252,16 +286,7 @@ const LeadComponent: React.FC = () => {
                 setSelectedIds([]);
                 toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
             }
-            // Refresh data after deletion
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            handleRefetch();
         } catch (error: any) {
             toast.error(error?.message || 'Failed to delete');
         } finally {
@@ -281,16 +306,7 @@ const LeadComponent: React.FC = () => {
                 currentLead ? 'Lead updated successfully' : 'Lead added successfully'
             );
             setIsModalOpen(false);
-            // Refresh data after save
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            handleRefetch();
         } catch (error: any) {
             console.error('Error saving lead:', error);
             toast.error(error?.message || 'Failed to save lead');
@@ -331,16 +347,7 @@ const LeadComponent: React.FC = () => {
             })).unwrap();
             toast.success(`${numericIds.length} lead(s) transferred successfully`);
             setSelectedIds([]);
-            // Refresh data after assignment
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            handleRefetch();
         } catch (error: any) {
             toast.error(error?.message || 'Failed to transfer selected leads');
         } finally {
@@ -408,16 +415,7 @@ const LeadComponent: React.FC = () => {
             await dispatch(uploadLeads(selectedFile)).unwrap();
             toast.success('Leads uploaded successfully');
             resetUploadStates();
-            // Refresh data after upload
-            const category = getCategoryFromTab(activeTab);
-            dispatch(fetchLeads({
-                page: currentPage,
-                limit: pageSize,
-                searchValue: searchTerm,
-                fromDate,
-                toDate,
-                ...(category && { category })
-            }));
+            handleRefetch();
         } catch (err: any) {
             toast.error(err?.message || 'Failed to upload leads');
         } finally {
@@ -429,13 +427,14 @@ const LeadComponent: React.FC = () => {
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
     const exportColumns = [
-        { label: 'Name', accessor: 'name' },          // 'accessor' instead of 'key'
+        { label: 'Name', accessor: 'name' },
         { label: 'Phone', accessor: 'phone' },
         { label: 'Email', accessor: 'email' },
         { label: 'Status', accessor: 'status' },
         { label: 'Stage', accessor: 'stage' },
         { label: 'Assigned To', accessor: 'assignedTo' },
         { label: 'Source', accessor: 'source' },
+        { label: 'Platform', accessor: 'platformType' },
         { label: 'Created Date', accessor: 'createdDate' },
         { label: 'Next Follow Up', accessor: 'nextFollowUp' },
         { label: 'Profession', accessor: 'profession' },
@@ -447,7 +446,6 @@ const LeadComponent: React.FC = () => {
         { label: 'Plot Price', accessor: 'plotPrice' },
         { label: 'Remark', accessor: 'remark' },
     ];
-
 
     return (
         <div className="space-y-8 p-3 sm:p-6 dark:bg-gray-900 dark:text-gray-100">
@@ -489,7 +487,7 @@ const LeadComponent: React.FC = () => {
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
                             bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
                         >
-                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <Plus className="w-3.5 h-3.5 sm:w-4" />
                             <span className="hidden sm:inline">Add New</span>
                         </button>
                     )}
@@ -512,20 +510,28 @@ const LeadComponent: React.FC = () => {
                 totalRecords={total}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                onAddLead={hasPermission(21, 'add') ? handleAdd : undefined}
-                onEditLead={hasPermission(22, 'edit') ? handleEdit : undefined}
-                onDeleteLead={hasPermission(4, 'delete') ? handleDelete : undefined}
-                onBulkDelete={hasPermission(4, 'delete') ? handleBulkDelete : undefined}
-                onBulkAssign={hasPermission(25, 'bulk assign') ? handleAssignLeads : undefined}
+                onAddLead={hasPermission(21, "add") ? handleAdd : undefined}
+                onEditLead={hasPermission(22, "edit") ? handleEdit : undefined}
+                onDeleteLead={hasPermission(4, "delete") ? handleDelete : undefined}
+                onBulkDelete={hasPermission(4, "delete") ? handleBulkDelete : undefined}
+                onBulkAssign={hasPermission(25, "bulk assign") ? handleAssignLeads : undefined}
                 onLeadClick={handleLeadClick}
                 onFollowUp={(lead: any) => {
                     setSelectedLeadId(lead);
                     setIsFollowUpModalOpen(true);
                 }}
-                hasEditPermission={hasPermission(22, 'edit')}
-                hasDeletePermission={hasPermission(4, 'delete')}
-                hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(4, 'delete')}
+                onRefetch={handleRefetch}
+                selectedPlatform={selectedPlatform}
+                onPlatformChange={handlePlatformChange}
+                selectedAssignedTo={selectedAssignedTo}
+                onAssignedToChange={handleAssignedToChange}
+                hasEditPermission={hasPermission(22, "edit")}
+                hasDeletePermission={hasPermission(4, "delete")}
+                hasBulkPermission={
+                    hasPermission(25, "bulk assign") || hasPermission(4, "delete")
+                }
                 currentUser={currentUser}
+                disableInternalFetch={true} // New prop to disable internal fetching
             />
 
             <ComprehensiveLeadModal
@@ -539,7 +545,10 @@ const LeadComponent: React.FC = () => {
             {selectedLeadId && (
                 <FollowUpLeadModal
                     isOpen={isFollowUpModalOpen}
-                    onClose={() => setIsFollowUpModalOpen(false)}
+                    onClose={() => {
+                        setIsFollowUpModalOpen(false);
+                        handleRefetch();
+                    }}
                     lead={selectedLeadId}
                 />
             )}
@@ -594,3 +603,5 @@ const LeadComponent: React.FC = () => {
 };
 
 export default LeadComponent;
+
+// Note: The LeadPanel component also needs updates to prevent duplicate API calls

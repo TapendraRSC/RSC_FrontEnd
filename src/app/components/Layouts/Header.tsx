@@ -63,6 +63,7 @@ const Header = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('role');
         router.push('/login');
     };
 

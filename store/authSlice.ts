@@ -7,6 +7,7 @@ interface AuthState {
     token: string | null;
     refreshToken: string | null;
     loading: boolean;
+    role: string | null;
     error: string | null;
     isAuthenticated: boolean;
 }
@@ -17,11 +18,13 @@ const getInitialAuthState = (): AuthState => {
         const token = localStorage.getItem('accessToken');
         const refreshToken = localStorage.getItem('refreshToken');
         const user = localStorage.getItem('user');
+        const role = localStorage.getItem('role');
 
         return {
             user: user ? JSON.parse(user) : null,
             token,
             refreshToken,
+            role,
             loading: false,
             error: null,
             isAuthenticated: !!(token && user),
@@ -31,6 +34,7 @@ const getInitialAuthState = (): AuthState => {
         user: null,
         token: null,
         refreshToken: null,
+        role: null,
         loading: false,
         error: null,
         isAuthenticated: false,
@@ -150,13 +154,14 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
-                const { accessToken, refreshToken, user } = action.payload;
+                const { accessToken, refreshToken, user, role } = action.payload;
 
                 state.user = user;
                 state.token = accessToken;
                 state.refreshToken = refreshToken || null;
                 state.isAuthenticated = true;
                 state.loading = false;
+                state.role = role || null;
                 state.error = null;
 
                 try {
@@ -164,6 +169,7 @@ const authSlice = createSlice({
                         localStorage.setItem('accessToken', accessToken);
                         localStorage.setItem('user', JSON.stringify(user));
                         if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+                        if (role) localStorage.setItem('role', role);
                     }
                 } catch { }
             })

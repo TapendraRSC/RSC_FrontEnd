@@ -72,6 +72,10 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
         URL.revokeObjectURL(url);
     };
 
+
+    console.log(Object.keys(previewData[0] || {}), "hey");
+
+
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4" style={{ marginTop: '0px' }}>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] flex flex-col">

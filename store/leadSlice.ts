@@ -15,12 +15,31 @@ export const fetchLeads = createAsyncThunk(
             category = "all-leads",
             fromDate = "",
             toDate = "",
-        }: { page?: number; limit?: number; searchValue?: string; category?: string; fromDate?: string; toDate?: string },
+            platformId = "",
+            assignedTo = "",
+        }: {
+            page?: number;
+            limit?: number;
+            searchValue?: string;
+            category?: string;
+            fromDate?: string;
+            toDate?: string;
+            platformId?: string;
+            assignedTo?: string;
+        },
         { rejectWithValue }
     ) => {
         try {
             const res = await axiosInstance.get(
-                `/leads/getAllLeads?page=${page}&limit=${limit}&search=${searchValue}&category=${category}&fromDate=${fromDate}&toDate=${toDate}`
+                `/leads/getAllLeads` +
+                `?page=${page}` +
+                `&limit=${limit}` +
+                `&search=${searchValue}` +
+                `&category=${category}` +
+                `&fromDate=${fromDate}` +
+                `&toDate=${toDate}` +
+                `&platformId=${platformId}` +
+                `&assignedTo=${assignedTo}`
             );
             return res.data.data;
         } catch (err: any) {
@@ -28,6 +47,7 @@ export const fetchLeads = createAsyncThunk(
         }
     }
 );
+
 
 // ✅ Fetch Lead By ID
 export const fetchLeadById = createAsyncThunk(

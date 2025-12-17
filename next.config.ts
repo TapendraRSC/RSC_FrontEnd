@@ -13,10 +13,10 @@ try {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // swcMinify: true,
   images: {
     domains: ["res.cloudinary.com"],
     formats: ["image/avif", "image/webp"],
+    unoptimized: true
   },
   experimental: {
     optimizeCss,
