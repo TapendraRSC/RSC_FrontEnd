@@ -21,6 +21,21 @@ interface ComprehensiveLeadModalProps {
   isLoading?: boolean;
 }
 
+interface LeadFormValues {
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  assignedTo: number | null;
+  platformId: number | null;
+  projectStatusId: number | null;
+  plotId: number | null;
+  leadStageId: number | null;
+  leadStatusId: number | null;
+  interestStatus: string | null;
+}
+
 const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   isOpen,
   onClose,
@@ -36,6 +51,9 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const { list: stageList } = useSelector((state: RootState) => state.leadStages);
   const { list: statusList } = useSelector((state: RootState) => state.statuses);
 
+  const currentUser = useSelector((state: RootState) => state.auth?.user || {});
+  const currentRole = useSelector((state: RootState) => state.auth?.role || "");
+
   const actualUsersData = useMemo(() => {
     if (Array.isArray(users)) return users;
     if (users?.data) {
@@ -49,23 +67,36 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     () => actualUsersData.map((user: any) => ({ label: user.name, value: user.id })),
     [actualUsersData]
   );
+
   const actualPlatformOptions = useMemo(
-    () => leadPlatforms.map((platform: any) => ({ label: platform.platformType, value: platform.id })),
+    () =>
+      leadPlatforms.map((platform: any) => ({
+        label: platform.platformType,
+        value: platform.id,
+      })),
     [leadPlatforms]
   );
+
   const projectStatusOptions = useMemo(() => {
     const projects = projectList?.projects || [];
     return projects.map((p: any) => ({ label: p.title, value: p.id }));
   }, [projectList]);
-  const plotOptions = useMemo(() => plots.map((plot: any) => ({ label: plot.plotNumber, value: plot.id })), [plots]);
+
+  const plotOptions = useMemo(
+    () => plots.map((plot: any) => ({ label: plot.plotNumber, value: plot.id })),
+    [plots]
+  );
+
   const leadStageOptions = useMemo(
     () => (stageList || []).map((s: any) => ({ label: s.type, value: s.id })),
     [stageList]
   );
+
   const leadStatusOptions = useMemo(
     () => (statusList || []).map((s: any) => ({ label: s.type, value: s.id })),
     [statusList]
   );
+
   const currentStatusOptions = useMemo(
     () => [
       { label: "Interested", value: "interested" },
@@ -73,30 +104,28 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     ],
     []
   );
-  const currentUser = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
+
+  const isAdmin = useMemo(
+    () => currentRole?.toLowerCase() === "admin",
+    [currentRole]
+  );
 
   const filteredAssignedToOptions = useMemo(() => {
-    if (currentUser.roleId === 36) {
+    if (!isAdmin) {
       const userOption = assignedToOptions.find((u: any) => u.value === currentUser.id);
       return userOption ? [userOption] : [];
     }
     return assignedToOptions;
-  }, [assignedToOptions, currentUser]);
+  }, [assignedToOptions, currentUser, isAdmin]);
 
-  const defaultValues = useMemo(
+  const defaultValues: LeadFormValues = useMemo(
     () => ({
       name: "",
       email: "",
       phone: "",
       city: "",
       state: "",
-      assignedTo: currentUser.roleId === 36 ? currentUser.id : null,
+      assignedTo: !isAdmin ? currentUser.id ?? null : null,
       platformId: null,
       projectStatusId: null,
       plotId: null,
@@ -104,10 +133,19 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       leadStatusId: null,
       interestStatus: null,
     }),
-    [currentUser]
+    [currentUser, isAdmin]
   );
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch, control, clearErrors } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+    control,
+    clearErrors,
+  } = useForm<LeadFormValues>({
     defaultValues,
   });
 
@@ -123,19 +161,24 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
   const findOptionByName = (options: any[], name: string) => {
     if (!name) return null;
-    return options.find((opt: any) =>
-      opt.label?.toLowerCase() === name.toLowerCase()
-    );
+    return options.find((opt: any) => opt.label?.toLowerCase() === name.toLowerCase());
   };
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
         if (initialData.plotProjectId) {
-          dispatch(fetchPlots({ projectId: initialData.plotProjectId, page: 1, limit: 100, search: "" }));
+          dispatch(
+            fetchPlots({
+              projectId: initialData.plotProjectId,
+              page: 1,
+              limit: 100,
+              search: "",
+            })
+          );
         }
 
-        const mappedData = {
+        const mappedData: LeadFormValues = {
           ...defaultValues,
           name: initialData.name || "",
           email: initialData.email || "",
@@ -144,7 +187,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
           state: initialData.state || "",
           interestStatus: initialData.interestStatus || null,
           projectStatusId: initialData.plotProjectId || null,
-          // We'll set these after options are loaded
           assignedTo: null,
           platformId: null,
           plotId: null,
@@ -156,7 +198,10 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
         setTimeout(() => {
           if (initialData.assignedTo) {
-            const assignedOption = findOptionByName(assignedToOptions, initialData.assignedTo);
+            const assignedOption = findOptionByName(
+              assignedToOptions,
+              initialData.assignedTo
+            );
             if (assignedOption) {
               setValue("assignedTo", assignedOption.value);
             }
@@ -164,7 +209,10 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
           if (initialData.platformType || initialData.source) {
             const platformName = initialData.platformType || initialData.source;
-            const platformOption = findOptionByName(actualPlatformOptions, platformName);
+            const platformOption = findOptionByName(
+              actualPlatformOptions,
+              platformName
+            );
             if (platformOption) {
               setValue("platformId", platformOption.value);
             }
@@ -184,21 +232,40 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             }
           }
         }, 500);
-
       } else {
         reset(defaultValues);
       }
     }
-  }, [isOpen, initialData, reset, defaultValues, dispatch, assignedToOptions, actualPlatformOptions, leadStageOptions, leadStatusOptions, setValue]);
+  }, [
+    isOpen,
+    initialData,
+    reset,
+    defaultValues,
+    dispatch,
+    assignedToOptions,
+    actualPlatformOptions,
+    leadStageOptions,
+    leadStatusOptions,
+    setValue,
+  ]);
 
   useEffect(() => {
     if (initialData?.plotNumber && plots.length > 0) {
-      const plotOption = findOptionByName(plots.map(p => ({ ...p, label: p.plotNumber })), initialData.plotNumber);
+      const plotOption = findOptionByName(
+        plots.map((p) => ({ ...p, label: p.plotNumber })),
+        initialData.plotNumber
+      );
       if (plotOption) {
         setValue("plotId", plotOption.id);
       }
     }
   }, [plots, initialData, setValue]);
+
+  useEffect(() => {
+    if (!isAdmin && currentUser?.id) {
+      setValue("assignedTo", currentUser.id);
+    }
+  }, [isAdmin, currentUser, setValue]);
 
   const handleClose = () => {
     reset(defaultValues);
@@ -208,7 +275,9 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   const selectedProjectId = watch("projectStatusId");
   useEffect(() => {
     if (selectedProjectId) {
-      dispatch(fetchPlots({ projectId: selectedProjectId, page: 1, limit: 100, search: "" }));
+      dispatch(
+        fetchPlots({ projectId: selectedProjectId, page: 1, limit: 100, search: "" })
+      );
       if (!initialData || selectedProjectId !== initialData.plotProjectId) {
         setValue("plotId", null);
       }
@@ -217,12 +286,15 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   }, [dispatch, selectedProjectId, setValue, initialData]);
 
-  const onSubmit = (data: any) => onSave(data);
+  const onSubmit = (data: LeadFormValues) => onSave(data);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 dark:bg-black/60" style={{ margin: "0px" }}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 dark:bg-black/60"
+      style={{ margin: "0px" }}
+    >
       <div className="bg-white dark:bg-gray-900 w-full sm:max-w-md md:max-w-2xl lg:max-w-4xl rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">
@@ -236,25 +308,74 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             ×
           </button>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <FormInput name="name" label="Name" required placeholder="Enter Name" register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput name="email" label="Email" type="email" placeholder="Enter Email" register={register} errors={errors} clearErrors={clearErrors} />
+            <FormInput
+              name="name"
+              label="Name"
+              required
+              placeholder="Enter Name"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+
+            <FormInput
+              name="email"
+              label="Email"
+              placeholder="Enter email"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+              validation={{
+                validate: (value: string | number | null) => {
+                  // Convert to string for validation
+                  const stringValue = value?.toString() || "";
+                  if (!stringValue || stringValue.trim() === "" || stringValue.toUpperCase() === "N/A") {
+                    return true;
+                  }
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  return (
+                    emailRegex.test(stringValue) || "Please enter a valid email address"
+                  );
+                },
+              }}
+            />
+
             <FormPhoneInput
               name="phone"
               label="Phone"
               required
               placeholder="Enter phone number"
-              register={register}
+              control={control}
               errors={errors}
               clearErrors={clearErrors}
               setValue={setValue}
-              control={control}
               maxLength={10}
               validation={{ required: "Phone number is required" }}
             />
-            <FormInput name="city" label="City" placeholder="Enter City" register={register} errors={errors} clearErrors={clearErrors} />
-            <FormInput name="state" label="State" placeholder="Enter State" register={register} errors={errors} clearErrors={clearErrors} />
+
+            <FormInput
+              name="city"
+              label="City"
+              placeholder="Enter City"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+
+            <FormInput
+              name="state"
+              label="State"
+              placeholder="Enter State"
+              register={register}
+              errors={errors}
+              clearErrors={clearErrors}
+            />
+
             <div>
               <label className="block text-sm font-medium mb-1">Current Status</label>
               <Controller
@@ -263,7 +384,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 render={({ field }) => (
                   <CommonDropdown
                     options={currentStatusOptions}
-                    selected={currentStatusOptions.find((opt: any) => opt.value === field.value) || null}
+                    selected={
+                      currentStatusOptions.find(
+                        (opt: any) => opt.value === field.value
+                      ) || null
+                    }
                     onChange={(val: any) => field.onChange(val?.value || null)}
                     placeholder="Select Current Status"
                     error={!!errors.interestStatus}
@@ -271,9 +396,15 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                   />
                 )}
               />
-              {errors.interestStatus && <p className="mt-1 text-sm text-red-600">{errors.interestStatus.message as string}</p>}
+              {errors.interestStatus && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.interestStatus.message as string}
+                </p>
+              )}
             </div>
           </div>
+
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -299,6 +430,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
               />
               {errors.assignedTo && <p className="mt-1 text-sm text-red-600">{errors.assignedTo.message as string}</p>}
             </div>
+
+
             <div>
               <label className="block text-sm font-medium mb-1">
                 Platform <span className="text-red-500">*</span>
@@ -310,7 +443,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 render={({ field }) => (
                   <CommonDropdown
                     options={actualPlatformOptions}
-                    selected={actualPlatformOptions.find((opt: any) => opt.value === field.value) || null}
+                    selected={
+                      actualPlatformOptions.find(
+                        (opt: any) => opt.value === field.value
+                      ) || null
+                    }
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Platform"
                     error={!!errors.platformId}
@@ -318,7 +455,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                   />
                 )}
               />
-              {errors.platformId && <p className="mt-1 text-sm text-red-600">{errors.platformId.message as string}</p>}
+              {errors.platformId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.platformId.message as string}
+                </p>
+              )}
             </div>
             {/* <div>
               <label className="block text-sm font-medium mb-1">Project</label>
@@ -363,7 +504,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 render={({ field }) => (
                   <CommonDropdown
                     options={leadStatusOptions}
-                    selected={leadStatusOptions.find((opt: any) => opt.value === field.value) || null}
+                    selected={
+                      leadStatusOptions.find(
+                        (opt: any) => opt.value === field.value
+                      ) || null
+                    }
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Lead Status"
                     error={!!errors.leadStatusId}
@@ -371,8 +516,13 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                   />
                 )}
               />
-              {errors.leadStatusId && <p className="mt-1 text-sm text-red-600">{errors.leadStatusId.message as string}</p>}
+              {errors.leadStatusId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.leadStatusId.message as string}
+                </p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Lead Stage</label>
               <Controller
@@ -381,7 +531,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 render={({ field }) => (
                   <CommonDropdown
                     options={leadStageOptions}
-                    selected={leadStageOptions.find((opt: any) => opt.value === field.value) || null}
+                    selected={
+                      leadStageOptions.find(
+                        (opt: any) => opt.value === field.value
+                      ) || null
+                    }
                     onChange={(value: any) => field.onChange(value?.value || null)}
                     placeholder="Select Lead Stage"
                     error={!!errors.leadStageId}
@@ -389,9 +543,14 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                   />
                 )}
               />
-              {errors.leadStageId && <p className="mt-1 text-sm text-red-600">{errors.leadStageId.message as string}</p>}
+              {errors.leadStageId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.leadStageId.message as string}
+                </p>
+              )}
             </div>
           </div>
+
           <div className="flex justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
