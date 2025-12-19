@@ -22,7 +22,7 @@ interface FollowUpFormData {
 
 interface FollowUpLeadModalProps {
     isOpen: boolean;
-    onClose: () => void;
+    onClose: (saved?: boolean) => void; // ✅ allow boolean
     lead: { id: number; name?: string; phone?: string };
 }
 
@@ -176,8 +176,9 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
 
                 // Close modal and signal parent to refresh if needed
                 setTimeout(() => {
-                    onClose(true); // Pass true to indicate data was saved
-                }, 1500); // Give time for toast to show
+                    onClose(true); // ✅ now valid
+                }, 1500);
+                // Give time for toast to show
             } else {
                 const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
                 setToast({ message: errorMessage, type: "error" });
@@ -196,8 +197,9 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
             nextFollowUpDate: new Date().toISOString().slice(0, 16),
             remark: "",
         });
-        onClose();
+        onClose(); // ✅ no argument also allowed
     };
+
 
     return (
         <>

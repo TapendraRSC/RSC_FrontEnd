@@ -6,8 +6,9 @@ import { Capacitor } from '@capacitor/core';
 // ✅ Fixed base URL with trailing slash (use env var fallback)
 const axiosInstance = axios.create({
     baseURL:
-        process.env.REACT_APP_BASE_URL ??
-        "https://backend.rscgroupdholera.in",
+        "http://localhost:8000",
+    // process.env.REACT_APP_BASE_URL ??
+    // "https://backend.rscgroupdholera.in",
     withCredentials: true,
     timeout: 30000, // 30 seconds
 });
