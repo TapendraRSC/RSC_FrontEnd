@@ -154,8 +154,12 @@ const LeadComponent: React.FC = () => {
     }, [fetchLeadsData]);
 
     // Intelligent refetch that maintains current tab context
-    const handleRefetch = useCallback(() => {
-        // Use the last fetch parameters with current tab context
+    const handleRefetch = useCallback((force: boolean = false) => {
+        // Only refetch if explicitly forced or if we have valid parameters
+        if (!force && Object.keys(lastFetchParams).length === 0) {
+            return;
+        }
+
         const category = getCategoryFromTab(activeTab);
         const params: any = {
             page: currentPage,
@@ -574,9 +578,12 @@ const LeadComponent: React.FC = () => {
             {selectedLeadId && (
                 <FollowUpLeadModal
                     isOpen={isFollowUpModalOpen}
-                    onClose={() => {
+                    onClose={(shouldRefetch?: boolean) => {
                         setIsFollowUpModalOpen(false);
-                        handleRefetch();
+                        // Only refetch if data was actually saved
+                        if (shouldRefetch) {
+                            handleRefetch(true);
+                        }
                     }}
                     lead={selectedLeadId}
                 />

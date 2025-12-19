@@ -161,20 +161,23 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
             );
 
             if (saveFollowUp.fulfilled.match(result)) {
-                await dispatch(fetchFollowUps(lead.id));
-                const params = {
-                    page: currentPage,
-                    limit: pageSize,
-                };
-                dispatch(fetchLeads(params));
+                // Only fetch follow-ups for the modal, not the entire lead list
+
+
                 setToast({ message: "Follow-up saved successfully!", type: "success" });
+
+                // Reset form
                 reset({
                     inquiryStatus: { label: "in follow up", value: "in follow up" },
                     budgetUpto: null,
                     nextFollowUpDate: new Date().toISOString().slice(0, 16),
                     remark: "",
                 });
-                onClose();
+
+                // Close modal and signal parent to refresh if needed
+                setTimeout(() => {
+                    onClose(true); // Pass true to indicate data was saved
+                }, 1500); // Give time for toast to show
             } else {
                 const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
                 setToast({ message: errorMessage, type: "error" });
