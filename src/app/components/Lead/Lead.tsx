@@ -97,6 +97,9 @@ const LeadComponent: React.FC = () => {
     const [selectedPlatform, setSelectedPlatform] = useState("");
     const [selectedAssignedTo, setSelectedAssignedTo] = useState("");
 
+    // Store the last fetch parameters for intelligent refetch
+    const [lastFetchParams, setLastFetchParams] = useState<any>({});
+
     useEffect(() => {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         setTheme(prefersDark ? 'dark' : 'light');
@@ -118,7 +121,41 @@ const LeadComponent: React.FC = () => {
     };
 
     // Main API call - ONLY in LeadComponent
-    const fetchLeadsData = useCallback(() => {
+    const fetchLeadsData = useCallback((overrideTab?: string) => {
+        const tabToUse = overrideTab || activeTab;
+        const category = getCategoryFromTab(tabToUse);
+        const params: any = {
+            page: currentPage,
+            limit: pageSize,
+            searchValue: searchTerm,
+            fromDate,
+            toDate,
+            ...(category && { category }),
+        };
+
+        if (selectedPlatform) {
+            params.platformId = selectedPlatform;
+        }
+
+        if (selectedAssignedTo) {
+            params.assignedTo = selectedAssignedTo;
+        }
+
+        // Store the last fetch parameters
+        setLastFetchParams(params);
+
+        console.log("Fetching leads with params:", params);
+        dispatch(fetchLeads(params));
+    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
+
+    // Only fetch when parameters change
+    useEffect(() => {
+        fetchLeadsData();
+    }, [fetchLeadsData]);
+
+    // Intelligent refetch that maintains current tab context
+    const handleRefetch = useCallback(() => {
+        // Use the last fetch parameters with current tab context
         const category = getCategoryFromTab(activeTab);
         const params: any = {
             page: currentPage,
@@ -137,19 +174,9 @@ const LeadComponent: React.FC = () => {
             params.assignedTo = selectedAssignedTo;
         }
 
-        console.log("Fetching leads with params:", params);
+        console.log("Refetching with current tab context:", activeTab, params);
         dispatch(fetchLeads(params));
-    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
-
-    // Only fetch when parameters change
-    useEffect(() => {
-        fetchLeadsData();
-    }, [fetchLeadsData]);
-
-    // Refetch function that maintains all filters
-    const handleRefetch = useCallback(() => {
-        fetchLeadsData();
-    }, [fetchLeadsData]);
+    }, [dispatch, activeTab, currentPage, pageSize, searchTerm, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
 
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
@@ -387,12 +414,14 @@ const LeadComponent: React.FC = () => {
                 const text = event.target.result as string;
                 const rows = text.split('\n').map((row: string) => row.split(','));
                 const preview = rows.map((cols: string[], i: number) => ({
-                    id: i + 1,
+
                     name: cols[0] || '',
                     email: cols[1] || '',
                     phone: cols[2] || '',
                     city: cols[3] || '',
                     state: cols[4] || '',
+                    platform: cols[5] || '',
+
                 }));
                 setPreviewData(preview.filter((r) => r.name));
             } catch (err) {
