@@ -1,8 +1,9 @@
 'use client';
-import React, { useEffect, useState, useMemo } from 'react';
-import { Pencil, Trash2, Plus, Upload, Loader2, Download, UserPlus } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { Trash2, Plus, Upload, Loader2, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
+
 import {
     createLead,
     deleteLead,
@@ -10,11 +11,14 @@ import {
     updateLead,
     uploadLeads,
     deleteBulkLeads,
-    transferSelectedLeads
+    transferSelectedLeads,
 } from '../../../../store/leadSlice';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
+import { fetchLeadPlatforms } from '../../../../store/leadPlateformSlice';
+import { exportUsers } from '../../../../store/userSlice';
 import { RootState } from '../../../../store/store';
+
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import ComprehensiveLeadModal from './LeadModal';
 import FollowUpLeadModal from './FollowUpLeadModal';
@@ -40,7 +44,7 @@ const formatDate = (dateString: string | Date | null) => {
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: true
+            hour12: true,
         });
     }
     const date = new Date(dateString);
@@ -52,7 +56,7 @@ const formatDate = (dateString: string | Date | null) => {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true
+        hour12: true,
     });
 };
 
@@ -74,97 +78,141 @@ const LeadComponent: React.FC = () => {
     const [toDate, setToDate] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [currentLead, setCurrentLead] = useState<any | null>(null);
-    const [leadToDelete, setLeadToDelete] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+
     const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
     const [currentTimelineLead, setCurrentTimelineLead] = useState<any | null>(null);
+
     const [isUploadPreviewOpen, setIsUploadPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [fileName, setFileName] = useState('');
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
     const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
     const [deleteMode, setDeleteMode] = useState<'single' | 'bulk'>('single');
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-    useEffect(() => {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(prefersDark ? 'dark' : 'light');
-    }, []);
+    const [selectedPlatform, setSelectedPlatform] = useState('');
+    const [selectedAssignedTo, setSelectedAssignedTo] = useState('');
 
-    // ✅ MAIN API CALL - Single useEffect to handle ALL API calls
-    useEffect(() => {
-        const category = getCategoryFromTab(activeTab);
-        dispatch(
-            fetchLeads({
+    const [lastFetchParams, setLastFetchParams] = useState<any>({});
+
+    const getCategoryFromTab = (tabId: string) => {
+        const tabToCategory: Record<string, string> = {
+            list: '',
+            todayFollowup: 'today-followup',
+            pendingFollowup: 'pending-followup',
+            freshLead: 'fresh',
+            hotLead: 'hot',
+            warmLead: 'warm',
+            coldLead: 'cold',
+            dumpLead: 'dump',
+            'future-followup': 'future-followup',
+        };
+        return tabToCategory[tabId] || '';
+    };
+
+    // SINGLE SOURCE OF TRUTH API CALL
+    const fetchLeadsData = useCallback(
+        (overrideTab?: string) => {
+            const tabToUse = overrideTab || activeTab;
+            const category = getCategoryFromTab(tabToUse);
+
+            const params: any = {
                 page: currentPage,
                 limit: pageSize,
                 searchValue: searchTerm,
                 fromDate,
                 toDate,
-                ...(category && { category })
-            })
-        );
-    }, [dispatch, currentPage, pageSize, searchTerm, activeTab, fromDate, toDate]);
+                ...(category && { category }),
+            };
 
-    const getCategoryFromTab = (tabId: string) => {
-        const tabToCategory: Record<string, string> = {
-            'list': '',
-            'todayFollowup': 'today-followup',
-            'pendingFollowup': 'pending-followup',
-            'freshLead': 'fresh',
-            'hotLead': 'hot',
-            'warmLead': 'warm',
-            'coldLead': 'cold',
-            'dumpLead': 'dump',
-            "future-followup": "future-followup",
-        };
-        return tabToCategory[tabId] || '';
-    };
+            if (selectedPlatform) {
+                params.platformId = selectedPlatform;
+            }
 
-    // ✅ CRITICAL: Refetch function that maintains search term
-    const handleRefetch = (maintainSearchTerm?: string) => {
-        const category = getCategoryFromTab(activeTab);
+            if (selectedAssignedTo) {
+                params.assignedTo = selectedAssignedTo;
+            }
 
-        // Use the search term parameter if provided, otherwise use state
-        const effectiveSearchTerm = maintainSearchTerm !== undefined
-            ? maintainSearchTerm
-            : searchTerm;
-
-        console.log('🔄 Refetching with params:', {
-            page: currentPage,
-            limit: pageSize,
-            category,
-            searchTerm: effectiveSearchTerm,
-            fromDate,
-            toDate
-        });
-
-        dispatch(fetchLeads({
-            page: currentPage,
-            limit: pageSize,
-            searchValue: effectiveSearchTerm,  // ✅ CRITICAL: Pass search term
+            setLastFetchParams(params);
+            dispatch(fetchLeads(params));
+        },
+        [
+            dispatch,
+            activeTab,
+            currentPage,
+            pageSize,
+            searchTerm,
             fromDate,
             toDate,
-            ...(category && { category })
-        }));
-    };
+            selectedPlatform,
+            selectedAssignedTo,
+        ]
+    );
 
+    // Fetch when dependencies change
+    useEffect(() => {
+        fetchLeadsData();
+    }, [fetchLeadsData]);
+
+    // Intelligent refetch
+    const handleRefetch = useCallback(
+        (force: boolean = false) => {
+            if (!force && Object.keys(lastFetchParams).length === 0) {
+                return;
+            }
+            const category = getCategoryFromTab(activeTab);
+            const params: any = {
+                page: currentPage,
+                limit: pageSize,
+                searchValue: searchTerm,
+                fromDate,
+                toDate,
+                ...(category && { category }),
+            };
+
+            if (selectedPlatform) {
+                params.platformId = selectedPlatform;
+            }
+
+            if (selectedAssignedTo) {
+                params.assignedTo = selectedAssignedTo;
+            }
+
+            dispatch(fetchLeads(params));
+        },
+        [
+            dispatch,
+            activeTab,
+            currentPage,
+            pageSize,
+            searchTerm,
+            fromDate,
+            toDate,
+            selectedPlatform,
+            selectedAssignedTo,
+            lastFetchParams,
+        ]
+    );
+
+    // Handlers to update filters + reset page
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         setCurrentPage(1);
     };
 
     const handleSearch = (term: string) => {
-        console.log('🔍 Search term changed to:', term);
         setSearchTerm(term);
         setCurrentPage(1);
     };
@@ -172,6 +220,16 @@ const LeadComponent: React.FC = () => {
     const handleDateChange = (newFromDate: string, newToDate: string) => {
         setFromDate(newFromDate);
         setToDate(newToDate);
+        setCurrentPage(1);
+    };
+
+    const handlePlatformChange = (platform: string) => {
+        setSelectedPlatform(platform);
+        setCurrentPage(1);
+    };
+
+    const handleAssignedToChange = (assignedTo: string) => {
+        setSelectedAssignedTo(assignedTo);
         setCurrentPage(1);
     };
 
@@ -188,8 +246,13 @@ const LeadComponent: React.FC = () => {
         return (leadList || []).map((lead: any) => {
             const createdAt = lead.createdAt ? formatDate(lead.createdAt) : 'N/A';
             const updatedAt = lead.updatedAt ? formatDate(lead.updatedAt) : 'N/A';
-            const latestFollowUpDate = lead.latestFollowUpDate ? formatDate(lead.latestFollowUpDate) : 'Not Scheduled';
-            const lastFollowUpDate = lead.lastFollowUpDate ? formatDate(lead.lastFollowUpDate) : 'N/A';
+            const latestFollowUpDate = lead.latestFollowUpDate
+                ? formatDate(lead.latestFollowUpDate)
+                : 'Not Scheduled';
+            const lastFollowUpDate = lead.lastFollowUpDate
+                ? formatDate(lead.lastFollowUpDate)
+                : 'N/A';
+
             return {
                 id: lead.id,
                 name: lead.name || 'N/A',
@@ -228,9 +291,12 @@ const LeadComponent: React.FC = () => {
         });
     }, [leadList]);
 
+    // Master data
     useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
         dispatch(fetchRolePermissionsSidebar());
+        dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: '' }));
+        dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
     }, [dispatch]);
 
     const getLeadPermissions = () => {
@@ -279,10 +345,11 @@ const LeadComponent: React.FC = () => {
             } else if (deleteMode === 'bulk') {
                 await dispatch(deleteBulkLeads(deleteTarget as number[])).unwrap();
                 setSelectedIds([]);
-                toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
+                toast.success(
+                    `${(deleteTarget as number[]).length} lead(s) deleted successfully`
+                );
             }
-            // ✅ Use handleRefetch to maintain search
-            handleRefetch(searchTerm);
+            handleRefetch();
         } catch (error: any) {
             toast.error(error?.message || 'Failed to delete');
         } finally {
@@ -302,10 +369,8 @@ const LeadComponent: React.FC = () => {
                 currentLead ? 'Lead updated successfully' : 'Lead added successfully'
             );
             setIsModalOpen(false);
-            // ✅ Use handleRefetch to maintain search
-            handleRefetch(searchTerm);
+            handleRefetch();
         } catch (error: any) {
-            console.error('Error saving lead:', error);
             toast.error(error?.message || 'Failed to save lead');
         } finally {
             setIsSaving(false);
@@ -320,32 +385,33 @@ const LeadComponent: React.FC = () => {
         setIsExportModalOpen(true);
     };
 
-    const handleBulkDelete = (selectedIds: (string | number)[]) => {
-        if (!selectedIds || selectedIds.length === 0) {
+    const handleBulkDelete = (ids: (string | number)[]) => {
+        if (!ids || ids.length === 0) {
             toast.error('No leads selected for deletion');
             return;
         }
         setDeleteMode('bulk');
-        setDeleteTarget(selectedIds.map(id => Number(id)));
+        setDeleteTarget(ids.map((id) => Number(id)));
         setIsDeleteModalOpen(true);
     };
 
     const handleBulkAssignRole = async (assignedTo: string | number) => {
-        if (!selectedIds || selectedIds?.length === 0) {
+        if (!selectedIds || selectedIds.length === 0) {
             toast.error('No leads selected for assignment');
             return;
         }
-        const numericIds = selectedIds?.map(id => Number(id));
+        const numericIds = selectedIds.map((id) => Number(id));
         const numericAssignedTo = Number(assignedTo);
         try {
-            await dispatch(transferSelectedLeads({
-                leadIds: numericIds,
-                assignedTo: numericAssignedTo
-            })).unwrap();
+            await dispatch(
+                transferSelectedLeads({
+                    leadIds: numericIds,
+                    assignedTo: numericAssignedTo,
+                })
+            ).unwrap();
             toast.success(`${numericIds.length} lead(s) transferred successfully`);
             setSelectedIds([]);
-            // ✅ Use handleRefetch to maintain search
-            handleRefetch(searchTerm);
+            handleRefetch();
         } catch (error: any) {
             toast.error(error?.message || 'Failed to transfer selected leads');
         } finally {
@@ -379,21 +445,22 @@ const LeadComponent: React.FC = () => {
         if (!file) return;
         setFileName(file.name);
         setSelectedFile(file);
+
         const reader = new FileReader();
         reader.onload = (event: any) => {
             try {
                 const text = event.target.result as string;
                 const rows = text.split('\n').map((row: string) => row.split(','));
-                const preview = rows.map((cols: string[], i: number) => ({
-                    id: i + 1,
+                const preview = rows.map((cols: string[]) => ({
                     name: cols[0] || '',
                     email: cols[1] || '',
                     phone: cols[2] || '',
                     city: cols[3] || '',
                     state: cols[4] || '',
+                    platform: cols[5] || '',
                 }));
                 setPreviewData(preview.filter((r) => r.name));
-            } catch (err) {
+            } catch {
                 toast.error('Failed to parse file');
                 resetUploadStates();
             }
@@ -413,8 +480,7 @@ const LeadComponent: React.FC = () => {
             await dispatch(uploadLeads(selectedFile)).unwrap();
             toast.success('Leads uploaded successfully');
             resetUploadStates();
-            // ✅ Use handleRefetch to maintain search
-            handleRefetch(searchTerm);
+            handleRefetch();
         } catch (err: any) {
             toast.error(err?.message || 'Failed to upload leads');
         } finally {
@@ -422,7 +488,7 @@ const LeadComponent: React.FC = () => {
         }
     };
 
-    const storedUser = localStorage.getItem('user');
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
     const exportColumns = [
@@ -433,6 +499,7 @@ const LeadComponent: React.FC = () => {
         { label: 'Stage', accessor: 'stage' },
         { label: 'Assigned To', accessor: 'assignedTo' },
         { label: 'Source', accessor: 'source' },
+        { label: 'Platform', accessor: 'platformType' },
         { label: 'Created Date', accessor: 'createdDate' },
         { label: 'Next Follow Up', accessor: 'nextFollowUp' },
         { label: 'Profession', accessor: 'profession' },
@@ -447,6 +514,7 @@ const LeadComponent: React.FC = () => {
 
     return (
         <div className="space-y-8 p-3 sm:p-6 dark:bg-gray-900 dark:text-gray-100">
+            {/* Header */}
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold">Lead Master</h1>
@@ -459,7 +527,7 @@ const LeadComponent: React.FC = () => {
                         <button
                             onClick={handleExport}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
-                            bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-medium"
+              bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-medium"
                         >
                             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span className="hidden sm:inline">Export</span>
@@ -469,7 +537,7 @@ const LeadComponent: React.FC = () => {
                         <button
                             onClick={handleOpenUploadPreview}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
-                            bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+              bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
                         >
                             {uploadLoading ? (
                                 <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
@@ -483,17 +551,16 @@ const LeadComponent: React.FC = () => {
                         <button
                             onClick={handleAdd}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
-                            bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+              bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
                         >
-                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:w-4" />
+                            <Plus className="w-3.5 h-3.5 sm:w-4" />
                             <span className="hidden sm:inline">Add New</span>
                         </button>
                     )}
                 </div>
             </div>
 
-
-
+            {/* Lead panel – UI only */}
             <LeadPanel
                 leads={transformLeadsForPanel}
                 loading={loading}
@@ -520,13 +587,21 @@ const LeadComponent: React.FC = () => {
                     setSelectedLeadId(lead);
                     setIsFollowUpModalOpen(true);
                 }}
-                onRefetch={handleRefetch}  // ✅ CRITICAL: Pass refetch function
+                onRefetch={() => handleRefetch(true)}
+                selectedPlatform={selectedPlatform}
+                onPlatformChange={handlePlatformChange}
+                selectedAssignedTo={selectedAssignedTo}
+                onAssignedToChange={handleAssignedToChange}
                 hasEditPermission={hasPermission(28, 'edit')}
                 hasDeletePermission={hasPermission(29, 'delete')}
-                hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(29, 'delete')}
+                hasBulkPermission={
+                    hasPermission(25, 'bulk assign') || hasPermission(29, 'delete')
+                }
                 currentUser={currentUser}
+                disableInternalFetch={true}
             />
 
+            {/* Modals */}
             <ComprehensiveLeadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -538,10 +613,11 @@ const LeadComponent: React.FC = () => {
             {selectedLeadId && (
                 <FollowUpLeadModal
                     isOpen={isFollowUpModalOpen}
-                    onClose={() => {
+                    onClose={(shouldRefetch?: boolean) => {
                         setIsFollowUpModalOpen(false);
-                        // ✅ Refetch when follow-up modal closes
-                        handleRefetch(searchTerm);
+                        if (shouldRefetch) {
+                            handleRefetch(true);
+                        }
                     }}
                     lead={selectedLeadId}
                 />
@@ -560,7 +636,8 @@ const LeadComponent: React.FC = () => {
                 title={deleteMode === 'bulk' ? 'Confirm Bulk Deletion' : 'Confirm Deletion'}
                 message={
                     deleteMode === 'bulk'
-                        ? `Are you sure you want to delete ${Array.isArray(deleteTarget) ? deleteTarget.length : 0} selected leads?`
+                        ? `Are you sure you want to delete ${Array.isArray(deleteTarget) ? deleteTarget.length : 0
+                        } selected leads?`
                         : `Are you sure you want to delete "${deleteTarget?.name ?? ''}"?`
                 }
                 Icon={Trash2}

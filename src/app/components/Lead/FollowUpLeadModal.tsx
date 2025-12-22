@@ -1,17 +1,18 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { X, Calendar, IndianRupee, CheckCircle, AlertCircle, Users, Phone, Clock, TrendingUp } from "lucide-react";
 import { useForm } from "react-hook-form";
 import CommonDropdown from "../Common/CommonDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { fetchFollowUps, saveFollowUp } from "../../../../store/followUpSlice";
-import { fetchLeads } from "../../../../store/leadSlice";
+
 
 interface DropdownOption {
     label: string;
     value: string;
 }
+
 
 interface FollowUpFormData {
     inquiryStatus: DropdownOption | null;
@@ -20,11 +21,13 @@ interface FollowUpFormData {
     remark: string;
 }
 
+
 interface FollowUpLeadModalProps {
     isOpen: boolean;
-    onClose: () => void;
+    onClose: (shouldRefetch?: boolean) => void;
     lead: { id: number; name?: string; phone?: string };
 }
+
 
 const statusMappingReverse: Record<number, string> = {
     1: "New Lead",
@@ -44,6 +47,7 @@ const statusMappingReverse: Record<number, string> = {
     15: "closed",
 };
 
+
 const Toast: React.FC<{
     message: string;
     type: "success" | "error";
@@ -53,6 +57,7 @@ const Toast: React.FC<{
         const timer = setTimeout(onClose, 3000);
         return () => clearTimeout(timer);
     }, [onClose]);
+
 
     return (
         <div className="fixed top-6 right-6 z-[60] animate-in slide-in-from-right duration-300">
@@ -76,12 +81,16 @@ const Toast: React.FC<{
     );
 };
 
+
 const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, lead }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { followUps, loading } = useSelector((state: RootState) => state.followUps);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(5);
+
+
+    // Use ref to track the last fetched lead ID to prevent duplicate calls
+    const lastFetchedLeadIdRef = useRef<number | null>(null);
+
 
     const {
         register,
@@ -100,10 +109,19 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         },
     });
 
-    useEffect(() => {
-        if (isOpen && lead?.id) dispatch(fetchFollowUps(lead.id));
-    }, [dispatch, lead, isOpen]);
 
+    // Fetch follow-ups only when modal opens with a NEW lead ID
+    useEffect(() => {
+        // Only fetch if modal is open, we have a lead ID, and it's different from last fetch
+        if (isOpen && lead?.id && lead.id !== lastFetchedLeadIdRef.current) {
+            console.log('Fetching followups for lead:', lead.id);
+            dispatch(fetchFollowUps(lead.id));
+            lastFetchedLeadIdRef.current = lead.id;
+        }
+    }, [isOpen, lead?.id, dispatch]);
+
+
+    // Handle form field dependencies
     useEffect(() => {
         const subscription = watch((value, { name }) => {
             if (name === "inquiryStatus") {
@@ -119,13 +137,16 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         return () => subscription.unsubscribe();
     }, [watch, setValue]);
 
+
     if (!isOpen) return null;
+
 
     const inquiryOptions: DropdownOption[] = [
         { label: "in follow up", value: "in follow up" },
         { label: "not interested", value: "not interested" },
         { label: "closed", value: "closed" },
     ];
+
 
     const budgetOptions: DropdownOption[] = [
         { label: "10 lacs", value: "10 lacs" },
@@ -142,12 +163,15 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         { label: "2 Crore", value: "2 Crore" },
     ];
 
+
     const inquiryValue = watch("inquiryStatus");
     const isDisabledStatus = inquiryValue?.value === "not interested" || inquiryValue?.value === "closed";
+
 
     const onSubmit = async (data: FollowUpFormData) => {
         try {
             if (!lead?.id) throw new Error("Lead ID not found");
+
 
             const followUpStatusString = data.inquiryStatus?.value || "in follow up";
             const result: any = await dispatch(
@@ -160,21 +184,37 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                 })
             );
 
+
             if (saveFollowUp.fulfilled.match(result)) {
-                await dispatch(fetchFollowUps(lead.id));
-                const params = {
-                    page: currentPage,
-                    limit: pageSize,
-                };
-                dispatch(fetchLeads(params));
+                // Fetch updated follow-ups to refresh the history table
+                // await dispatch(fetchFollowUps(lead.id));
+
+
+                // Update the ref so we track this fetch
+                lastFetchedLeadIdRef.current = lead.id;
+
+
                 setToast({ message: "Follow-up saved successfully!", type: "success" });
+
+
+                // Reset form to default values
                 reset({
                     inquiryStatus: { label: "in follow up", value: "in follow up" },
                     budgetUpto: null,
                     nextFollowUpDate: new Date().toISOString().slice(0, 16),
                     remark: "",
                 });
-                onClose();
+
+
+                // Close modal after 1.5 seconds to show success message
+                setTimeout(() => {
+                    // Reset the ref so next time this lead opens, it fetches fresh data
+                    lastFetchedLeadIdRef.current = null;
+
+
+                    // Pass true to indicate that parent should refetch leads list
+                    onClose(true);
+                }, 1500);
             } else {
                 const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
                 setToast({ message: errorMessage, type: "error" });
@@ -186,15 +226,25 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         }
     };
 
+
     const handleClose = () => {
+        // Reset form when closing
         reset({
             inquiryStatus: { label: "in follow up", value: "in follow up" },
             budgetUpto: null,
             nextFollowUpDate: new Date().toISOString().slice(0, 16),
             remark: "",
         });
-        onClose();
+
+
+        // Don't reset lastFetchedLeadIdRef here
+        // This prevents refetch if user opens same lead again immediately
+
+
+        // Call parent's onClose with false since this is manual close
+        onClose(false);
     };
+
 
     return (
         <>
@@ -224,6 +274,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                         </div>
                     </div>
 
+
                     {/* Customer Info Card */}
                     <div className="px-6 sm:px-8 py-5 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border-b border-gray-200/50 dark:border-gray-700/50">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
@@ -252,6 +303,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                         </div>
                     </div>
 
+
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 sm:py-8 space-y-8">
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -275,6 +327,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                         </p>
                                     )}
                                 </div>
+
 
                                 {/* Next Follow-up Date */}
                                 <div className="space-y-2">
@@ -304,6 +357,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                     )}
                                 </div>
 
+
                                 {/* Budget */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -321,6 +375,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                     </div>
                                 </div>
                             </div>
+
 
                             {/* Remark */}
                             <div className="space-y-2">
@@ -346,6 +401,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                 )}
                             </div>
 
+
                             {/* Save Button */}
                             <div className="flex justify-end pt-2">
                                 <button
@@ -368,6 +424,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                 </button>
                             </div>
                         </form>
+
 
                         {/* Follow-up History Table */}
                         <div className="border-2 border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
@@ -459,5 +516,6 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         </>
     );
 };
+
 
 export default FollowUpLeadModal;
