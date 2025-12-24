@@ -282,7 +282,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
     const isValidFollowUpDate = (value: string) => {
         if (!value) return true;
 
-        const selected = parseISTDateTime(value); // ✅ FIX
+        const selected = parseISTDateTime(value);
         const now = getKolkataNow();
 
         const selectedDate = selected.toDateString();
@@ -291,18 +291,18 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         const selectedHour = selected.getHours();
         const currentHour = now.getHours();
 
-        // ❌ Aaj ka past time
+        //  Past time on the same day
         if (selectedDate === todayDate && selected < now) {
-            return "Past time select nahi kar sakte";
+            return "You cannot select a past time for today.";
         }
 
-        // ❌ Aaj PM hai aur AM select
+        //  Today is PM and selected time is AM
         if (
             selectedDate === todayDate &&
             currentHour >= 12 &&
             selectedHour < 12
         ) {
-            return "Aaj AM time allowed nahi hai";
+            return "AM time is not allowed for today.";
         }
 
         return true;
