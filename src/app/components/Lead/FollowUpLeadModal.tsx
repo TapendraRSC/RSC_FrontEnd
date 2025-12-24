@@ -385,10 +385,13 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             //         : false,
                                             // })}
                                             {...register("nextFollowUpDate", {
-                                                required: "Next Followup Date is required",
+                                                // required: "Next Followup Date is required",
+                                                required: !isDisabledStatus
+                                                    ? "Next Follow-up Date is required"
+                                                    : false,
                                                 validate: isValidFollowUpDate,
                                             })}
-                                            disabled={isDisabledStatus}
+                                            // disabled={isDisabledStatus}
                                             min={getKolkataMinDateTime()}
                                             className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12
       focus:ring-2 focus:ring-blue-500 focus:border-blue-500
