@@ -246,6 +246,71 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
     };
 
 
+    const getKolkataMinDateTime = () => {
+        const now = new Date();
+
+        const kolkataNow = new Date(
+            now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+        );
+
+        const yyyy = kolkataNow.getFullYear();
+        const mm = String(kolkataNow.getMonth() + 1).padStart(2, "0");
+        const dd = String(kolkataNow.getDate()).padStart(2, "0");
+        const hh = String(kolkataNow.getHours()).padStart(2, "0"); // 24h
+        const min = String(kolkataNow.getMinutes()).padStart(2, "0");
+
+        return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    };
+
+
+    const parseISTDateTime = (value: string) => {
+        const [date, time] = value.split("T");
+        const [year, month, day] = date.split("-").map(Number);
+        const [hour, minute] = time.split(":").map(Number);
+
+        return new Date(year, month - 1, day, hour, minute);
+    };
+
+
+
+    const getKolkataNow = () => {
+        return new Date(
+            new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+        );
+    };
+
+    const isValidFollowUpDate = (value: string) => {
+        if (!value) return true;
+
+        const selected = parseISTDateTime(value); // ✅ FIX
+        const now = getKolkataNow();
+
+        const selectedDate = selected.toDateString();
+        const todayDate = now.toDateString();
+
+        const selectedHour = selected.getHours();
+        const currentHour = now.getHours();
+
+        // ❌ Aaj ka past time
+        if (selectedDate === todayDate && selected < now) {
+            return "Past time select nahi kar sakte";
+        }
+
+        // ❌ Aaj PM hai aur AM select
+        if (
+            selectedDate === todayDate &&
+            currentHour >= 12 &&
+            selectedHour < 12
+        ) {
+            return "Aaj AM time allowed nahi hai";
+        }
+
+        return true;
+    };
+
+
+
+
     return (
         <>
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4" style={{ margin: "0px" }}>
@@ -337,6 +402,49 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                     <div className="relative">
                                         <input
                                             type="datetime-local"
+                                            // {...register("nextFollowUpDate", {
+                                            //     required: !isDisabledStatus
+                                            //         ? "Next Follow-up Date is required"
+                                            //         : false,
+                                            // })}
+                                            {...register("nextFollowUpDate", {
+                                                required: "Next Followup Date is required",
+                                                validate: isValidFollowUpDate,
+                                            })}
+                                            disabled={isDisabledStatus}
+                                            min={getKolkataMinDateTime()}
+                                            className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12
+      focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+      dark:bg-gray-800 dark:text-gray-100 transition-all duration-200
+      ${errors.nextFollowUpDate
+                                                    ? "border-rose-300 dark:border-rose-600"
+                                                    : "border-gray-200 dark:border-gray-700"
+                                                }
+      ${isDisabledStatus
+                                                    ? "bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed opacity-60"
+                                                    : "hover:border-blue-400"
+                                                }`}
+                                        />
+
+                                        <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
+                                    </div>
+                                    {errors.nextFollowUpDate && (
+                                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                                            <AlertCircle className="w-3.5 h-3.5" />
+                                            {errors.nextFollowUpDate.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* old  */}
+                                {/* 
+  <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Next Followup Date {isDisabledStatus ? "" : <span className="text-rose-500">*</span>}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="datetime-local"
                                             {...register("nextFollowUpDate", {
                                                 required: !isDisabledStatus ? "Next Followup Date is required" : false
                                             })}
@@ -355,7 +463,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             {errors.nextFollowUpDate.message}
                                         </p>
                                     )}
-                                </div>
+                                </div> */}
 
 
                                 {/* Budget */}
