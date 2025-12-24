@@ -408,19 +408,22 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                             //         : false,
                                             // })}
                                             {...register("nextFollowUpDate", {
-                                                required: "Next Followup Date is required",
+                                                // required: "Next Followup Date is required",
+                                                required: !isDisabledStatus
+                                                    ? "Next Follow-up Date is required"
+                                                    : false,
                                                 validate: isValidFollowUpDate,
                                             })}
-                                            disabled={isDisabledStatus}
+                                            // disabled={isDisabledStatus}
                                             min={getKolkataMinDateTime()}
                                             className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12
-      focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-      dark:bg-gray-800 dark:text-gray-100 transition-all duration-200
-      ${errors.nextFollowUpDate
+                                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                                  dark:bg-gray-800 dark:text-gray-100 transition-all duration-200
+                                  ${errors.nextFollowUpDate
                                                     ? "border-rose-300 dark:border-rose-600"
                                                     : "border-gray-200 dark:border-gray-700"
                                                 }
-      ${isDisabledStatus
+                                  ${isDisabledStatus
                                                     ? "bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed opacity-60"
                                                     : "hover:border-blue-400"
                                                 }`}
