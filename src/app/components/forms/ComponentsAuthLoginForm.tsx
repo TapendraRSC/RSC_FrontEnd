@@ -16,6 +16,8 @@ const ComponentsAuthLoginForm = () => {
     const { loading, error } = useSelector((state: RootState) => state.auth);
     const [showPassword, setShowPassword] = useState(false);
 
+    console.log('Auth Login Form Rendered');
+
     const {
         register,
         handleSubmit,
