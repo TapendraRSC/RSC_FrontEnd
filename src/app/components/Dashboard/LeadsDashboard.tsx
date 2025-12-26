@@ -8,10 +8,16 @@ import {
     Facebook,
     Activity,
     Search,
+    Calendar,
+    Clock,
+    Tag,
+    AlertTriangle,
+    EyeOff,
 } from "lucide-react";
 import axiosInstance from "@/libs/axios";
 import { toast } from "react-toastify";
 import { Phone, Mail, UserCheck } from "lucide-react";
+
 interface SearchResultItem {
     id?: number;
     leadName?: string;
@@ -119,6 +125,7 @@ interface StatItem {
     icon: React.ReactNode;
     color: string;
     route?: string;
+    tab?: string; // Add tab parameter for lead filtering
 }
 
 const SalesDashboard = () => {
@@ -142,17 +149,104 @@ const SalesDashboard = () => {
         fetchStats();
     }, []);
 
-    const getRouteForKey = (key: string): string | undefined => {
+    // Mapping for API keys to tab IDs and routes
+    const getRouteAndTabForKey = (key: string): { route?: string; tab?: string } => {
         const lowerKey = key.toLowerCase();
-        if (lowerKey.includes("user")) return "/users";
-        if (lowerKey.includes("project")) return "/projectstatus";
-        if (lowerKey.includes("lead")) return "/lead";
-        return undefined;
+
+        // User related
+        if (lowerKey.includes("user")) {
+            return { route: "/users" };
+        }
+
+        // Project related
+        if (lowerKey.includes("project")) {
+            return { route: "/projectstatus" };
+        }
+
+        // Lead related with specific tabs
+        if (lowerKey.includes("todayfollowup") || lowerKey.includes("today_followup") || lowerKey.includes("today followup")) {
+            return { route: "/lead", tab: "todayFollowup" };
+        }
+
+        if (lowerKey.includes("pendingfollowup") || lowerKey.includes("pending_followup") || lowerKey.includes("pending followup")) {
+            return { route: "/lead", tab: "pendingFollowup" };
+        }
+
+        if (lowerKey.includes("futurefollowup") || lowerKey.includes("future_followup") || lowerKey.includes("future followup")) {
+            return { route: "/lead", tab: "future-followup" };
+        }
+
+        if (lowerKey.includes("freshlead") || lowerKey.includes("fresh_lead") || lowerKey.includes("fresh lead")) {
+            return { route: "/lead", tab: "freshLead" };
+        }
+
+        if (lowerKey.includes("hotlead") || lowerKey.includes("hot_lead") || lowerKey.includes("hot lead")) {
+            return { route: "/lead", tab: "hotLead" };
+        }
+
+        if (lowerKey.includes("warmlead") || lowerKey.includes("warm_lead") || lowerKey.includes("warm lead")) {
+            return { route: "/lead", tab: "warmLead" };
+        }
+
+        if (lowerKey.includes("coldlead") || lowerKey.includes("cold_lead") || lowerKey.includes("cold lead")) {
+            return { route: "/lead", tab: "coldLead" };
+        }
+
+        if (lowerKey.includes("dumplead") || lowerKey.includes("dump_lead") || lowerKey.includes("dump lead")) {
+            return { route: "/lead", tab: "dumpLead" };
+        }
+
+        // Generic lead (all leads)
+        if (lowerKey.includes("lead")) {
+            return { route: "/lead", tab: "list" };
+        }
+
+        return {};
     };
 
-    const handleCardClick = (route?: string) => {
+    // Get icon based on key
+    const getIconForKey = (key: string): React.ReactNode => {
+        const lowerKey = key.toLowerCase();
+
+        if (lowerKey.includes("user")) return <User size={18} />;
+        if (lowerKey.includes("todayfollowup") || lowerKey.includes("today_followup")) return <Calendar size={18} />;
+        if (lowerKey.includes("pendingfollowup") || lowerKey.includes("pending_followup")) return <Clock size={18} />;
+        if (lowerKey.includes("futurefollowup") || lowerKey.includes("future_followup")) return <Clock size={18} />;
+        if (lowerKey.includes("fresh")) return <Tag size={18} />;
+        if (lowerKey.includes("hot") || lowerKey.includes("warm") || lowerKey.includes("cold")) return <AlertTriangle size={18} />;
+        if (lowerKey.includes("dump")) return <EyeOff size={18} />;
+
+        return <Users size={18} />;
+    };
+
+    // Get color based on key
+    const getColorForKey = (key: string): string => {
+        const lowerKey = key.toLowerCase();
+
+        if (lowerKey.includes("user")) return "blue";
+        if (lowerKey.includes("project")) return "purple";
+        if (lowerKey.includes("todayfollowup") || lowerKey.includes("today_followup")) return "emerald";
+        if (lowerKey.includes("pendingfollowup") || lowerKey.includes("pending_followup")) return "orange";
+        if (lowerKey.includes("futurefollowup") || lowerKey.includes("future_followup")) return "blue";
+        if (lowerKey.includes("fresh")) return "green";
+        if (lowerKey.includes("hot")) return "red";
+        if (lowerKey.includes("warm")) return "orange";
+        if (lowerKey.includes("cold")) return "blue";
+        if (lowerKey.includes("dump")) return "slate";
+        if (lowerKey.includes("plot")) return "pink";
+        if (lowerKey.includes("lead")) return "orange";
+
+        return "blue";
+    };
+
+    const handleCardClick = (route?: string, tab?: string) => {
         if (route) {
-            router.push(route);
+            if (tab) {
+                // Navigate with tab query parameter
+                router.push(`${route}?tab=${tab}`);
+            } else {
+                router.push(route);
+            }
         }
     };
 
@@ -161,16 +255,20 @@ const SalesDashboard = () => {
         try {
             const res = await axiosInstance.get("/dashboard/dashboard-stats");
             const data = res.data.data;
-            const updatedStats: any = Object.entries(data).map(([key, value]) => {
+            const updatedStats: StatItem[] = Object.entries(data).map(([key, value]) => {
                 const title = key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase());
-                let icon: React.ReactNode = <Users size={18} />;
-                let color = "blue";
-                const route = getRouteForKey(key);
-                if (key.toLowerCase().includes("user")) icon = <User size={18} />;
-                if (key.toLowerCase().includes("plot")) color = "pink";
-                if (key.toLowerCase().includes("project")) color = "purple";
-                if (key.toLowerCase().includes("lead")) color = "orange";
-                return { title, value: value ?? 0, icon, color, route };
+                const { route, tab } = getRouteAndTabForKey(key);
+                const icon = getIconForKey(key);
+                const color = getColorForKey(key);
+
+                return {
+                    title,
+                    value: (value as number) ?? 0,
+                    icon,
+                    color,
+                    route,
+                    tab
+                };
             });
             setStatsData(updatedStats);
         } catch (error) {
@@ -190,7 +288,6 @@ const SalesDashboard = () => {
         setIsSearching(true);
         try {
             const res = await axiosInstance.get(`dashboard/search-leads?search=${encodeURIComponent(searchQuery)}`);
-            // Ensure res.data.data is always treated as an array
             const results = Array.isArray(res.data?.data) ? res.data?.data : [res.data?.data];
             setSearchResults(results);
             setIsSearchModalOpen(true);
@@ -202,8 +299,6 @@ const SalesDashboard = () => {
             setIsSearching(false);
         }
     };
-
-
 
     const getColorClasses = (color: string, type = "bg") => {
         const colors: Record<string, string> = {
@@ -288,7 +383,7 @@ const SalesDashboard = () => {
                         : statsData.map((item, idx) => (
                             <div
                                 key={idx}
-                                onClick={() => handleCardClick(item.route)}
+                                onClick={() => handleCardClick(item.route, item.tab)}
                                 className={`bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 hover:shadow-xl transition-transform hover:-translate-y-1 ${item.route ? 'cursor-pointer hover:scale-105' : ''}`}
                             >
                                 <div className="flex items-center justify-between">

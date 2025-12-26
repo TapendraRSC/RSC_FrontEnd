@@ -1,12 +1,14 @@
 'use client';
 import React, { useEffect, useState } from "react";
 import { X, Calendar, IndianRupee, CheckCircle, AlertCircle, Users, Phone, Clock, TrendingUp } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import CommonDropdown from "../Common/CommonDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { fetchFollowUps, saveFollowUp } from "../../../../store/followUpSlice";
-import { fetchLeads } from "../../../../store/leadSlice";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import dayjs from "dayjs";
 
 interface DropdownOption {
     label: string;
@@ -22,7 +24,7 @@ interface FollowUpFormData {
 
 interface FollowUpLeadModalProps {
     isOpen: boolean;
-    onClose: (saved?: boolean) => void; // ✅ allow boolean
+    onClose: (saved?: boolean) => void;
     lead: { id: number; name?: string; phone?: string };
 }
 
@@ -76,7 +78,15 @@ const Toast: React.FC<{
     );
 };
 
+const getKolkataNow = () =>
+    new Date(
+        new Date().toLocaleString("en-US", {
+            timeZone: "Asia/Kolkata",
+        })
+    );
+
 const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, lead }) => {
+    //  ALL HOOKS FIRST - BEFORE ANY EARLY RETURN
     const dispatch = useDispatch<AppDispatch>();
     const { followUps, loading } = useSelector((state: RootState) => state.followUps);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -95,7 +105,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         defaultValues: {
             inquiryStatus: { label: "in follow up", value: "in follow up" },
             budgetUpto: null,
-            nextFollowUpDate: new Date().toISOString().slice(0, 16),
+            nextFollowUpDate: dayjs().format("YYYY-MM-DD HH:mm"),
             remark: "",
         },
     });
@@ -112,14 +122,15 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     setValue("nextFollowUpDate", "");
                     setValue("budgetUpto", null);
                 } else if (!value.nextFollowUpDate) {
-                    setValue("nextFollowUpDate", new Date().toISOString().slice(0, 16));
+                    setValue("nextFollowUpDate", dayjs().format("YYYY-MM-DD HH:mm"));
                 }
             }
         });
         return () => subscription.unsubscribe();
     }, [watch, setValue]);
 
-    if (!isOpen) return null;
+    //  Early return LAST - AFTER ALL HOOKS
+    if (!isOpen || !lead) return null;
 
     const inquiryOptions: DropdownOption[] = [
         { label: "in follow up", value: "in follow up" },
@@ -161,24 +172,20 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
             );
 
             if (saveFollowUp.fulfilled.match(result)) {
-                // Only fetch follow-ups for the modal, not the entire lead list
-
-
                 setToast({ message: "Follow-up saved successfully!", type: "success" });
 
                 // Reset form
                 reset({
                     inquiryStatus: { label: "in follow up", value: "in follow up" },
                     budgetUpto: null,
-                    nextFollowUpDate: new Date().toISOString().slice(0, 16),
+                    nextFollowUpDate: dayjs().format("YYYY-MM-DD HH:mm"),
                     remark: "",
                 });
 
                 // Close modal and signal parent to refresh if needed
                 setTimeout(() => {
-                    onClose(true); // ✅ now valid
+                    onClose(true);
                 }, 1500);
-                // Give time for toast to show
             } else {
                 const errorMessage = result.payload?.message || "Failed to save follow-up. Please try again.";
                 setToast({ message: errorMessage, type: "error" });
@@ -194,74 +201,15 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
         reset({
             inquiryStatus: { label: "in follow up", value: "in follow up" },
             budgetUpto: null,
-            nextFollowUpDate: new Date().toISOString().slice(0, 16),
+            nextFollowUpDate: dayjs().format("YYYY-MM-DD HH:mm"),
             remark: "",
         });
-        onClose(); // ✅ no argument also allowed
+        onClose();
     };
 
-
-    const getKolkataMinDateTime = () => {
-        const now = new Date();
-
-        const kolkataNow = new Date(
-            now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-        );
-
-        const yyyy = kolkataNow.getFullYear();
-        const mm = String(kolkataNow.getMonth() + 1).padStart(2, "0");
-        const dd = String(kolkataNow.getDate()).padStart(2, "0");
-        const hh = String(kolkataNow.getHours()).padStart(2, "0"); // 24h
-        const min = String(kolkataNow.getMinutes()).padStart(2, "0");
-
-        return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-    };
-
-
-    const parseISTDateTime = (value: string) => {
-        const [date, time] = value.split("T");
-        const [year, month, day] = date.split("-").map(Number);
-        const [hour, minute] = time.split(":").map(Number);
-
-        return new Date(year, month - 1, day, hour, minute);
-    };
-
-
-
-    const getKolkataNow = () => {
-        return new Date(
-            new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-        );
-    };
-
-    const isValidFollowUpDate = (value: string) => {
-        if (!value) return true;
-
-        const selected = parseISTDateTime(value);
-        const now = getKolkataNow();
-
-        const selectedDate = selected.toDateString();
-        const todayDate = now.toDateString();
-
-        const selectedHour = selected.getHours();
-        const currentHour = now.getHours();
-
-        //  Past time on the same day
-        if (selectedDate === todayDate && selected < now) {
-            return "You cannot select a past time for today.";
-        }
-
-        //  Today is PM and selected time is AM
-        if (
-            selectedDate === todayDate &&
-            currentHour >= 12 &&
-            selectedHour < 12
-        ) {
-            return "AM time is not allowed for today.";
-        }
-
-        return true;
-    };
+    const now = getKolkataNow();
+    const isToday = dayjs().format("YYYY-MM-DD") === dayjs(now).format("YYYY-MM-DD");
+    const selectableNow = new Date(now.getTime() + 60000); // +1 min
 
     return (
         <>
@@ -344,76 +292,52 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                 </div>
 
                                 {/* Next Follow-up Date */}
-                                {/* <div className="space-y-2">
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                        Next Followup Date {isDisabledStatus ? "" : <span className="text-rose-500">*</span>}
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="datetime-local"
-                                            {...register("nextFollowUpDate", {
-                                                required: !isDisabledStatus ? "Next Followup Date is required" : false
-                                            })}
-                                            disabled={isDisabledStatus}
-                                            value={isDisabledStatus ? "" : watch("nextFollowUpDate")}
-                                            className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 ${errors.nextFollowUpDate
-                                                ? "border-rose-300 dark:border-rose-600"
-                                                : "border-gray-200 dark:border-gray-700"
-                                                } ${isDisabledStatus ? "bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed opacity-60" : "hover:border-blue-400"}`}
-                                        />
-                                        <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
-                                    </div>
-                                    {errors.nextFollowUpDate && (
-                                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                                            <AlertCircle className="w-3.5 h-3.5" />
-                                            {errors.nextFollowUpDate.message}
-                                        </p>
-                                    )}
-                                </div> */}
-
-
                                 <div className="space-y-2">
                                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                        Next Followup Date {isDisabledStatus ? "" : <span className="text-rose-500">*</span>}
+                                        Next Followup Date <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="relative">
-                                        <input
-                                            type="datetime-local"
-                                            // {...register("nextFollowUpDate", {
-                                            //     required: !isDisabledStatus
-                                            //         ? "Next Follow-up Date is required"
-                                            //         : false,
-                                            // })}
-                                            {...register("nextFollowUpDate", {
-                                                // required: "Next Followup Date is required",
-                                                required: !isDisabledStatus
-                                                    ? "Next Follow-up Date is required"
-                                                    : false,
-                                                validate: isValidFollowUpDate,
-                                            })}
-                                            // disabled={isDisabledStatus}
-                                            min={getKolkataMinDateTime()}
-                                            className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12
-      focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-      dark:bg-gray-800 dark:text-gray-100 transition-all duration-200
-      ${errors.nextFollowUpDate
-                                                    ? "border-rose-300 dark:border-rose-600"
-                                                    : "border-gray-200 dark:border-gray-700"
-                                                }
-      ${isDisabledStatus
-                                                    ? "bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed opacity-60"
-                                                    : "hover:border-blue-400"
-                                                }`}
-                                        />
+                                    <Controller
+                                        name="nextFollowUpDate"
+                                        control={control}
+                                        rules={{
+                                            required: !isDisabledStatus ? "Next Follow-up Date is required" : false,
+                                        }}
+                                        render={({ field, fieldState }) => {
+                                            const kolkataNow = getKolkataNow();
+                                            const fieldDate = field.value ? dayjs(field.value).toDate() : kolkataNow;
+                                            const isTodayField = dayjs(fieldDate).format("YYYY-MM-DD") === dayjs(kolkataNow).format("YYYY-MM-DD");
 
-                                        <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
-                                    </div>
-                                    {errors.nextFollowUpDate && (
-                                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                                            <AlertCircle className="w-3.5 h-3.5" />
-                                            {errors.nextFollowUpDate.message}
-                                        </p>
-                                    )}
+                                            return (
+                                                <div className="space-y-2">
+                                                    <DatePicker
+                                                        selected={fieldDate}
+                                                        onChange={(date: Date | null) => {
+                                                            if (!date) return;
+                                                            field.onChange(dayjs(date).format("YYYY-MM-DD HH:mm"));
+                                                        }}
+                                                        showTimeSelect
+                                                        timeFormat="HH:mm"
+                                                        timeIntervals={1}
+                                                        dateFormat="yyyy-MM-dd HH:mm"
+                                                        minDate={kolkataNow}
+                                                        minTime={isTodayField ? selectableNow : new Date(0, 0, 0, 0, 0)}
+                                                        maxTime={new Date(0, 0, 0, 23, 59)}
+                                                        disabled={isDisabledStatus}
+                                                        className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 ${fieldState.error
+                                                            ? "border-rose-300 dark:border-rose-600"
+                                                            : "border-gray-200 dark:border-gray-700"
+                                                            } ${isDisabledStatus
+                                                                ? "bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed opacity-60"
+                                                                : "hover:border-blue-400"
+                                                            }`}
+                                                    />
+                                                    {fieldState.error && (
+                                                        <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    />
                                 </div>
 
                                 {/* Budget */}
