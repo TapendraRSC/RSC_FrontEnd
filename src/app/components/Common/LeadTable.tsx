@@ -212,10 +212,7 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                 newToDate = format(endOfDay(today), 'yyyy-MM-dd');
                 break;
             case 'thisMonth':
-                newFromDate = format(
-                    startOfDay(new Date(today.getFullYear(), today.getMonth(), 1)),
-                    'yyyy-MM-dd'
-                );
+                newFromDate = format(startOfDay(new Date(today.getFullYear(), today.getMonth(), 1)), 'yyyy-MM-dd');
                 newToDate = format(endOfDay(today), 'yyyy-MM-dd');
                 break;
             case 'all':
@@ -273,20 +270,13 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
             >
                 <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>{getDisplayText()}</span>
-                <ChevronUp
-                    className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''
-                        }`}
-                />
+                <ChevronUp className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
-                <div
-                    className="absolute right-0 top-[110%] w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-200 dark:border-gray-700"
-                >
+                <div className="absolute right-0 top-[110%] w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-200 dark:border-gray-700">
                     <div className="p-2 space-y-1">
-                        <h3 className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Quick Select
-                        </h3>
+                        <h3 className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quick Select</h3>
                         {[
                             { id: 'today', label: 'Today' },
                             { id: 'yesterday', label: 'Yesterday' },
@@ -310,9 +300,7 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                         {selectedOption === 'custom' && (
                             <div className="pt-2 space-y-2">
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                        From Date
-                                    </label>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">From Date</label>
                                     <input
                                         type="date"
                                         value={customFromDate}
@@ -321,9 +309,7 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                        To Date
-                                    </label>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">To Date</label>
                                     <input
                                         type="date"
                                         value={customToDate}
@@ -344,12 +330,10 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                         )}
                     </div>
                 </div>
-            )
-            }
-        </div >
+            )}
+        </div>
     );
 };
-
 
 const PaginationButtons = ({
     currentPage,
@@ -408,10 +392,7 @@ const PaginationButtons = ({
                 {getPageNumbers().map(item => {
                     if (item.type === 'ellipsis') {
                         return (
-                            <span
-                                key={item.key}
-                                className="px-2 py-1.5 text-gray-500 dark:text-gray-400 text-sm"
-                            >
+                            <span key={item.key} className="px-2 py-1.5 text-gray-500 dark:text-gray-400 text-sm">
                                 <MoreHorizontal className="h-4 w-4" />
                             </span>
                         );
@@ -597,12 +578,8 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const { permissions: rolePermissions } = useSelector((state: RootState) => state.sidebarPermissions);
     const { list: allPermissions } = useSelector((state: RootState) => state.permissions);
 
-
     const role = useSelector((state: RootState) => state.auth.role);
     const isAdmin = role === 'Admin';
-
-    console.log(isAdmin, role, 'isAdmin');
-
 
     const actualUsersData = React.useMemo(() => {
         if (Array.isArray(users)) return users;
@@ -614,18 +591,18 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     }, [users]);
 
     useEffect(() => {
-        dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: '' }));
-        dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
-    }, [dispatch]);
-
-
-
-
+        if (!disableInternalFetch) {
+            dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: '' }));
+            dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
+        }
+    }, [dispatch, disableInternalFetch]);
 
     useEffect(() => {
-        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
-    }, [dispatch]);
+        if (!disableInternalFetch) {
+            dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
+            dispatch(fetchRolePermissionsSidebar());
+        }
+    }, [dispatch, disableInternalFetch]);
 
     const handleFollowUp = async (lead: Lead) => {
         if (!onFollowUp) return;
@@ -687,13 +664,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         setShowBulkActions(selectedLeads.length > 0);
     }, [selectedLeads]);
 
-    useEffect(() => {
-        if (!disableInternalFetch) {
-            dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-            dispatch(fetchRolePermissionsSidebar());
-        }
-    }, [dispatch, disableInternalFetch]);
-
     const getLeadPermissions = () => {
         const leadPerm = rolePermissions?.permissions?.find((p: any) => p.pageName === 'Lead');
         return leadPerm?.permissionIds || [];
@@ -727,30 +697,18 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         ...lead,
         formattedPhone: lead.phone ? (
             <a className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{lead.phone}</a>
-        ) : (
-            'N/A'
-        ),
+        ) : 'N/A',
         formattedEmail: lead.email ? (
             <a className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{lead.email}</a>
-        ) : (
-            'N/A'
-        ),
+        ) : 'N/A',
         formattedStatus: (
-            <span
-                className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(
-                    lead.status
-                )}`}
-            >
+            <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(lead.status)}`}>
                 {getStatusIcon(lead.status)}
                 <span>{lead.status}</span>
             </span>
         ),
         formattedSource: (
-            <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getSourceColor(
-                    lead.platformType || lead.source || 'WEBSITE'
-                )}`}
-            >
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSourceColor(lead.platformType || lead.source || 'WEBSITE')}`}>
                 {lead.platformType || lead.source || 'WEBSITE'}
             </span>
         ),
@@ -773,12 +731,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             <div className="flex items-center space-x-2">
                                 <span className="font-medium">Showing :</span>
                                 <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded-md font-semibold">
-                                    {leads.length > 0
-                                        ? `${(externalCurrentPage - 1) * externalPageSize + 1} - ${Math.min(
-                                            externalCurrentPage * externalPageSize,
-                                            totalRecords
-                                        )}`
-                                        : '0'}
+                                    {leads.length > 0 ? `${(externalCurrentPage - 1) * externalPageSize + 1} - ${Math.min(externalCurrentPage * externalPageSize, totalRecords)}` : '0'}
                                 </span>
                                 <span>of</span>
                                 <span className="px-2 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200 rounded-md font-semibold">
@@ -790,11 +743,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 <div className="text-xs text-gray-500 dark:text-gray-400">(filtered)</div>
                             )}
                         </div>
-                        <PaginationButtons
-                            currentPage={externalCurrentPage}
-                            totalPages={totalPages}
-                            onPageChange={onPageChange!}
-                        />
+                        <PaginationButtons currentPage={externalCurrentPage} totalPages={totalPages} onPageChange={onPageChange!} />
                     </div>
                 </div>
             )}
@@ -820,16 +769,11 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                 </div>
             </div>
 
-
-
             <div className="w-full mb-4">
                 <div className="rounded-lg shadow-sm border mb-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="p-2 sm:p-3">
                         <div className="flex flex-col gap-2 sm:gap-3">
-                            {/* TOP BAR */}
                             <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-3 w-full">
-
-                                {/* Search */}
                                 <div className="relative flex-1 min-w-[200px] sm:min-w-[240px]">
                                     <input
                                         type="text"
@@ -841,22 +785,15 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
                                 </div>
 
-                                {/* Show entries */}
                                 <div className="flex items-center space-x-1 min-w-fit">
                                     <span className="text-xs text-gray-600 dark:text-gray-300">Show</span>
                                     <select
                                         value={externalPageSize}
-                                        onChange={e =>
-                                            onPageSizeChange && onPageSizeChange(Number(e.target.value))
-                                        }
+                                        onChange={e => onPageSizeChange && onPageSizeChange(Number(e.target.value))}
                                         className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
                                         {[5, 15, 50, 100].map(size => (
-                                            <option
-                                                key={`page-size-${size}`}
-                                                value={size}
-                                                className="bg-white dark:bg-gray-800 text-black dark:text-white"
-                                            >
+                                            <option key={`page-size-${size}`} value={size} className="bg-white dark:bg-gray-800 text-black dark:text-white">
                                                 {size}
                                             </option>
                                         ))}
@@ -864,64 +801,36 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     <span className="text-xs text-gray-600 dark:text-gray-300">entries</span>
                                 </div>
 
-                                {/* Platform filter */}
                                 <select
                                     value={externalSelectedPlatform}
                                     onChange={e => onPlatformChange && onPlatformChange(e.target.value)}
                                     className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer min-w-[120px]"
                                 >
-                                    <option
-                                        value=""
-                                        className="bg-white dark:bg-gray-800 text-black dark:text-white"
-                                    >
-                                        All Platforms
-                                    </option>
+                                    <option value="" className="bg-white dark:bg-gray-800 text-black dark:text-white">All Platforms</option>
                                     {leadPlatforms?.map((platform: any) => (
-                                        <option
-                                            key={platform.id}
-                                            value={platform.id}
-                                            className="bg-white dark:bg-gray-800 text-black dark:text-white"
-                                        >
+                                        <option key={platform.id} value={platform.id} className="bg-white dark:bg-gray-800 text-black dark:text-white">
                                             {platform.platformType}
                                         </option>
                                     ))}
                                 </select>
 
-                                {/* Assignee filter */}
-                                {isAdmin && (<select
-                                    value={externalSelectedAssignedTo}
-                                    onChange={e =>
-                                        onAssignedToChange && onAssignedToChange(e.target.value)
-                                    }
-                                    className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer min-w-[120px]"
-                                >
-                                    <option
-                                        value=""
-                                        className="bg-white dark:bg-gray-800 text-black dark:text-white"
+                                {isAdmin && (
+                                    <select
+                                        value={externalSelectedAssignedTo}
+                                        onChange={e => onAssignedToChange && onAssignedToChange(e.target.value)}
+                                        className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer min-w-[120px]"
                                     >
-                                        All Assignees
-                                    </option>
+                                        <option value="" className="bg-white dark:bg-gray-800 text-black dark:text-white">All Assignees</option>
+                                        {actualUsersData?.map((user: any) => (
+                                            <option key={user.id} value={user.id} className="bg-white dark:bg-gray-800 text-black dark:text-white">
+                                                {user.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
 
-                                    {actualUsersData?.map((user: any) => (
-                                        <option
-                                            key={user.id}
-                                            value={user.id}
-                                            className="bg-white dark:bg-gray-800 text-black dark:text-white"
-                                        >
-                                            {user.name}
-                                        </option>
-                                    ))}
-                                </select>)}
+                                <DateFilterDropdown fromDate={externalFromDate} toDate={externalToDate} onDateChange={externalOnDateChange} />
 
-
-                                {/* Date filter */}
-                                <DateFilterDropdown
-                                    fromDate={externalFromDate}
-                                    toDate={externalToDate}
-                                    onDateChange={externalOnDateChange}
-                                />
-
-                                {/* View mode buttons */}
                                 <div className="flex items-center space-x-3 ml-auto">
                                     <button
                                         onClick={() => setViewMode('card')}
@@ -946,7 +855,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 </div>
                             </div>
 
-                            {/* BOTTOM BAR */}
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-2 border-t border-gray-200 dark:border-gray-700 gap-2">
                                 <div className="flex items-center space-x-2">
                                     <input
@@ -956,10 +864,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         onChange={handleSelectAll}
                                         className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 rounded"
                                     />
-                                    <label
-                                        htmlFor="selectAll"
-                                        className="text-xs font-medium text-gray-700 dark:text-gray-300"
-                                    >
+                                    <label htmlFor="selectAll" className="text-xs font-medium text-gray-700 dark:text-gray-300">
                                         Select All ({leads.length})
                                     </label>
                                     {selectedLeads.length > 0 && (
@@ -970,552 +875,386 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 </div>
                                 <div className="flex gap-3 text-xs text-gray-600 dark:text-gray-300">
                                     <span>Filtered</span>
-                                    <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                        {leads.length}
-                                    </span>
+                                    <span className="font-semibold text-blue-600 dark:text-blue-400">{leads.length}</span>
                                     <span>Page {externalCurrentPage} of {totalPages}</span>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            {
-                showBulkActions && (
-                    <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:right-6 sm:left-auto z-50 transition-all duration-300 ease-in-out">
-                        <div className="rounded-lg shadow-lg p-2.5 sm:p-3 border flex items-center space-x-2 sm:space-x-3 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {selectedLeads.length} leads selected
-                            </span>
-                            <div className="flex space-x-1.5 sm:space-x-2">
-                                {hasBulkPermission && hasPermission(4, 'delete') && (
-                                    <button
-                                        onClick={handleBulkDelete}
-                                        className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-[1.02] text-xs sm:text-sm shadow-sm hover:shadow-md"
-                                    >
-                                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                        <span className="hidden sm:inline">Delete</span>
-                                    </button>
-                                )}
-                                {hasBulkPermission && hasPermission(25, 'bulk assign') && (
-                                    <button
-                                        onClick={handleBulkAssign}
-                                        className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-[1.02] text-xs sm:text-sm shadow-sm hover:shadow-md"
-                                    >
-                                        <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                        <span className="hidden sm:inline">Assign</span>
-                                    </button>
-                                )}
+            {showBulkActions && (
+                <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:right-6 sm:left-auto z-50 transition-all duration-300 ease-in-out">
+                    <div className="rounded-lg shadow-lg p-2.5 sm:p-3 border flex items-center space-x-2 sm:space-x-3 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {selectedLeads.length} leads selected
+                        </span>
+                        <div className="flex space-x-1.5 sm:space-x-2">
+                            {hasBulkPermission && hasPermission(4, 'delete') && (
                                 <button
-                                    onClick={clearSelection}
-                                    className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                    title="Clear selection"
+                                    onClick={handleBulkDelete}
+                                    className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-[1.02] text-xs sm:text-sm shadow-sm hover:shadow-md"
                                 >
-                                    <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    <span className="hidden sm:inline">Delete</span>
                                 </button>
-                            </div>
+                            )}
+                            {hasBulkPermission && hasPermission(25, 'bulk assign') && (
+                                <button
+                                    onClick={handleBulkAssign}
+                                    className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-[1.02] text-xs sm:text-sm shadow-sm hover:shadow-md"
+                                >
+                                    <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    <span className="hidden sm:inline">Assign</span>
+                                </button>
+                            )}
+                            <button
+                                onClick={clearSelection}
+                                className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                title="Clear selection"
+                            >
+                                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
-            {
-                loading ? (
-                    <div className="rounded-lg p-8 sm:p-12 text-center bg-white dark:bg-gray-800">
-                        <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4 sm:mb-6" />
-                        <p className="font-medium text-gray-600 dark:text-gray-300">Loading leads...</p>
-                    </div>
-                ) : viewMode === 'table' ? (
-                    <div className="rounded-lg shadow-sm border overflow-x-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-700">
-                                <tr>
+            {loading ? (
+                <div className="rounded-lg p-8 sm:p-12 text-center bg-white dark:bg-gray-800">
+                    <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4 sm:mb-6" />
+                    <p className="font-medium text-gray-600 dark:text-gray-300">Loading leads...</p>
+                </div>
+            ) : viewMode === 'table' ? (
+                <div className="rounded-lg shadow-sm border overflow-x-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider w-8 sm:w-12">
+                                    <input
+                                        type="checkbox"
+                                        checked={leads.length > 0 && selectedLeads.length === leads.length}
+                                        onChange={handleSelectAll}
+                                        className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
+                                    />
+                                </th>
+                                {columns.map((column: any) => (
                                     <th
+                                        key={column.accessor}
                                         scope="col"
-                                        className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider w-8 sm:w-12"
+                                        className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider"
+                                        style={{ minWidth: column.minWidth }}
+                                        onClick={() => column.sortable && handleSort(column.accessor as keyof Lead)}
                                     >
-                                        <input
-                                            type="checkbox"
-                                            checked={leads.length > 0 && selectedLeads.length === leads.length}
-                                            onChange={handleSelectAll}
-                                            className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
-                                        />
+                                        <div className="flex items-center space-x-1 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                                            <span>{column.label}</span>
+                                            {column.sortable && <ChevronUp className="h-3 w-3 text-gray-400 dark:text-gray-500" />}
+                                        </div>
                                     </th>
-                                    {columns.map((column: any) => (
-                                        <th
-                                            key={column.accessor}
-                                            scope="col"
-                                            className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider"
-                                            style={{ minWidth: column.minWidth }}
-                                            onClick={() => column.sortable && handleSort(column.accessor as keyof Lead)}
+                                ))}
+                                <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider w-12 sm:w-20">
+                                    <span className="text-gray-500 dark:text-gray-400">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                            {leads.length > 0 ? (
+                                leads.map(lead => {
+                                    const formattedLead = formatLeadData(lead);
+                                    const followUpStatus = getFollowUpStatus(lead.latestFollowUpDate || lead.nextFollowUp);
+                                    return (
+                                        <tr
+                                            key={`lead-${lead.id}`}
+                                            className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedLeads.includes(lead.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                                         >
-                                            <div className="flex items-center space-x-1 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
-                                                <span>{column.label}</span>
-                                                {column.sortable && (
-                                                    <ChevronUp className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                                                )}
-                                            </div>
-                                        </th>
-                                    ))}
-                                    <th
-                                        scope="col"
-                                        className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider w-12 sm:w-20"
-                                    >
-                                        <span className="text-gray-500 dark:text-gray-400">Actions</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {leads.length > 0 ? (
-                                    leads.map(lead => {
-                                        const formattedLead = formatLeadData(lead);
-                                        const followUpStatus = getFollowUpStatus(
-                                            lead.latestFollowUpDate || lead.nextFollowUp
-                                        );
-                                        return (
-                                            <tr
-                                                key={`lead-${lead.id}`}
-                                                className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedLeads.includes(lead.id)
-                                                    ? 'bg-blue-50 dark:bg-blue-900/20'
-                                                    : ''
-                                                    }`}
-                                            >
-                                                <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedLeads.includes(lead.id)}
-                                                        onChange={() => handleSelectLead(lead.id)}
-                                                        className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
-                                                    />
-                                                </td>
-                                                {columns.map((column: any) => {
-                                                    const accessor = column.accessor as keyof Lead;
-                                                    const value: any = (lead as any)[accessor];
-                                                    if (accessor === 'createdAt') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                {formattedLead.formattedCreatedAt}
-                                                            </td>
-                                                        );
-                                                    }
-                                                    if (accessor === 'updatedAt') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                {formattedLead.formattedUpdatedAt}
-                                                            </td>
-                                                        );
-                                                    }
-                                                    if (accessor === 'latestFollowUpDate' || accessor === 'nextFollowUp') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                <div
-                                                                    className={`inline-block ${followUpStatus.isDueSoon &&
-                                                                        followUpStatus.pulse
-                                                                        ? 'animate-blink'
-                                                                        : ''
-                                                                        }`}
-                                                                >
-                                                                    {formattedLead.formattedNextFollowUp}
-                                                                </div>
-                                                            </td>
-                                                        );
-                                                    }
-                                                    if (accessor === 'status') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                {formattedLead.formattedStatus}
-                                                            </td>
-                                                        );
-                                                    }
-                                                    if (accessor === 'platformType' || accessor === 'source') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                {formattedLead.formattedSource}
-                                                            </td>
-                                                        );
-                                                    }
-                                                    if (accessor === 'stage') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                {formattedLead.formattedStage}
-                                                            </td>
-                                                        );
-                                                    }
-                                                    if (accessor === 'phone') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                {formattedLead.formattedPhone}
-                                                            </td>
-                                                        );
-                                                    }
-                                                    if (accessor === 'email') {
-                                                        return (
-                                                            <td
-                                                                key={`lead-${lead.id}-${accessor}`}
-                                                                className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-                                                            >
-                                                                {formattedLead.formattedEmail}
-                                                            </td>
-                                                        );
-                                                    }
+                                            <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedLeads.includes(lead.id)}
+                                                    onChange={() => handleSelectLead(lead.id)}
+                                                    className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                            </td>
+                                            {columns.map((column: any) => {
+                                                const accessor = column.accessor as keyof Lead;
+                                                const value: any = (lead as any)[accessor];
+                                                if (accessor === 'createdAt') {
+                                                    return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedCreatedAt}</td>;
+                                                }
+                                                if (accessor === 'updatedAt') {
+                                                    return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedUpdatedAt}</td>;
+                                                }
+                                                if (accessor === 'latestFollowUpDate' || accessor === 'nextFollowUp') {
                                                     return (
-                                                        <td
-                                                            key={`lead-${lead.id}-${accessor}`}
-                                                            className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400"
-                                                        >
-                                                            {value || 'N/A'}
+                                                        <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
+                                                            <div className={`inline-block ${followUpStatus.isDueSoon && followUpStatus.pulse ? 'animate-blink' : ''}`}>
+                                                                {formattedLead.formattedNextFollowUp}
+                                                            </div>
                                                         </td>
                                                     );
-                                                })}
-                                                <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium flex space-x-1">
-                                                    {onFollowUp && (
-                                                        <button
-                                                            onClick={() => handleFollowUp(lead)}
-                                                            className="p-1.5 rounded-full text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                                                            title="Follow Up"
-                                                        >
-                                                            <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                                        </button>
-                                                    )}
-                                                    {hasEditPermission && onEditLead && (
-                                                        <button
-                                                            onClick={() => onEditLead(lead)}
-                                                            className="p-1.5 rounded-full text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                                        </button>
-                                                    )}
-                                                    {hasDeletePermission && onDeleteLead && (
-                                                        <button
-                                                            onClick={() => onDeleteLead(lead)}
-                                                            className="p-1.5 rounded-full text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan={columns.length + 2}
-                                            className="px-2 sm:px-4 py-8 sm:py-12 text-center"
-                                        >
-                                            <div className="text-gray-400 dark:text-gray-500">
-                                                <FileText className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-4 text-gray-400 dark:text-gray-500" />
-                                                <h3 className="text-sm sm:text-lg font-semibold mb-1 sm:mb-2 text-gray-600 dark:text-gray-300">
-                                                    {externalSearchTerm
-                                                        ? `No leads match your search "${externalSearchTerm}"`
-                                                        : 'No leads found'}
-                                                </h3>
-                                                {onAddLead && (
-                                                    <button
-                                                        onClick={onAddLead}
-                                                        className="mt-2 sm:mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
-                                                    >
-                                                        Add Your First Lead
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="space-y-3 sm:space-y-4">
-                        {leads.length > 0 ? (
-                            leads.map(lead => {
-                                const formattedLead = formatLeadData(lead);
-                                const followUpStatus = getFollowUpStatus(
-                                    lead.lastFollowUpDate || lead.nextFollowUp
-                                );
-                                return (
-                                    <div
-                                        key={`card-${lead.id}`}
-                                        className={`rounded-lg shadow-sm border transition-all duration-200 ${selectedLeads.includes(lead.id)
-                                            ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50 dark:bg-blue-900/20'
-                                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
-                                            }`}
-                                    >
-                                        <div className="p-3 sm:p-4 rounded-t-lg bg-gradient-to-r from-gray-800 to-gray-700 text-white">
-                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                                <div className="flex items-center space-x-3">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedLeads.includes(lead.id)}
-                                                        onChange={() => handleSelectLead(lead.id)}
-                                                        className="h-4 w-4 text-blue-400 focus:ring-blue-300 rounded bg-white/20 border-white/30"
-                                                    />
-                                                    <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full">
-                                                        <div
-                                                            className={`${followUpStatus.bgColor} ${followUpStatus.border} flex items-center space-x-2 px-3 py-1.5 rounded-full ${followUpStatus.isDueSoon && followUpStatus.pulse
-                                                                ? 'animate-blink'
-                                                                : ''
-                                                                }`}
-                                                        >
-                                                            {followUpStatus.icon}
-                                                            <span className={`text-xs sm:text-sm font-medium ${followUpStatus.color}`}>
-                                                                <span className="hidden sm:inline">Next Follow-up: </span>
-                                                                <span className="font-semibold">
-                                                                    {formattedLead.formattedNextFollowUp}
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
-                                                    <div className="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-full">
-                                                        <span className="text-xs font-medium text-white/80">
-                                                            Stage
-                                                        </span>
-                                                        <span className="text-xs font-semibold text-blue-200">
-                                                            {lead.stage || 'N/A'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-1 bg-white/10 px-3 py-1.5 rounded-full">
-                                                        <span className="text-xs font-medium text-white/80">
-                                                            Status
-                                                        </span>
-                                                        {formattedLead.formattedStatus}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3 sm:p-5">
-                                            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-6">
-                                                <div className="flex-1">
-                                                    <h3
-                                                        className="text-lg sm:text-xl font-bold mb-1.5 text-gray-900 dark:text-gray-50 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
-                                                        onClick={() => onLeadClick && onLeadClick(lead)}
-                                                    >
-                                                        {lead.name || 'Unnamed Lead'}
-                                                    </h3>
-                                                    <div className="space-y-1.5 mb-3">
-                                                        <div className="flex items-center space-x-2">
-                                                            <Phone className="h-3.5 w-3.5 text-blue-500" />
-                                                            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                                                                {formattedLead.formattedPhone}
-                                                            </span>
-                                                        </div>
-                                                        {lead.email && (
-                                                            <div className="flex items-center space-x-2">
-                                                                <User className="h-3.5 w-3.5 text-green-500" />
-                                                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                                                                    {formattedLead.formattedEmail}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                                                        <div>
-                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                Profession
-                                                            </p>
-                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                {lead.profession || 'N/A'}
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                Budget
-                                                            </p>
-                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                {lead.budget || 'N/A'}
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                Assigned To
-                                                            </p>
-                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                {lead.assignedUserName || lead.assignedTo || 'N/A'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="w-full sm:w-auto sm:min-w-[200px] space-y-1.5">
-                                                    {lead.leadNo && (
-                                                        <div>
-                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                Lead #
-                                                            </p>
-                                                            <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200">
-                                                                {lead.leadNo}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <div>
-                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                City
-                                                            </p>
-                                                            <p className="flex items-center space-x-1 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                <MapPin className="h-3 w-3 text-red-500" />
-                                                                <span>{lead.city || 'N/A'}</span>
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                State
-                                                            </p>
-                                                            <p className="flex items-center space-x-1 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                <Building2 className="h-3 w-3 text-blue-500" />
-                                                                <span>{lead.state || 'N/A'}</span>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="rounded-lg mt-4 p-3 sm:p-4 border bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-700">
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                                                    <div>
-                                                        <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">
-                                                            Next Follow-up
-                                                        </p>
-                                                        <p
-                                                            className={`text-xs sm:text-sm text-gray-700 dark:text-gray-300 ${followUpStatus.isDueSoon && followUpStatus.pulse
-                                                                ? 'animate-blink'
-                                                                : ''
-                                                                }`}
-                                                        >
-                                                            {formattedLead.formattedNextFollowUp}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">
-                                                            Created
-                                                        </p>
-                                                        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                            {formattedLead.formattedCreatedAt}
-                                                        </p>
-                                                    </div>
-                                                    {formattedLead.formattedCreatedAt !== formattedLead.formattedUpdatedAt && (
-                                                        <div>
-                                                            <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">
-                                                                Last Updated
-                                                            </p>
-                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                {formattedLead.formattedUpdatedAt}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                                                    <div>
-                                                        <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">
-                                                            Source
-                                                        </p>
-                                                        {formattedLead.formattedSource}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">
-                                                            Remark
-                                                        </p>
-                                                        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                            {lead.remark || 'N/A'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                                                }
+                                                if (accessor === 'status') {
+                                                    return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedStatus}</td>;
+                                                }
+                                                if (accessor === 'platformType' || accessor === 'source') {
+                                                    return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedSource}</td>;
+                                                }
+                                                if (accessor === 'stage') {
+                                                    return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedStage}</td>;
+                                                }
+                                                if (accessor === 'phone') {
+                                                    return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedPhone}</td>;
+                                                }
+                                                if (accessor === 'email') {
+                                                    return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedEmail}</td>;
+                                                }
+                                                return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">{value || 'N/A'}</td>;
+                                            })}
+                                            <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium flex space-x-1">
                                                 {onFollowUp && (
-                                                    <button
-                                                        onClick={() => handleFollowUp(lead)}
-                                                        className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md"
-                                                    >
-                                                        <Phone className="h-3.5 w-3.5" />
-                                                        <span>Follow Up</span>
+                                                    <button onClick={() => handleFollowUp(lead)} className="p-1.5 rounded-full text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors" title="Follow Up">
+                                                        <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                     </button>
                                                 )}
                                                 {hasEditPermission && onEditLead && (
-                                                    <button
-                                                        onClick={() => onEditLead(lead)}
-                                                        className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md"
-                                                    >
-                                                        <Edit className="h-3.5 w-3.5" />
-                                                        <span>Edit</span>
+                                                    <button onClick={() => onEditLead(lead)} className="p-1.5 rounded-full text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors" title="Edit">
+                                                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                     </button>
                                                 )}
                                                 {hasDeletePermission && onDeleteLead && (
-                                                    <button
-                                                        onClick={() => onDeleteLead(lead)}
-                                                        className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all shadow-sm hover:shadow-md"
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                        <span>Delete</span>
+                                                    <button onClick={() => onDeleteLead(lead)} className="p-1.5 rounded-full text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors" title="Delete">
+                                                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                     </button>
                                                 )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan={columns.length + 2} className="px-2 sm:px-4 py-8 sm:py-12 text-center">
+                                        <div className="text-gray-400 dark:text-gray-500">
+                                            <FileText className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-4 text-gray-400 dark:text-gray-500" />
+                                            <h3 className="text-sm sm:text-lg font-semibold mb-1 sm:mb-2 text-gray-600 dark:text-gray-300">
+                                                {externalSearchTerm ? `No leads match your search "${externalSearchTerm}"` : 'No leads found'}
+                                            </h3>
+                                            {onAddLead && (
+                                                <button onClick={onAddLead} className="mt-2 sm:mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md">
+                                                    Add Your First Lead
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="space-y-3 sm:space-y-4">
+                    {leads.length > 0 ? (
+                        leads.map(lead => {
+                            const formattedLead = formatLeadData(lead);
+                            const followUpStatus = getFollowUpStatus(lead.lastFollowUpDate || lead.nextFollowUp);
+                            return (
+                                <div
+                                    key={`card-${lead.id}`}
+                                    className={`rounded-lg shadow-sm border transition-all duration-200 ${selectedLeads.includes(lead.id)
+                                        ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50 dark:bg-blue-900/20'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
+                                        }`}
+                                >
+                                    <div className="p-3 sm:p-4 rounded-t-lg bg-gradient-to-r from-gray-800 to-gray-700 text-white">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                            <div className="flex items-center space-x-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedLeads.includes(lead.id)}
+                                                    onChange={() => handleSelectLead(lead.id)}
+                                                    className="h-4 w-4 text-blue-400 focus:ring-blue-300 rounded bg-white/20 border-white/30"
+                                                />
+                                                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full">
+                                                    <div className={`${followUpStatus.bgColor} ${followUpStatus.border} flex items-center space-x-2 px-3 py-1.5 rounded-full ${followUpStatus.isDueSoon && followUpStatus.pulse ? 'animate-blink' : ''}`}>
+                                                        {followUpStatus.icon}
+                                                        <span className={`text-xs sm:text-sm font-medium ${followUpStatus.color}`}>
+                                                            <span className="hidden sm:inline">Next Follow-up: </span>
+                                                            <span className="font-semibold">{formattedLead.formattedNextFollowUp}</span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+                                                <div className="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-full">
+                                                    <span className="text-xs font-medium text-white/80">Stage</span>
+                                                    <span className="text-xs font-semibold text-blue-200">{lead.stage || 'N/A'}</span>
+                                                </div>
+                                                <div className="flex items-center space-x-1 bg-white/10 px-3 py-1.5 rounded-full">
+                                                    <span className="text-xs font-medium text-white/80">Status</span>
+                                                    {formattedLead.formattedStatus}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                );
-                            })
-                        ) : (
-                            <div className="rounded-lg p-6 sm:p-10 text-center border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                                <div className="text-gray-400 dark:text-gray-500">
-                                    <FileText className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-gray-400 dark:text-gray-500" />
-                                    <h3 className="text-sm sm:text-lg font-semibold mb-2 text-gray-600 dark:text-gray-300">
-                                        {externalSearchTerm
-                                            ? `No leads match your search "${externalSearchTerm}"`
-                                            : 'No leads found'}
-                                    </h3>
-                                    <p className="text-xs sm:text-sm mb-4 text-gray-500 dark:text-gray-400">
-                                        {externalSearchTerm
-                                            ? 'Try adjusting your search terms'
-                                            : 'Try adjusting your filters or add some leads'}
-                                    </p>
+
+                                    <div className="p-3 sm:p-5">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-6">
+                                            <div className="flex-1">
+                                                <h3
+                                                    className="text-lg sm:text-xl font-bold mb-1.5 text-gray-900 dark:text-gray-50 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                                                    onClick={() => onLeadClick && onLeadClick(lead)}
+                                                >
+                                                    {lead.name || 'Unnamed Lead'}
+                                                </h3>
+                                                <div className="space-y-1.5 mb-3">
+                                                    <div className="flex items-center space-x-2">
+                                                        <Phone className="h-3.5 w-3.5 text-blue-500" />
+                                                        <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">{formattedLead.formattedPhone}</span>
+                                                    </div>
+                                                    {lead.email && (
+                                                        <div className="flex items-center space-x-2">
+                                                            <User className="h-3.5 w-3.5 text-green-500" />
+                                                            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">{formattedLead.formattedEmail}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                                                    {lead.profession && lead.profession !== 'N/A' && lead.profession !== 'Not Provided' && (
+                                                        <div>
+                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Profession</p>
+                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{lead.profession}</p>
+                                                        </div>
+                                                    )}
+                                                    {lead.budget && lead.budget !== 'N/A' && (
+                                                        <div>
+                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Budget</p>
+                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{lead.budget}</p>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Assigned To</p>
+                                                        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{lead.assignedUserName || lead.assignedTo || 'N/A'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="w-full sm:w-auto sm:min-w-[200px] space-y-1.5">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {lead.city && lead.city !== 'Not Provided' && (
+                                                        <div>
+                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">City</p>
+                                                            <p className="flex items-center space-x-1 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                                                                <MapPin className="h-3 w-3 text-red-500" />
+                                                                <span>{lead.city}</span>
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    {lead.state && lead.state !== 'Not Provided' && (
+                                                        <div>
+                                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">State</p>
+                                                            <p className="flex items-center space-x-1 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                                                                <Building2 className="h-3 w-3 text-blue-500" />
+                                                                <span>{lead.state}</span>
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-lg mt-4 p-3 sm:p-4 border bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-700">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                                                <div>
+                                                    <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Next Follow-up</p>
+                                                    <p className={`text-xs sm:text-sm text-gray-700 dark:text-gray-300 ${followUpStatus.isDueSoon && followUpStatus.pulse ? 'animate-blink' : ''}`}>
+                                                        {formattedLead.formattedNextFollowUp}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Created</p>
+                                                    <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{formattedLead.formattedCreatedAt}</p>
+                                                </div>
+                                                {formattedLead.formattedCreatedAt !== formattedLead.formattedUpdatedAt && (
+                                                    <div>
+                                                        <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Last Updated</p>
+                                                        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{formattedLead.formattedUpdatedAt}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                                                <div>
+                                                    <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Source</p>
+                                                    {formattedLead.formattedSource}
+                                                </div>
+                                                {lead.remark && lead.remark !== 'N/A' && (
+                                                    <div>
+                                                        <p className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Remark</p>
+                                                        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{lead.remark}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                                            {onFollowUp && (
+                                                <button
+                                                    onClick={() => handleFollowUp(lead)}
+                                                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md"
+                                                >
+                                                    <Phone className="h-3.5 w-3.5" />
+                                                    <span>Follow Up</span>
+                                                </button>
+                                            )}
+                                            {hasEditPermission && onEditLead && (
+                                                <button
+                                                    onClick={() => onEditLead(lead)}
+                                                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md"
+                                                >
+                                                    <Edit className="h-3.5 w-3.5" />
+                                                    <span>Edit</span>
+                                                </button>
+                                            )}
+                                            {hasDeletePermission && onDeleteLead && (
+                                                <button
+                                                    onClick={() => onDeleteLead(lead)}
+                                                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all shadow-sm hover:shadow-md"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                    <span>Delete</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                {onAddLead && (
-                                    <button
-                                        onClick={onAddLead}
-                                        className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
-                                    >
-                                        Add Your First Lead
-                                    </button>
-                                )}
+                            );
+                        })
+                    ) : (
+                        <div className="rounded-lg p-6 sm:p-10 text-center border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                            <div className="text-gray-400 dark:text-gray-500">
+                                <FileText className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-gray-400 dark:text-gray-500" />
+                                <h3 className="text-sm sm:text-lg font-semibold mb-2 text-gray-600 dark:text-gray-300">
+                                    {externalSearchTerm ? `No leads match your search "${externalSearchTerm}"` : 'No leads found'}
+                                </h3>
+                                <p className="text-xs sm:text-sm mb-4 text-gray-500 dark:text-gray-400">
+                                    {externalSearchTerm ? 'Try adjusting your search terms' : 'Try adjusting your filters or add some leads'}
+                                </p>
                             </div>
-                        )}
-                    </div>
-                )
-            }
+                            {onAddLead && (
+                                <button
+                                    onClick={onAddLead}
+                                    className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
+                                >
+                                    Add Your First Lead
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
             <style jsx>{`
                 .scrollbar-hide {
@@ -1526,19 +1265,14 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                     display: none;
                 }
                 @keyframes blink {
-                    0%,
-                    100% {
-                        opacity: 1;
-                    }
-                    50% {
-                        opacity: 0.5;
-                    }
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
                 }
                 .animate-blink {
                     animation: blink 1s infinite;
                 }
             `}</style>
-        </div >
+        </div>
     );
 };
 

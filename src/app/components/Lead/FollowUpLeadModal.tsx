@@ -363,24 +363,44 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Remark {isDisabledStatus ? "" : <span className="text-rose-500">*</span>}
                                 </label>
+
                                 <textarea
                                     {...register("remark", {
-                                        required: !isDisabledStatus ? "Remark is required" : false
+                                        required: !isDisabledStatus ? "Remark is required" : false,
+                                        maxLength: {
+                                            value: 100,
+                                            message: "Remark cannot exceed 100 characters",
+                                        },
                                     })}
                                     rows={4}
-                                    className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 resize-none ${errors.remark
-                                        ? "border-rose-300 dark:border-rose-600"
-                                        : "border-gray-200 dark:border-gray-700 hover:border-blue-400"
+                                    maxLength={100}
+                                    className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm
+        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+        dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 resize-none
+        ${errors.remark
+                                            ? "border-rose-300 dark:border-rose-600"
+                                            : "border-gray-200 dark:border-gray-700 hover:border-blue-400"
                                         }`}
                                     placeholder="Enter detailed remarks about the follow-up interaction..."
                                 />
-                                {errors.remark && (
-                                    <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                                        <AlertCircle className="w-3.5 h-3.5" />
-                                        {errors.remark.message}
+
+                                {/* Character counter */}
+                                <div className="flex justify-between items-center">
+                                    {errors.remark ? (
+                                        <p className="text-rose-500 text-xs flex items-center gap-1">
+                                            <AlertCircle className="w-3.5 h-3.5" />
+                                            {errors.remark.message}
+                                        </p>
+                                    ) : (
+                                        <span />
+                                    )}
+
+                                    <p className="text-xs text-gray-500">
+                                        {watch("remark")?.length || 0}/100
                                     </p>
-                                )}
+                                </div>
                             </div>
+
 
                             {/* Save Button */}
                             <div className="flex justify-end pt-2">
@@ -456,9 +476,12 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                                             })
                                                             : "N/A"}
                                                     </td>
-                                                    <td className="px-5 py-4 text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
+                                                    <td className="px-5 py-4 text-gray-700 dark:text-gray-300 max-w-[500px] whitespace-normal break-words">
                                                         {f.remark || "No remark"}
                                                     </td>
+
+
+
                                                     <td className="px-5 py-4 text-gray-800 dark:text-gray-200 font-semibold">
                                                         {f.budget || "Not specified"}
                                                     </td>

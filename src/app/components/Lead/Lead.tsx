@@ -75,6 +75,7 @@ const VALID_TABS = [
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
     const searchParams = useSearchParams();
+
     const { list: leadList, loading, totalPages, total } = useSelector((state: RootState) => state.leads);
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
@@ -100,18 +101,18 @@ const LeadComponent: React.FC = () => {
     const [pageSize, setPageSize] = useState(5);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [currentLead, setCurrentLead] = useState<any | null>(null);
-    const [leadToDelete, setLeadToDelete] = useState<any | null>(null);
+    const [currentLead, setCurrentLead] = useState<any>(null);
+    const [leadToDelete, setLeadToDelete] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
-    const [currentTimelineLead, setCurrentTimelineLead] = useState<any | null>(null);
+    const [currentTimelineLead, setCurrentTimelineLead] = useState<any>(null);
     const [isUploadPreviewOpen, setIsUploadPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [fileName, setFileName] = useState('');
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [selectedLeadId, setSelectedLeadId] = useState<number | any>(null);
+    const [selectedLeadId, setSelectedLeadId] = useState<any>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [deleteMode, setDeleteMode] = useState<'single' | 'bulk'>('single');
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -157,6 +158,7 @@ const LeadComponent: React.FC = () => {
     const fetchLeadsData = useCallback((overrideTab?: string) => {
         const tabToUse = overrideTab || activeTab;
         const category = getCategoryFromTab(tabToUse);
+
         const params: any = {
             page: currentPage,
             limit: pageSize,
@@ -218,7 +220,6 @@ const LeadComponent: React.FC = () => {
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         setCurrentPage(1);
-
         // Update URL without full page reload (optional - for better UX)
         const url = new URL(window.location.href);
         url.searchParams.set('tab', tab);
@@ -261,6 +262,7 @@ const LeadComponent: React.FC = () => {
             const updatedAt = lead.updatedAt ? formatDate(lead.updatedAt) : 'N/A';
             const latestFollowUpDate = lead.latestFollowUpDate ? formatDate(lead.latestFollowUpDate) : 'Not Scheduled';
             const lastFollowUpDate = lead.lastFollowUpDate ? formatDate(lead.lastFollowUpDate) : 'N/A';
+
             return {
                 id: lead.id,
                 name: lead.name || 'N/A',
@@ -355,7 +357,7 @@ const LeadComponent: React.FC = () => {
                 setSelectedIds([]);
                 toast.success(`${(deleteTarget as number[]).length} lead(s) deleted successfully`);
             }
-            handleRefetch();
+            handleRefetch(true);
         } catch (error: any) {
             toast.error(error?.message || 'Failed to delete');
         } finally {
@@ -375,7 +377,8 @@ const LeadComponent: React.FC = () => {
                 currentLead ? 'Lead updated successfully' : 'Lead added successfully'
             );
             setIsModalOpen(false);
-            handleRefetch();
+            setCurrentLead(null);
+            handleRefetch(true);
         } catch (error: any) {
             console.error('Error saving lead:', error);
             toast.error(error?.message || 'Failed to save lead');
@@ -407,8 +410,10 @@ const LeadComponent: React.FC = () => {
             toast.error('No leads selected for assignment');
             return;
         }
+
         const numericIds = selectedIds?.map(id => Number(id));
         const numericAssignedTo = Number(assignedTo);
+
         try {
             await dispatch(transferSelectedLeads({
                 leadIds: numericIds,
@@ -416,7 +421,7 @@ const LeadComponent: React.FC = () => {
             })).unwrap();
             toast.success(`${numericIds.length} lead(s) transferred successfully`);
             setSelectedIds([]);
-            handleRefetch();
+            handleRefetch(true);
         } catch (error: any) {
             toast.error(error?.message || 'Failed to transfer selected leads');
         } finally {
@@ -484,7 +489,7 @@ const LeadComponent: React.FC = () => {
             await dispatch(uploadLeads(selectedFile)).unwrap();
             toast.success('Leads uploaded successfully');
             resetUploadStates();
-            handleRefetch();
+            handleRefetch(true);
         } catch (err: any) {
             toast.error(err?.message || 'Failed to upload leads');
         } finally {
@@ -492,7 +497,7 @@ const LeadComponent: React.FC = () => {
         }
     };
 
-    const storedUser = localStorage.getItem('user');
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
     const exportColumns = [
@@ -517,11 +522,13 @@ const LeadComponent: React.FC = () => {
     ];
 
     return (
-        <div className="space-y-8 p-3 sm:p-6 dark:bg-gray-900 dark:text-gray-100">
-            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="p-2 sm:p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-bold">Lead Master</h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                        Lead Master
+                    </h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                         Manage leads with advanced filtering
                     </p>
                 </div>
@@ -529,35 +536,32 @@ const LeadComponent: React.FC = () => {
                     {hasPermission(24, 'export') && (
                         <button
                             onClick={handleExport}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
-                            bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-medium"
+                            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
                         >
-                            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Export</span>
+                            <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <span>Export</span>
                         </button>
                     )}
                     {hasPermission(26, 'upload') && (
                         <button
                             onClick={handleOpenUploadPreview}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
-                            bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+                            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-lg hover:from-purple-600 hover:to-violet-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
                         >
                             {uploadLoading ? (
-                                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                             ) : (
-                                <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             )}
-                            <span className="hidden sm:inline">Upload</span>
+                            <span>Upload</span>
                         </button>
                     )}
                     {hasPermission(21, 'add') && (
                         <button
                             onClick={handleAdd}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm
-                            bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+                            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
                         >
-                            <Plus className="w-3.5 h-3.5 sm:w-4" />
-                            <span className="hidden sm:inline">Add New</span>
+                            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <span>Add New</span>
                         </button>
                     )}
                 </div>
@@ -565,31 +569,32 @@ const LeadComponent: React.FC = () => {
 
             <LeadPanel
                 leads={transformLeadsForPanel}
+                onAddLead={handleAdd}
+                onEditLead={handleEdit}
+                onDeleteLead={handleDelete}
+                onBulkDelete={handleBulkDelete}
+                onBulkAssign={handleAssignLeads}
+                onLeadClick={handleLeadClick}
                 loading={loading}
-                activeTab={activeTab}
-                onTabChange={handleTabChange}
-                searchTerm={searchTerm}
-                onSearch={handleSearch}
+                title="Lead Panel"
+                currentPage={currentPage}
+                totalPages={totalPages || 1}
+                pageSize={pageSize}
+                totalRecords={total || 0}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
                 fromDate={fromDate}
                 toDate={toDate}
                 onDateChange={handleDateChange}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                totalRecords={total}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                onAddLead={hasPermission(21, "add") ? handleAdd : undefined}
-                onEditLead={hasPermission(22, "edit") ? handleEdit : undefined}
-                onDeleteLead={hasPermission(4, "delete") ? handleDelete : undefined}
-                onBulkDelete={hasPermission(4, "delete") ? handleBulkDelete : undefined}
-                onBulkAssign={hasPermission(25, "bulk assign") ? handleAssignLeads : undefined}
-                onLeadClick={handleLeadClick}
+                onTabChange={handleTabChange}
+                activeTab={activeTab}
+                searchTerm={searchTerm}
+                onSearch={handleSearch}
                 onFollowUp={(lead: any) => {
                     setSelectedLeadId(lead);
                     setIsFollowUpModalOpen(true);
                 }}
-                onRefetch={handleRefetch}
+                onRefetch={() => handleRefetch(true)}
                 selectedPlatform={selectedPlatform}
                 onPlatformChange={handlePlatformChange}
                 selectedAssignedTo={selectedAssignedTo}
@@ -605,18 +610,20 @@ const LeadComponent: React.FC = () => {
 
             <ComprehensiveLeadModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setCurrentLead(null);
+                }}
                 onSave={handleSaveLead}
                 initialData={currentLead}
                 isLoading={isSaving}
             />
 
-            {/* ✅ FIXED: Always render FollowUpLeadModal, control with isOpen */}
             <FollowUpLeadModal
-                isOpen={!!selectedLeadId && isFollowUpModalOpen}
+                isOpen={isFollowUpModalOpen}
                 onClose={(shouldRefetch?: boolean) => {
                     setIsFollowUpModalOpen(false);
-                    setSelectedLeadId(null); // Reset selected lead
+                    setSelectedLeadId(null);
                     if (shouldRefetch) {
                         handleRefetch(true);
                     }
