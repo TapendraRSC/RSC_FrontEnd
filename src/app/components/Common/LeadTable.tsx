@@ -1423,14 +1423,16 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                             {formattedLead.formattedCreatedAt}
                                                         </p>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">
-                                                            Last Updated
-                                                        </p>
-                                                        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                            {formattedLead.formattedUpdatedAt}
-                                                        </p>
-                                                    </div>
+                                                    {formattedLead.formattedCreatedAt !== formattedLead.formattedUpdatedAt && (
+                                                        <div>
+                                                            <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">
+                                                                Last Updated
+                                                            </p>
+                                                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                                                                {formattedLead.formattedUpdatedAt}
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
