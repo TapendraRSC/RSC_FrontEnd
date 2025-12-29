@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Pencil, Trash2, Plus, Upload, Loader2, Download, UserPlus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
@@ -58,8 +59,22 @@ const formatDate = (dateString: string | Date | null) => {
     });
 };
 
+// Valid tab IDs
+const VALID_TABS = [
+    'list',
+    'freshLead',
+    'hotLead',
+    'warmLead',
+    'coldLead',
+    'todayFollowup',
+    'pendingFollowup',
+    'dumpLead',
+    'future-followup'
+];
+
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
+    const searchParams = useSearchParams();
     const { list: leadList, loading, totalPages, total } = useSelector((state: RootState) => state.leads);
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
@@ -68,7 +83,16 @@ const LeadComponent: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
-    const [activeTab, setActiveTab] = useState('list');
+    // Get initial tab from URL query parameter
+    const getInitialTab = (): string => {
+        const tabFromUrl = searchParams.get('tab');
+        if (tabFromUrl && VALID_TABS.includes(tabFromUrl)) {
+            return tabFromUrl;
+        }
+        return 'list';
+    };
+
+    const [activeTab, setActiveTab] = useState(getInitialTab);
     const [searchTerm, setSearchTerm] = useState('');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
@@ -99,6 +123,15 @@ const LeadComponent: React.FC = () => {
 
     // Store the last fetch parameters for intelligent refetch
     const [lastFetchParams, setLastFetchParams] = useState<any>({});
+
+    // Update activeTab when URL changes
+    useEffect(() => {
+        const tabFromUrl = searchParams.get('tab');
+        if (tabFromUrl && VALID_TABS.includes(tabFromUrl)) {
+            setActiveTab(tabFromUrl);
+            setCurrentPage(1); // Reset to first page when tab changes from URL
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -185,6 +218,11 @@ const LeadComponent: React.FC = () => {
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         setCurrentPage(1);
+
+        // Update URL without full page reload (optional - for better UX)
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState({}, '', url.toString());
     };
 
     const handleSearch = (term: string) => {
@@ -418,14 +456,12 @@ const LeadComponent: React.FC = () => {
                 const text = event.target.result as string;
                 const rows = text.split('\n').map((row: string) => row.split(','));
                 const preview = rows.map((cols: string[], i: number) => ({
-
                     name: cols[0] || '',
                     email: cols[1] || '',
                     phone: cols[2] || '',
                     city: cols[3] || '',
                     state: cols[4] || '',
                     platform: cols[5] || '',
-
                 }));
                 setPreviewData(preview.filter((r) => r.name));
             } catch (err) {
@@ -564,7 +600,7 @@ const LeadComponent: React.FC = () => {
                     hasPermission(25, "bulk assign") || hasPermission(4, "delete")
                 }
                 currentUser={currentUser}
-                disableInternalFetch={true} // New prop to disable internal fetching
+                disableInternalFetch={true}
             />
 
             <ComprehensiveLeadModal
@@ -575,19 +611,18 @@ const LeadComponent: React.FC = () => {
                 isLoading={isSaving}
             />
 
-            {selectedLeadId && (
-                <FollowUpLeadModal
-                    isOpen={isFollowUpModalOpen}
-                    onClose={(shouldRefetch?: boolean) => {
-                        setIsFollowUpModalOpen(false);
-                        // Only refetch if data was actually saved
-                        if (shouldRefetch) {
-                            handleRefetch(true);
-                        }
-                    }}
-                    lead={selectedLeadId}
-                />
-            )}
+            {/* ✅ FIXED: Always render FollowUpLeadModal, control with isOpen */}
+            <FollowUpLeadModal
+                isOpen={!!selectedLeadId && isFollowUpModalOpen}
+                onClose={(shouldRefetch?: boolean) => {
+                    setIsFollowUpModalOpen(false);
+                    setSelectedLeadId(null); // Reset selected lead
+                    if (shouldRefetch) {
+                        handleRefetch(true);
+                    }
+                }}
+                lead={selectedLeadId}
+            />
 
             <TimelineLeadModal
                 isOpen={isTimelineModalOpen}
@@ -639,5 +674,3 @@ const LeadComponent: React.FC = () => {
 };
 
 export default LeadComponent;
-
-// Note: The LeadPanel component also needs updates to prevent duplicate API calls
