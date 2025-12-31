@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect, createContext, useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, X, LifeBuoy } from 'lucide-react'; // LifeBuoy icon add kiya
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import 'react-perfect-scrollbar/dist/css/styles.css';
 import AnimateHeight from 'react-animate-height';
@@ -81,6 +81,7 @@ const Sidebar = () => {
         },
         projectstatus: { pageName: 'Project Status', title: 'Project Status', href: '/projectstatus', type: 'single' },
         Lead: { pageName: 'Lead', title: 'Lead', href: '/lead', type: 'single' },
+        support: { pageName: 'Support', title: 'Support', href: '/support', type: 'single', alwaysShow: true },
     };
 
     const isViewPermissionValid = (ids: number[]) => ids.includes(17);
@@ -89,6 +90,12 @@ const Sidebar = () => {
         if (!rolePermissions?.permissions) return {};
         const filtered: any = {};
         Object.entries(menuStructure).forEach(([key, item]: any) => {
+            // Agar hamesha dikhana hai (Support ke liye)
+            if (item.alwaysShow) {
+                filtered[key] = item;
+                return;
+            }
+
             if (item.type === 'single') {
                 const permission = rolePermissions.permissions.find(
                     (perm: any) => perm.pageName === item.pageName && isViewPermissionValid(perm.permissionIds)
@@ -112,7 +119,7 @@ const Sidebar = () => {
 
     useEffect(() => {
         if (window.innerWidth < 1024) setSidebarOpen(false);
-    }, [pathname]);
+    }, [pathname, setSidebarOpen]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -129,7 +136,7 @@ const Sidebar = () => {
         };
         if (sidebarOpen) document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [sidebarOpen]);
+    }, [sidebarOpen, setSidebarOpen]);
 
     if (rolePermissionsLoading) {
         return (
@@ -151,7 +158,6 @@ const Sidebar = () => {
                 className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-gray-900 shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] dark:shadow-[5px_0_25px_0_rgba(0,0,0,0.3)] transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
             >
                 <div className="flex flex-col h-full">
-                    {/* ---------- Header ---------- */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                         <Link href="/" className="main-logo flex items-center gap-2">
                             <span className="text-2xl font-semibold text-gray-900 dark:text-white">RSC Group</span>
@@ -164,14 +170,12 @@ const Sidebar = () => {
                         </button>
                     </div>
 
-                    {/* ---------- Scrollable Menu ---------- */}
                     <div className="flex-1 overflow-hidden">
                         <PerfectScrollbar
                             className="h-full"
                             options={{
                                 wheelSpeed: 2,
                                 wheelPropagation: false,
-                                minScrollbarLength: 20,
                                 suppressScrollX: true,
                             }}
                         >
@@ -237,6 +241,19 @@ const Sidebar = () => {
                                             className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100"
                                         >
                                             <span>{filteredMenuItems.Lead.title}</span>
+                                        </Link>
+                                    </li>
+                                )}
+
+                                {/* --- Support Menu (Always Visible) --- */}
+                                {filteredMenuItems.support && (
+                                    <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
+                                        <Link
+                                            href={filteredMenuItems.support.href}
+                                            className={`nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ${pathname === '/support' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20' : 'text-gray-900 dark:text-gray-100'}`}
+                                        >
+                                            <LifeBuoy className="w-5 h-5 text-blue-500" />
+                                            <span>{filteredMenuItems.support.title}</span>
                                         </Link>
                                     </li>
                                 )}
