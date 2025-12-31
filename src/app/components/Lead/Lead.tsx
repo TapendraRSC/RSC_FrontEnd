@@ -388,7 +388,7 @@ const LeadComponent: React.FC = () => {
     };
 
     const handleExport = () => {
-        if (transformLeadsForPanel.length === 0) {
+        if (transformLeadsForPanel.length === 0 && total === 0) {
             toast.error('No data to export');
             return;
         }
@@ -504,22 +504,208 @@ const LeadComponent: React.FC = () => {
         { label: 'Name', accessor: 'name' },
         { label: 'Phone', accessor: 'phone' },
         { label: 'Email', accessor: 'email' },
-        { label: 'Status', accessor: 'status' },
-        { label: 'Stage', accessor: 'stage' },
+        // { label: 'Status', accessor: 'status' },
+        // { label: 'Stage', accessor: 'stage' },
         { label: 'Assigned To', accessor: 'assignedTo' },
-        { label: 'Source', accessor: 'source' },
+        // { label: 'Source', accessor: 'source' },
         { label: 'Platform', accessor: 'platformType' },
         { label: 'Created Date', accessor: 'createdDate' },
-        { label: 'Next Follow Up', accessor: 'nextFollowUp' },
-        { label: 'Profession', accessor: 'profession' },
-        { label: 'Address', accessor: 'address' },
-        { label: 'City', accessor: 'city' },
-        { label: 'State', accessor: 'state' },
-        { label: 'Budget', accessor: 'budget' },
-        { label: 'Plot Number', accessor: 'plotNumber' },
-        { label: 'Plot Price', accessor: 'plotPrice' },
-        { label: 'Remark', accessor: 'remark' },
+        // { label: 'Next Follow Up', accessor: 'nextFollowUp' },
+        // { label: 'Profession', accessor: 'profession' },
+        // { label: 'Address', accessor: 'address' },
+        // { label: 'City', accessor: 'city' },
+        // { label: 'State', accessor: 'state' },
+        // { label: 'Budget', accessor: 'budget' },
+        // { label: 'Plot Number', accessor: 'plotNumber' },
+        // { label: 'Plot Price', accessor: 'plotPrice' },
+        // { label: 'Remark', accessor: 'remark' },
     ];
+
+    // Transform lead data for export
+    const transformLeadForExport = (lead: any) => {
+        const createdAt = lead.createdAt ? formatDate(lead.createdAt) : 'N/A';
+        const latestFollowUpDate = lead.latestFollowUpDate ? formatDate(lead.latestFollowUpDate) : 'Not Scheduled';
+        const lastFollowUpDate = lead.lastFollowUpDate ? formatDate(lead.lastFollowUpDate) : 'N/A';
+
+
+        return {
+            id: lead.id,
+            name: lead.name || 'N/A',
+            phone: lead.phone || 'N/A',
+            email: lead.email || '',
+            profession: lead.profession || 'Not Provided',
+            address: lead.address || 'Not Provided',
+            city: lead.city || 'Not Provided',
+            state: lead.state || 'Not Provided',
+            nextFollowUp: latestFollowUpDate,
+            stage: lead.leadStage || 'Lead',
+            status: lead.leadStatus || 'N/A',
+            interestedIn: lead.interestedIn || 'not provided',
+            budget: lead.budget || lead.plotPrice || 'N/A',
+            assignedTo: lead.assignedUserName || 'Not Assigned',
+            assignedUserName: lead.assignedUserName || 'Not Assigned',
+            source: lead.platformType || lead.source || 'WEBSITE',
+            remark: lead.remark || 'N/A',
+            lastFollowUp: lead.lastFollowUp || 'DNP',
+            createdDate: createdAt,
+            lastFollowUpDate: lastFollowUpDate,
+            platformType: lead.platformType || 'N/A',
+            plotNumber: lead.plotNumber || 'N/A',
+            plotPrice: lead.plotPrice || 'N/A',
+        };
+    };
+
+
+    // Extract leads from API response (handles multiple response structures)
+    const extractLeadsFromResponse = (resultAction: any): any[] => {
+        if (!resultAction) return [];
+
+        if (Array.isArray(resultAction)) {
+            return resultAction;
+        }
+        if (resultAction.leads && Array.isArray(resultAction.leads)) {
+            return resultAction.leads;
+        }
+        if (resultAction.data && Array.isArray(resultAction.data)) {
+            return resultAction.data;
+        }
+        if (resultAction.data?.leads && Array.isArray(resultAction.data.leads)) {
+            return resultAction.data.leads;
+        }
+        if (resultAction.data?.data && Array.isArray(resultAction.data.data)) {
+            return resultAction.data.data;
+        }
+        return [];
+    };
+
+
+
+    // const handleFetchExportRange = useCallback(async (start: number, end: number): Promise<any[]> => {
+    //     try {
+    //         const totalToFetch = end - start;
+    //         const category = getCategoryFromTab(activeTab);
+    //         const BATCH_SIZE = 100; // Tera backend 100 deta hai ek baar mein
+
+    //         console.log(`Export: Fetching ${totalToFetch} records`);
+
+    //         let allLeads: any[] = [];
+    //         const totalPages = Math.ceil(totalToFetch / BATCH_SIZE);
+
+    //         // Har page ke liye API call
+    //         for (let page = 1; page <= totalPages; page++) {
+    //             console.log(`Fetching page ${page} of ${totalPages}...`);
+
+    //             const params: any = {
+    //                 page: page,
+    //                 limit: BATCH_SIZE,
+    //                 searchValue: searchTerm,
+    //                 fromDate,
+    //                 toDate,
+    //                 ...(category && { category }),
+    //                 ...(selectedPlatform && { platformId: selectedPlatform }),
+    //                 ...(selectedAssignedTo && { assignedTo: selectedAssignedTo }),
+    //             };
+
+    //             const resultAction = await dispatch(fetchLeads(params)).unwrap();
+    //             const batchLeads = extractLeadsFromResponse(resultAction);
+
+    //             console.log(`Page ${page}: Got ${batchLeads.length} records`);
+
+    //             if (batchLeads.length === 0) break;
+
+    //             allLeads = [...allLeads, ...batchLeads];
+
+    //             // Agar requested records mil gaye toh ruk jao
+    //             if (allLeads.length >= totalToFetch) break;
+    //         }
+
+    //         console.log(`Export: Total fetched ${allLeads.length} records`);
+
+    //         if (allLeads.length === 0) {
+    //             throw new Error('No data found to export');
+    //         }
+
+    //         // Sirf utne records lo jitne maange the
+    //         const slicedLeads = allLeads.slice(0, totalToFetch);
+    //         const transformedLeads = slicedLeads.map(transformLeadForExport);
+
+    //         return transformedLeads;
+
+    //     } catch (error: any) {
+    //         console.error('Export range fetch failed:', error);
+    //         toast.error(error?.message || 'Failed to fetch export data');
+    //         throw error;
+    //     }
+    // }, [dispatch, activeTab, searchTerm, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
+
+
+
+    const handleFetchExportRange = useCallback(async (start: number, end: number): Promise<any[]> => {
+        try {
+            const totalToFetch = end - start;
+            const category = getCategoryFromTab(activeTab);
+            // const BATCH_SIZE = 100;
+            const BATCH_SIZE = 500;
+
+            console.log(`Export: Fetching records from ${start} to ${end} (Total: ${totalToFetch})`);
+
+
+            const startPage = Math.floor(start / BATCH_SIZE) + 1;
+            const endPage = Math.ceil(end / BATCH_SIZE);
+
+            console.log(`Starting from page ${startPage} to page ${endPage}`);
+
+            let allLeads: any[] = [];
+
+
+            for (let page = startPage; page <= endPage; page++) {
+                console.log(`Fetching page ${page}...`);
+
+                const params: any = {
+                    page: page,
+                    limit: BATCH_SIZE,
+                    searchValue: searchTerm,
+                    fromDate,
+                    toDate,
+                    ...(category && { category }),
+                    ...(selectedPlatform && { platformId: selectedPlatform }),
+                    ...(selectedAssignedTo && { assignedTo: selectedAssignedTo }),
+                };
+
+                const resultAction = await dispatch(fetchLeads(params)).unwrap();
+                const batchLeads = extractLeadsFromResponse(resultAction);
+
+                console.log(`Page ${page}: Got ${batchLeads.length} records`);
+
+                if (batchLeads.length === 0) break;
+
+                allLeads = [...allLeads, ...batchLeads];
+            }
+
+            console.log(`Export: Total fetched ${allLeads.length} records`);
+
+            if (allLeads.length === 0) {
+                throw new Error('No data found to export');
+            }
+
+
+            const offsetInFirstPage = start % BATCH_SIZE;
+            const slicedLeads = allLeads.slice(offsetInFirstPage, offsetInFirstPage + totalToFetch);
+
+            console.log(`Slicing from index ${offsetInFirstPage}, taking ${totalToFetch} records`);
+
+            const transformedLeads = slicedLeads.map(transformLeadForExport);
+
+            return transformedLeads;
+
+        } catch (error: any) {
+            console.error('Export range fetch failed:', error);
+            toast.error(error?.message || 'Failed to fetch export data');
+            throw error;
+        }
+    }, [dispatch, activeTab, searchTerm, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
+
+
 
     return (
         <div className="p-2 sm:p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -580,7 +766,7 @@ const LeadComponent: React.FC = () => {
                 currentPage={currentPage}
                 totalPages={totalPages || 1}
                 pageSize={pageSize}
-                totalRecords={total || 0}
+                totalRecords={total}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 fromDate={fromDate}
@@ -667,6 +853,8 @@ const LeadComponent: React.FC = () => {
                 data={transformLeadsForPanel}
                 fileName={`leads_export_${new Date().toISOString().split('T')[0]}`}
                 columns={exportColumns}
+                totalRecords={total}
+                onFetchDataRange={handleFetchExportRange}
             />
 
             <BulkAssignRoleModal
