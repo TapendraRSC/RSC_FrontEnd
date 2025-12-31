@@ -187,6 +187,22 @@ export default function SupportPage(): React.JSX.Element {
 
     const currentDay = getCurrentDay();
 
+
+    const getLastUpdatedMonth = () => {
+        const now = new Date();
+        const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        const month = monthNames[previousMonth.getMonth()];
+        const year = previousMonth.getFullYear();
+
+        return `${month} ${year}`;
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300">
 
@@ -307,7 +323,6 @@ export default function SupportPage(): React.JSX.Element {
                     </div>
 
                     <div className="bg-white dark:bg-slate-800/50 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-700/50 backdrop-blur-sm overflow-hidden">
-                        {/* Policy Header */}
                         <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-6">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -362,13 +377,13 @@ export default function SupportPage(): React.JSX.Element {
                             ))}
                         </div>
 
-                        {/* Policy Footer */}
                         <div className="bg-slate-50 dark:bg-slate-800/80 px-8 py-6 border-t border-slate-100 dark:border-slate-700/50">
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+
                                 <div className="flex items-center gap-3">
                                     <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
                                     <span className="text-slate-600 dark:text-slate-400 text-sm">
-                                        Last updated: December 2025
+                                        Last updated: {getLastUpdatedMonth()}
                                     </span>
                                 </div>
                                 <a
