@@ -368,12 +368,13 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                State <span className="text-red-500">*</span>
+                State
+                {/* <span className="text-red-500">*</span> */}
               </label>
               <Controller
                 name="state"
                 control={control}
-                rules={{ required: "State is required" }}
+                // rules={{ required: "State is required" }}
                 render={({ field }) => (
                   <CommonDropdown
                     options={stateOptions}
@@ -393,12 +394,13 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                City <span className="text-red-500">*</span>
+                City
+                {/* <span className="text-red-500">*</span> */}
               </label>
               <Controller
                 name="city"
                 control={control}
-                rules={{ required: "City is required" }}
+                // rules={{ required: "City is required" }}
                 render={({ field }) => (
                   <CommonDropdown
                     options={cityOptions}

@@ -373,13 +373,13 @@ const ProjectStatusComponent: React.FC = () => {
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage project statuses</p>
                     </div>
                     <div className="flex gap-1 sm:gap-2">
-                        <button
+                        {/* <button
                             onClick={() => setIsExportModalOpen(true)}
                             className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors text-xs sm:text-sm"
                         >
                             <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span>Export</span>
-                        </button>
+                        </button> */}
                         {hasPermission(21, "add") && (
                             <button
                                 onClick={handleAdd}
