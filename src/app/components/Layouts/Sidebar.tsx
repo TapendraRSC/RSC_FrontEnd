@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect, createContext, useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChevronDown, X, LifeBuoy } from 'lucide-react'; // LifeBuoy icon add kiya
+import { ChevronDown, X, LifeBuoy } from 'lucide-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import 'react-perfect-scrollbar/dist/css/styles.css';
 import AnimateHeight from 'react-animate-height';
@@ -245,15 +245,31 @@ const Sidebar = () => {
                                     </li>
                                 )}
 
-                                {/* --- Support Menu (Always Visible) --- */}
+
                                 {filteredMenuItems.support && (
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
                                         <Link
                                             href={filteredMenuItems.support.href}
-                                            className={`nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ${pathname === '/support' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20' : 'text-gray-900 dark:text-gray-100'}`}
+                                            className={`
+                                                nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left 
+                                                transition-all duration-200 hover:scale-[1.02]
+                                                bg-gradient-to-r from-blue-50 to-blue-100
+                                                dark:from-blue-950/60 dark:to-blue-900/40
+                                                border border-blue-200 dark:border-blue-700
+                                                shadow-sm hover:shadow-md
+                                                ${pathname === '/support'
+                                                    ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-100'
+                                                    : 'text-blue-700 dark:text-blue-200 hover:text-blue-800 dark:hover:text-blue-100'
+                                                }
+                                            `}
                                         >
-                                            <LifeBuoy className="w-5 h-5 text-blue-500" />
-                                            <span>{filteredMenuItems.support.title}</span>
+                                            <LifeBuoy className="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                                            <span className="font-semibold tracking-wide uppercase text-sm">
+                                                {filteredMenuItems.support.title}
+                                            </span>
+                                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-200/60 dark:bg-blue-500/30 text-blue-700 dark:text-blue-100 font-medium">
+                                                Help
+                                            </span>
                                         </Link>
                                     </li>
                                 )}
