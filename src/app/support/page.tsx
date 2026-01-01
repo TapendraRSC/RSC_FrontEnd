@@ -240,9 +240,10 @@ export default function SupportPage(): React.JSX.Element {
                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 dark:text-white mb-3 sm:mb-4 tracking-tight">
                         Contact Support
                     </h1>
-                    <p className="text-base sm:text-lg lg:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto px-2">
-                        Welcome to <b>RSC Group Dholera </b> CRM. These Terms & Conditions govern the access and use of the Customer Relationship Management (CRM) system operated by <b>RSC Group Dholera.</b> By accessing, logging in, or using this CRM platform, you agree to comply with and be legally bound by these Terms.
+                    <p className="text-base sm:text-lg lg:text-xl text-slate-500 dark:text-slate-400 max-w-4xl mx-auto px-2">
+                        Welcome to <b>RSC Group Dholera</b> CRM. These Terms & Conditions govern the access and use of the Customer Relationship Management (CRM) system operated by <b>RSC Group Dholera.</b> By accessing, logging in, or using this CRM platform, you agree to comply with and be legally bound by these Terms.
                     </p>
+
                 </div>
 
                 {/* Cards Grid - Responsive layout */}
