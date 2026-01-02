@@ -42,7 +42,7 @@ const Director = () => {
                 const token = localStorage.getItem("accessToken");
 
                 const res = await fetch(
-                    "https://backend.rscgroupdholera.in/allotments/allotment-requests",
+                    "allotments/allotment-requests",
                     {
                         method: "GET",
                         headers: {
