@@ -269,7 +269,7 @@ const Director = () => {
                             <X />
                         </button>
 
-                        <h3 className="text-lg font-semibold mb-3">Message</h3>
+                        <h3 className="text-lg font-semibold text-slate-700 mb-3">Message</h3>
                         <p className="text-sm text-slate-700 whitespace-pre-wrap">
                             {openMessage}
                         </p>
