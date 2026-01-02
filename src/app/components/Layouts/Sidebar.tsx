@@ -82,7 +82,11 @@ const Sidebar = () => {
         projectstatus: { pageName: 'Project Status', title: 'Project Status', href: '/projectstatus', type: 'single' },
         Lead: { pageName: 'Lead', title: 'Lead', href: '/lead', type: 'single' },
         support: { pageName: 'Support', title: 'Support', href: '/support', type: 'single', alwaysShow: true },
+        Assistantdirector: { pageName: 'Assistantdirector', title: 'Assistant Director', href: '/Assistantdirector', type: 'single', alwaysShow: true },
     };
+    const isAssistantDirectorUser = rolePermissions?.permissions?.some(
+        (perm: any) => perm.pageName === 'Assistantdirector' && perm.permissionIds?.includes(17)
+    );
 
     const isViewPermissionValid = (ids: number[]) => ids.includes(17);
 
@@ -90,7 +94,6 @@ const Sidebar = () => {
         if (!rolePermissions?.permissions) return {};
         const filtered: any = {};
         Object.entries(menuStructure).forEach(([key, item]: any) => {
-            // Agar hamesha dikhana hai (Support ke liye)
             if (item.alwaysShow) {
                 filtered[key] = item;
                 return;
@@ -116,6 +119,8 @@ const Sidebar = () => {
     };
 
     const filteredMenuItems = getFilteredMenu();
+    const shouldShowDashboard = filteredMenuItems.dashboard && !isAssistantDirectorUser;
+    const shouldShowAssistantDirector = filteredMenuItems.Assistantdirector && isAssistantDirectorUser;
 
     useEffect(() => {
         if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -180,11 +185,21 @@ const Sidebar = () => {
                             }}
                         >
                             <ul className="space-y-0.5 p-4 font-semibold">
-                                {filteredMenuItems.dashboard && (
+                                {shouldShowAssistantDirector && (
+                                    <li className="menu nav-item">
+                                        <Link
+                                            href={filteredMenuItems.Assistantdirector.href}
+                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/Assistantdirector' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
+                                        >
+                                            <span>{filteredMenuItems.Assistantdirector.title}</span>
+                                        </Link>
+                                    </li>
+                                )}
+                                {shouldShowDashboard && (
                                     <li className="menu nav-item">
                                         <Link
                                             href={filteredMenuItems.dashboard.href}
-                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100"
+                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
                                         >
                                             <span>{filteredMenuItems.dashboard.title}</span>
                                         </Link>
@@ -212,7 +227,7 @@ const Sidebar = () => {
                                                     <li key={index}>
                                                         <Link
                                                             href={child.href}
-                                                            className="block px-3 py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                                                            className={`block px-3 py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white ${pathname === child.href ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : ''}`}
                                                         >
                                                             {child.title}
                                                         </Link>
@@ -227,7 +242,7 @@ const Sidebar = () => {
                                     <li className="menu nav-item">
                                         <Link
                                             href={filteredMenuItems.projectstatus.href}
-                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100"
+                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/projectstatus' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
                                         >
                                             <span>{filteredMenuItems.projectstatus.title}</span>
                                         </Link>
@@ -238,13 +253,12 @@ const Sidebar = () => {
                                     <li className="menu nav-item">
                                         <Link
                                             href={filteredMenuItems.Lead.href}
-                                            className="nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100"
+                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/lead' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
                                         >
                                             <span>{filteredMenuItems.Lead.title}</span>
                                         </Link>
                                     </li>
                                 )}
-
 
                                 {filteredMenuItems.support && (
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
