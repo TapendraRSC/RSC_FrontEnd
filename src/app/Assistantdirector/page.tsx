@@ -41,8 +41,10 @@ const Director = () => {
             try {
                 const token = localStorage.getItem("accessToken");
 
+                const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
                 const res = await fetch(
-                    "/allotments/allotment-requests",
+                    `${BASE_URL}/allotments/allotment-requests`,
                     {
                         method: "GET",
                         headers: {
@@ -51,6 +53,7 @@ const Director = () => {
                         },
                     }
                 );
+
 
                 if (!res.ok) throw new Error("API failed");
 
