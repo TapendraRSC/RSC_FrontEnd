@@ -41,7 +41,11 @@ const Director = () => {
             try {
                 const token = localStorage.getItem("accessToken");
 
-                const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+                const BASE_URL = "https://backend.rscgroupdholera.in";
+
+                if (!BASE_URL) {
+                    throw new Error("BASE_URL not defined");
+                }
 
                 const res = await fetch(
                     `${BASE_URL}/allotments/allotment-requests`,
@@ -54,8 +58,9 @@ const Director = () => {
                     }
                 );
 
-
-                if (!res.ok) throw new Error("API failed");
+                if (!res.ok) {
+                    throw new Error(`API failed with status ${res.status}`);
+                }
 
                 const json = await res.json();
                 const contacts = json.data || json.contacts || [];
@@ -71,6 +76,7 @@ const Director = () => {
 
         fetchContacts();
     }, []);
+
 
     const filteredData = useMemo(() => {
         if (!searchQuery.trim()) return data;
