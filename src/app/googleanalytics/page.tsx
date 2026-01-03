@@ -53,7 +53,7 @@ type CampaignTrendPoint = {
 };
 
 type CampaignErrorItem = {
-    reason: string;
+    reason: any;
     total: number;
 };
 
@@ -62,7 +62,7 @@ type CampaignLog = {
     event_type: string;
     payload: {
         phone?: string;
-        error?: string;
+        error?: any;
         [key: string]: any;
     };
     ip_address: string;
@@ -135,7 +135,6 @@ const formatDateTime = (dateString: string) => {
 };
 
 
-// Helper function to safely get error message string
 const getErrorMessage = (error: any): string => {
     if (typeof error === 'string') {
         return error;
@@ -147,7 +146,6 @@ const getErrorMessage = (error: any): string => {
         if (error.error) {
             return String(error.error);
         }
-        // Try to stringify for debugging, but return a generic message
         try {
             return JSON.stringify(error);
         } catch {
@@ -364,7 +362,7 @@ const CampaignSource = () => {
                         <h1 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-white">
                             {selectedCampaign.campaign_name}
                         </h1>
-                        <div className="flex items-center gap-2 mt-1">
+                        {/* <div className="flex items-center gap-2 mt-1">
                             <p className="text-sm text-slate-500 dark:text-slate-400">
                                 ID: {selectedCampaign.id}
                             </p>
@@ -378,7 +376,7 @@ const CampaignSource = () => {
                                     <Copy size={14} className="text-slate-400" />
                                 )}
                             </button>
-                        </div>
+                        </div> */}
                         {selectedCampaign.created_at && (
                             <p className="text-sm text-slate-500 dark:text-slate-400">
                                 Created: {formatDateTime(selectedCampaign.created_at)}
@@ -598,20 +596,35 @@ const CampaignSource = () => {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-3">
-                                        {errors.map((errItem, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/30"
-                                            >
-                                                <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
-                                                    {String(errItem.reason)}
-                                                </span>
-                                                <span className="text-sm font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 px-3 py-1 rounded-full">
-                                                    {errItem.total}
-                                                </span>
-                                            </div>
-                                        ))}
+                                    <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                                        {errors.map((errItem, idx) => {
+
+                                            let displayMessage = "";
+                                            try {
+                                                const parsedReason = typeof errItem.reason === 'string'
+                                                    ? JSON.parse(errItem.reason)
+                                                    : errItem.reason;
+
+                                                displayMessage = parsedReason?.message || String(errItem.reason);
+                                            } catch (e) {
+                                                displayMessage = String(errItem.reason);
+                                            }
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/30"
+                                                >
+                                                    <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
+                                                        {displayMessage}
+                                                    </span>
+
+                                                    <span className="text-sm font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 px-3 py-1 rounded-full">
+                                                        {errItem.total}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -651,11 +664,20 @@ const CampaignSource = () => {
                                                     </span>
                                                 </div>
 
-                                                {data.payload?.phone && (
+
+                                                {data.payload?.name && (
                                                     <p className="text-xs text-slate-600 dark:text-slate-300 mb-1">
-                                                        📱 Phone: {String(data.payload.phone)}
+                                                        name: {String(data.payload.name)}
                                                     </p>
                                                 )}
+
+                                                {data.payload?.phone && (
+                                                    <p className="text-xs text-slate-600 dark:text-slate-300 mb-1">
+                                                        Phone: {String(data.payload.phone)}
+                                                    </p>
+                                                )}
+
+
 
                                                 {data.ip_address && (
                                                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -665,13 +687,10 @@ const CampaignSource = () => {
 
                                                 {data.payload?.error && (
                                                     <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-medium">
-                                                        Error: {String(data.payload.error)}
-                                                    </p>
-                                                )}
-
-                                                {data.user_agent && (
-                                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 line-clamp-1">
-                                                        {String(data.user_agent)}
+                                                        {/* DISPLAY MESSAGE VALUE ONLY */}
+                                                        Error: {typeof data.payload.error === 'object' && data.payload.error !== null && 'message' in data.payload.error
+                                                            ? String(data.payload.error.message)
+                                                            : String(data.payload.error)}
                                                     </p>
                                                 )}
                                             </div>
@@ -766,24 +785,6 @@ const CampaignSource = () => {
                                 <h2 className="text-lg font-semibold text-slate-800 dark:text-white line-clamp-2">
                                     {campaign.campaign_name}
                                 </h2>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                        ID: {campaign.id}
-                                    </p>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            copyToClipboard(campaign.id);
-                                        }}
-                                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                                    >
-                                        {copiedId === campaign.id ? (
-                                            <Check size={12} className="text-green-500" />
-                                        ) : (
-                                            <Copy size={12} className="text-slate-400" />
-                                        )}
-                                    </button>
-                                </div>
                                 {campaign.created_at && (
                                     <p className="text-xs text-slate-500 dark:text-slate-400">
                                         Created: {formatDateTime(campaign.created_at)}
