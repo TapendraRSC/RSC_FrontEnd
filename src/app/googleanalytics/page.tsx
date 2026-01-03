@@ -106,20 +106,34 @@ const formatDate = (dateString: string) => {
     }
 };
 
+// const formatDateTime = (dateString: string) => {
+//     try {
+//         const date = new Date(dateString);
+//         return date.toLocaleString('en-IN', {
+//             day: '2-digit',
+//             month: 'short',
+//             year: 'numeric',
+//             hour: '2-digit',
+//             minute: '2-digit',
+//         });
+//     } catch {
+//         return dateString;
+//     }
+// };
+
 const formatDateTime = (dateString: string) => {
     try {
         const date = new Date(dateString);
-        return date.toLocaleString('en-IN', {
+        return date.toLocaleDateString('en-IN', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
         });
     } catch {
         return dateString;
     }
 };
+
 
 // Helper function to safely get error message string
 const getErrorMessage = (error: any): string => {
