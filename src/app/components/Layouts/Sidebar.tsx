@@ -77,6 +77,7 @@ const Sidebar = () => {
                 { pageName: 'Status Master View', title: 'Status Master View', href: '/statusmasterview' },
                 { pageName: 'Land', title: 'Land', href: '/land' },
                 { pageName: 'Lead Platform', title: 'Lead Platform', href: '/leadplatform' },
+                { pageName: 'Google Analytics', title: 'Google Analytics', href: '/googleanalytics' },
             ]
         },
         projectstatus: { pageName: 'Project Status', title: 'Project Status', href: '/projectstatus', type: 'single' },
