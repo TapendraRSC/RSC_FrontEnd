@@ -62,6 +62,12 @@ type CampaignLog = {
     event_type: string;
     payload: {
         phone?: string;
+        name?: string;
+        data?: {
+            phone?: string;
+            name?: string;
+            [key: string]: any;
+        };
         error?: any;
         [key: string]: any;
     };
@@ -153,6 +159,16 @@ const getErrorMessage = (error: any): string => {
         }
     }
     return 'An unknown error occurred';
+};
+const getNameFromPayload = (payload: any): string | null => {
+    if (!payload) return null;
+    return payload.name || payload.data?.name || null;
+};
+
+// Helper function to get phone from payload (checks both direct and nested in data)
+const getPhoneFromPayload = (payload: any): string | null => {
+    if (!payload) return null;
+    return payload.phone || payload.data?.phone || null;
 };
 
 const CampaignSource = () => {
@@ -644,57 +660,63 @@ const CampaignSource = () => {
                                     </div>
                                 ) : (
                                     <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                                        {logs.map((data, index) => (
-                                            <div
-                                                key={data.id || index}
-                                                className={`border rounded-lg p-3 ${String(data.event_type).includes('failed') || data.payload?.error
-                                                    ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10'
-                                                    : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${String(data.event_type).includes('failed') || data.payload?.error
-                                                        ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'
-                                                        : 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400'
-                                                        }`}>
-                                                        {String(data.event_type)}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400 dark:text-slate-500">
-                                                        {formatDateTime(data.created_at)}
-                                                    </span>
+                                        {logs.map((data, index) => {
+                                            // Get name and phone using helper functions (handles both direct and nested payload.data)
+                                            const logName = getNameFromPayload(data.payload);
+                                            const logPhone = getPhoneFromPayload(data.payload);
+
+                                            return (
+                                                <div
+                                                    key={data.id || index}
+                                                    className={`border rounded-lg p-3 ${String(data.event_type).includes('failed') || data.payload?.error
+                                                        ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10'
+                                                        : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${String(data.event_type).includes('failed') || data.payload?.error
+                                                            ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'
+                                                            : 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400'
+                                                            }`}>
+                                                            {String(data.event_type)}
+                                                        </span>
+                                                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                                                            {formatDateTime(data.created_at)}
+                                                        </span>
+                                                    </div>
+
+
+                                                    {logName && (
+                                                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-1">
+                                                            Name: {String(logName)}
+                                                        </p>
+                                                    )}
+
+                                                    {logPhone && (
+                                                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-1">
+                                                            Phone: {String(logPhone)}
+                                                        </p>
+                                                    )}
+
+
+
+                                                    {data.ip_address && (
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                            IP: {String(data.ip_address)}
+                                                        </p>
+                                                    )}
+
+                                                    {data.payload?.error && (
+                                                        <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-medium">
+                                                            {/* DISPLAY MESSAGE VALUE ONLY */}
+                                                            Error: {typeof data.payload.error === 'object' && data.payload.error !== null && 'message' in data.payload.error
+                                                                ? String(data.payload.error.message)
+                                                                : String(data.payload.error)}
+                                                        </p>
+                                                    )}
                                                 </div>
-
-
-                                                {data.payload?.name && (
-                                                    <p className="text-xs text-slate-600 dark:text-slate-300 mb-1">
-                                                        name: {String(data.payload.name)}
-                                                    </p>
-                                                )}
-
-                                                {data.payload?.phone && (
-                                                    <p className="text-xs text-slate-600 dark:text-slate-300 mb-1">
-                                                        Phone: {String(data.payload.phone)}
-                                                    </p>
-                                                )}
-
-
-
-                                                {data.ip_address && (
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                        IP: {String(data.ip_address)}
-                                                    </p>
-                                                )}
-
-                                                {data.payload?.error && (
-                                                    <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-medium">
-                                                        {/* DISPLAY MESSAGE VALUE ONLY */}
-                                                        Error: {typeof data.payload.error === 'object' && data.payload.error !== null && 'message' in data.payload.error
-                                                            ? String(data.payload.error.message)
-                                                            : String(data.payload.error)}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
