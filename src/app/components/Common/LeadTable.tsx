@@ -991,7 +991,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 {selectedLeads.length} leads selected
                             </span>
                             <div className="flex space-x-1.5 sm:space-x-2">
-                                {hasBulkPermission && hasPermission(4, 'delete') && (
+                                {hasBulkPermission && hasPermission(29, 'delete') && (
                                     <button
                                         onClick={handleBulkDelete}
                                         className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-[1.02] text-xs sm:text-sm shadow-sm hover:shadow-md"
@@ -1000,7 +1000,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         <span className="hidden sm:inline">Delete</span>
                                     </button>
                                 )}
-                                {hasBulkPermission && hasPermission(25, 'bulk assign') && (
+                                {hasBulkPermission && hasPermission(33, 'bulk assign') && (
                                     <button
                                         onClick={handleBulkAssign}
                                         className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-[1.02] text-xs sm:text-sm shadow-sm hover:shadow-md"

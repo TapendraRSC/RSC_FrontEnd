@@ -581,7 +581,7 @@ const LeadComponent: React.FC = () => {
                 onEditLead={hasPermission(28, 'edit') ? handleEdit : undefined}
                 onDeleteLead={hasPermission(29, 'delete') ? handleDelete : undefined}
                 onBulkDelete={hasPermission(29, 'delete') ? handleBulkDelete : undefined}
-                onBulkAssign={hasPermission(25, 'bulk assign') ? handleAssignLeads : undefined}
+                onBulkAssign={hasPermission(33, 'bulk assign') ? handleAssignLeads : undefined}
                 onLeadClick={handleLeadClick}
                 onFollowUp={(lead: any) => {
                     setSelectedLeadId(lead);
@@ -595,7 +595,7 @@ const LeadComponent: React.FC = () => {
                 hasEditPermission={hasPermission(28, 'edit')}
                 hasDeletePermission={hasPermission(29, 'delete')}
                 hasBulkPermission={
-                    hasPermission(25, 'bulk assign') || hasPermission(29, 'delete')
+                    hasPermission(33, 'bulk assign') || hasPermission(29, 'delete')
                 }
                 currentUser={currentUser}
                 disableInternalFetch={true}
