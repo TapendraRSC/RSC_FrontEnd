@@ -5,7 +5,7 @@ import {
     Briefcase, DollarSign, User, FileText, Calendar, Tag, ListFilter, Plus, Edit,
     Trash2, UserPlus, X, LayoutGrid, Table2, MoreHorizontal, Clock, AlertTriangle,
     CheckCircle, XCircle, RefreshCw, Bell, ShieldAlert, MapPin, Building2,
-    IndianRupee, Calendar as CalendarIcon, Filter, Users
+    IndianRupee, Calendar as CalendarIcon, Filter, Users, Hash
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
@@ -431,6 +431,7 @@ const PaginationButtons = ({
 
 const getColumnsBasedOnRole = (roleId: number) => {
     const commonColumns = [
+        { label: 'Lead Id', accessor: 'id', sortable: true, minWidth: 100 },
         { label: 'Name', accessor: 'name', sortable: true, minWidth: 150 },
         { label: 'Phone', accessor: 'phone', sortable: true, minWidth: 120 },
         { label: 'Email', accessor: 'email', sortable: true, minWidth: 150 },
@@ -530,6 +531,27 @@ const getSourceColor = (source: string) => {
         default:
             return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600';
     }
+};
+
+
+const LeadIdBadge = ({ id }: { id: number | string }) => {
+    return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-purple-500/30 border border-purple-400/30 animate-subtle-glow">
+            {/* <Hash className="h-3.5 w-3.5" /> */}
+            Lead Id :-
+            <span className="tracking-wide">{id || 'N/A'}</span>
+        </div>
+    );
+};
+
+const LeadIdBadgeTable = ({ id }: { id: number | string }) => {
+    return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-semibold text-xs shadow-md shadow-purple-500/25 border border-purple-400/20">
+            {/* <Hash className="h-3 w-3" /> */}
+            Lead Id :-
+            <span>{id || 'N/A'}</span>
+        </span>
+    );
 };
 
 const LeadPanel: React.FC<LeadPanelProps> = ({
@@ -979,6 +1001,15 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                             {columns.map((column: any) => {
                                                 const accessor = column.accessor as keyof Lead;
                                                 const value: any = (lead as any)[accessor];
+
+
+                                                if (accessor === 'id') {
+                                                    return (
+                                                        <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
+                                                            <LeadIdBadgeTable id={lead.id} />
+                                                        </td>
+                                                    );
+                                                }
                                                 if (accessor === 'createdAt') {
                                                     return <td key={`lead-${lead.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{formattedLead.formattedCreatedAt}</td>;
                                                 }
@@ -1085,6 +1116,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                 </div>
                                             </div>
                                             <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+                                                <LeadIdBadge id={lead.id} />
                                                 <div className="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-full">
                                                     <span className="text-xs font-medium text-white/80">Stage</span>
                                                     <span className="text-xs font-semibold text-blue-200">{lead.stage || 'N/A'}</span>
@@ -1102,7 +1134,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                             <div className="flex-1">
                                                 <h3
                                                     className="text-lg sm:text-xl font-bold mb-1.5 text-gray-900 dark:text-gray-50 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
-                                                    onClick={() => onLeadClick && onLeadClick(lead)}
+                                                // onClick={() => onLeadClick && onLeadClick(lead)}
                                                 >
                                                     {lead.name || 'Unnamed Lead'}
                                                 </h3>
@@ -1270,6 +1302,17 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                 }
                 .animate-blink {
                     animation: blink 1s infinite;
+                }
+                @keyframes subtle-glow {
+                    0%, 100% { 
+                        box-shadow: 0 4px 15px -3px rgba(139, 92, 246, 0.4);
+                    }
+                    50% { 
+                        box-shadow: 0 4px 20px -3px rgba(139, 92, 246, 0.6);
+                    }
+                }
+                .animate-subtle-glow {
+                    animation: subtle-glow 2s ease-in-out infinite;
                 }
             `}</style>
         </div>

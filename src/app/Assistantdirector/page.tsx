@@ -15,6 +15,7 @@ type Contact = {
     fullName: string;
     email: string;
     phone: string;
+    createat: number;
     message: string;
 };
 
@@ -86,6 +87,7 @@ const Director = () => {
                 item.fullName?.toLowerCase().includes(query) ||
                 item.email?.toLowerCase().includes(query) ||
                 item.phone?.includes(query) ||
+                item.createat?.includes(query) ||
                 item.message?.toLowerCase().includes(query)
         );
     }, [data, searchQuery]);
@@ -196,6 +198,9 @@ const Director = () => {
                                     <th onClick={() => handleSort("phone")} className="px-4 py-3 text-left text-xs font-semibold cursor-pointer">
                                         <div className="flex items-center">Phone <SortIcon columnKey="phone" /></div>
                                     </th>
+                                    <th onClick={() => handleSort("createat")} className="px-4 py-3 text-left text-xs font-semibold cursor-pointer">
+                                        <div className="flex items-center">createdAt<SortIcon columnKey="createat" /></div>
+                                    </th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold">
                                         Message
                                     </th>
@@ -226,6 +231,9 @@ const Director = () => {
                                             <td className="px-4 py-4">{item.fullName}</td>
                                             <td className="px-4 py-4">{item.email}</td>
                                             <td className="px-4 py-4">{item.phone}</td>
+                                            <td className="px-4 py-4">
+                                                {new Date(item.createdAt).toLocaleDateString('en-CA')}
+                                            </td>
 
                                             <td className="px-4 py-4">
                                                 <button
@@ -250,7 +258,7 @@ const Director = () => {
                             onChange={(e) => setRowsPerPage(Number(e.target.value))}
                             className="border rounded px-2 py-1"
                         >
-                            {[5, 10, 20, 50].map((n) => (
+                            {[5, 15, 50, 100].map((n) => (
                                 <option key={n} value={n}>{n}</option>
                             ))}
                         </select>
