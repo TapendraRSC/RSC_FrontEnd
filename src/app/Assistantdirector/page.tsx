@@ -15,7 +15,7 @@ type Contact = {
     fullName: string;
     email: string;
     phone: string;
-    createat: number;
+    createdAt: string;
     message: string;
 };
 
@@ -87,7 +87,7 @@ const Director = () => {
                 item.fullName?.toLowerCase().includes(query) ||
                 item.email?.toLowerCase().includes(query) ||
                 item.phone?.includes(query) ||
-                item.createat?.includes(query) ||
+                new Date(item.createdAt).toLocaleDateString('en-CA').toLowerCase().includes(query) ||
                 item.message?.toLowerCase().includes(query)
         );
     }, [data, searchQuery]);
@@ -164,19 +164,19 @@ const Director = () => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="
-            w-full
-            h-11
-            pl-10
-            pr-4
-            text-sm
-            rounded-xl
-            bg-slate-800/70
-            text-slate-200
-            placeholder:text-slate-400
-            focus:outline-none
-            focus:ring-2
-            focus:ring-slate-600
-        "
+                                        w-full
+                                        h-11
+                                        pl-10
+                                        pr-4
+                                        text-sm
+                                        rounded-xl
+                                        bg-slate-800/70
+                                        text-slate-200
+                                        placeholder:text-slate-400
+                                        focus:outline-none
+                                        focus:ring-2
+                                        focus:ring-slate-600
+                                    "
                                 />
                             </div>
 
@@ -198,8 +198,8 @@ const Director = () => {
                                     <th onClick={() => handleSort("phone")} className="px-4 py-3 text-left text-xs font-semibold cursor-pointer">
                                         <div className="flex items-center">Phone <SortIcon columnKey="phone" /></div>
                                     </th>
-                                    <th onClick={() => handleSort("createat")} className="px-4 py-3 text-left text-xs font-semibold cursor-pointer">
-                                        <div className="flex items-center">createdAt<SortIcon columnKey="createat" /></div>
+                                    <th onClick={() => handleSort("createdAt")} className="px-4 py-3 text-left text-xs font-semibold cursor-pointer">
+                                        <div className="flex items-center">createdAt<SortIcon columnKey="createdAt" /></div>
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold">
                                         Message
@@ -209,14 +209,14 @@ const Director = () => {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-8 text-center">
+                                        <td colSpan={5} className="px-4 py-8 text-center">
                                             Loading...
                                         </td>
                                     </tr>
                                 ) : paginatedData.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan={4}
+                                            colSpan={5}
                                             className="px-4 py-8 text-center text-slate-500 dark:text-slate-400"
                                         >
                                             No data found
