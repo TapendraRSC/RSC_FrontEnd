@@ -528,14 +528,15 @@ const BookingComponent: React.FC = () => {
     };
 
     const handleEdit = (booking: any) => {
-        // Transform table data back to modal format
         const modalData = {
             id: booking.id,
             leadId: booking.leadId,
             name: booking.name,
             phone: booking.phone,
-            projectId: null, // Will need to be fetched or stored
-            plotId: null, // Will need to be fetched or stored
+            // projectId: null, // Will need to be fetched or stored
+            // plotId: null, // Will need to be fetched or stored
+            projectTitle: booking.projectTitle || booking.projectName,
+            plotNumber: booking.plotNumber,
             bookingAmount: booking.bookingAmount,
             totalPlotAmount: booking.totalPlotAmount,
             status: booking.status,
