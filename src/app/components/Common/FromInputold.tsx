@@ -13,7 +13,6 @@ interface FormInputProps<T extends Record<string, any>> {
     type?: 'text' | 'email' | 'password' | 'tel' | 'number' | 'file' | 'url' | 'textarea' | 'time' | 'date';
     placeholder?: string;
     required?: boolean;
-    min?: number;
     validation?: RegisterOptions<T, Path<T>>;
     register: UseFormRegister<T>;
     errors: FieldErrors<T>;
@@ -31,7 +30,6 @@ const FormInput = <T extends Record<string, any>>({
     label,
     type = 'text',
     placeholder,
-    min,
     required = false,
     validation = {},
     register,
@@ -49,21 +47,12 @@ const FormInput = <T extends Record<string, any>>({
         ...(required && { required: `${label} is required` }),
     };
 
-
-    if (type === 'number' && min !== undefined) {
-        rules.validate = {
-            ...rules.validate,
-            minValue: (value) =>
-                Number(value) >= min || `${label} cannot be less than ${min}`,
-        };
-    }
-
     if (type === 'number' && maxLength) {
         rules.validate = {
             ...rules.validate,
             maxLength: (value) =>
-                !value || value.toString().length <= maxLength
-                || `Must be at most ${maxLength} digits`,
+                (value && value.toString().length <= maxLength) ||
+                `Must be at most ${maxLength} digits`,
         };
     }
 
@@ -74,58 +63,33 @@ const FormInput = <T extends Record<string, any>>({
             clearErrors(name);
         }
         if (type === 'number' && maxLength) {
-            const value = e.target.value;
-            if (value.length > maxLength) {
-                e.target.value = value.slice(0, maxLength);
+            const inputValue = e.target.value;
+            if (inputValue.length > maxLength) {
+                e.target.value = inputValue.slice(0, maxLength);
             }
         }
         register(name, rules).onChange(e);
-        onChange?.(e);
+        if (onChange) {
+            onChange(e);
+        }
     };
 
     const inputProps: React.InputHTMLAttributes<HTMLInputElement> = {
         ...register(name, rules),
         type,
-        min,
-        inputMode: type === 'number' ? 'decimal' : undefined,
+        className: `w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 transition-all ${error ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' : ''} ${className}`,
         placeholder,
         disabled,
         step,
-        accept,
-        className: `
-            w-full px-3 py-2 border rounded-lg
-            border-gray-300 dark:border-gray-600
-            bg-white dark:bg-slate-800
-            text-gray-900 dark:text-gray-100
-            focus:outline-none focus:ring-2
-            focus:ring-blue-500 dark:focus:ring-blue-400
-            transition-all
-            ${error ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' : ''}
-            ${className}
-            ${type === 'number' ? 'no-spinner' : ''}
-        `,
-
-
-        onKeyDown: (e) => {
-            if (
-                type === 'number' &&
-                (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+')
-            ) {
-                e.preventDefault();
-            }
-        },
-
-        onInput: (e) => {
-            if (type === 'number') {
-                const input = e.currentTarget;
-                input.value = input.value.replace(/[^0-9.]/g, '');
-
-                if (maxLength && input.value.length > maxLength) {
+        onChange: handleInputChange,
+        onInput: type === 'number' && maxLength
+            ? (e: React.FormEvent<HTMLInputElement>) => {
+                const input = e.target as HTMLInputElement;
+                if (input.value.length > maxLength) {
                     input.value = input.value.slice(0, maxLength);
                 }
             }
-        },
-        onChange: handleInputChange,
+            : undefined,
     };
 
     return (
@@ -136,9 +100,7 @@ const FormInput = <T extends Record<string, any>>({
             </label>
             <input {...inputProps} />
             {error && (
-                <p className="text-red-500 dark:text-red-400 text-sm mt-1">
-                    {error.message as string}
-                </p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1">{error.message as string}</p>
             )}
         </div>
     );

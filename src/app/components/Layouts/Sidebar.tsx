@@ -82,6 +82,7 @@ const Sidebar = () => {
         },
         projectstatus: { pageName: 'Project Status', title: 'Project Status', href: '/projectstatus', type: 'single' },
         Lead: { pageName: 'Lead', title: 'Lead', href: '/lead', type: 'single' },
+        Booking: { pageName: 'Booking', title: 'Booking', href: '/booking', type: 'single' },
         support: { pageName: 'Support', title: 'Support', href: '/support', type: 'single', alwaysShow: true },
         Assistantdirector: { pageName: 'Assistantdirector', title: 'Assistant Director', href: '/Assistantdirector', type: 'single', alwaysShow: true },
     };
@@ -257,6 +258,18 @@ const Sidebar = () => {
                                             className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/lead' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
                                         >
                                             <span>{filteredMenuItems.Lead.title}</span>
+                                        </Link>
+                                    </li>
+                                )}
+
+
+                                {filteredMenuItems.Booking && (
+                                    <li className="menu nav-item">
+                                        <Link
+                                            href={filteredMenuItems.Booking.href}
+                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/booking' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
+                                        >
+                                            <span>{filteredMenuItems.Booking.title}</span>
                                         </Link>
                                     </li>
                                 )}
