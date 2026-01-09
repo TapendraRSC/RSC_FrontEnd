@@ -15,8 +15,6 @@ import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { exportUsers } from '../../../../store/userSlice';
 import { RootState } from '../../../../store/store';
-
-import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import ComprehensiveLeadModal from './BookingModal';
 import UploadPreviewModal from '../../components/Common/UploadPreviewModal';
 import BulkAssignRoleModal from '../Common/BulkAssignRoleModal';
@@ -131,9 +129,14 @@ const BookingComponent: React.FC = () => {
 
     const [projectList, setProjectList] = useState<Project[]>([]);
 
+    // Get role permissions from Redux store
+    // This comes from /rolePermissions/roles/{roleId}/permissions API
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
+
+    // Get all permissions list from Redux store
+    // This comes from /permissions/getAllPermissions API
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
@@ -495,32 +498,83 @@ const BookingComponent: React.FC = () => {
         });
     }, [bookingList]);
 
+    // Dispatch Redux actions to fetch permissions
     useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }) as any);
         dispatch(fetchRolePermissionsSidebar() as any);
         dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }) as any);
     }, [dispatch]);
 
-    const getLeadPermissions = () => {
+    // ============================================
+    // PERMISSION SYSTEM - ID WISE CHECK
+    // ============================================
+
+    // Get Booking page permission IDs from role permissions
+    // First checks 'Booking' page, then fallback to 'Lead' page
+    const getBookingPermissionIds = useCallback((): number[] => {
+        // Check for 'Booking' page first
+        const bookingPerm = rolePermissions?.permissions?.find(
+            (p: any) => p.pageName === 'Booking' || p.pageName === 'booking'
+        );
+        if (bookingPerm?.permissionIds?.length > 0) {
+            return bookingPerm.permissionIds;
+        }
+
+        // Fallback to 'Lead' page if Booking not found
         const leadPerm = rolePermissions?.permissions?.find(
-            (p: any) => p.pageName === 'Lead'
+            (p: any) => p.pageName === 'Lead' || p.pageName === 'lead'
         );
         return leadPerm?.permissionIds || [];
-    };
+    }, [rolePermissions]);
 
-    const leadPermissionIds = getLeadPermissions();
+    // Get all permissions list from API
+    // This comes from /permissions/getAllPermissions API via Redux
+    const getAllPermissionsList = useCallback(() => {
+        // Handle different response structures
+        const permissionsList =
+            allPermissions?.data?.permissions ||  // { data: { permissions: [...] } }
+            // allPermissions?.permissions ||         // { permissions: [...] }
+            allPermissions?.data ||                // { data: [...] }
+            (Array.isArray(allPermissions) ? allPermissions : []);
 
-    const hasPermission = (permId: number, permName: string) => {
-        if (!leadPermissionIds.includes(permId)) return false;
-        const matched = allPermissions?.data?.permissions?.find(
+        return Array.isArray(permissionsList) ? permissionsList : [];
+    }, [allPermissions]);
+
+    // hasPermission function - checks by ID and verifies name from API
+    // Usage: hasPermission(22, "edit") - checks if permission ID 22 exists and name matches "edit"
+    const hasPermission = useCallback((permId: number, permName: string): boolean => {
+        const bookingPermissionIds = getBookingPermissionIds();
+
+        // Step 1: Check if this permission ID exists in role's Booking page permissions
+        if (!bookingPermissionIds.includes(permId)) {
+            return false;
+        }
+
+        // Step 2: Get all permissions from API and verify the name matches
+        const permissionsList = getAllPermissionsList();
+
+        // Find the permission by ID in the master list
+        const matchedPermission = permissionsList.find(
             (p: any) => p.id === permId
         );
-        if (!matched) return false;
-        return (
-            matched.permissionName?.trim().toLowerCase() ===
-            permName.trim().toLowerCase()
-        );
-    };
+
+        // If permission not found in master list, deny (safety check)
+        if (!matchedPermission) {
+            // If API data not loaded yet but ID exists in role, allow it
+            // This prevents blocking while data is loading
+            return permissionsList.length === 0;
+        }
+
+        // Step 3: Verify permission name matches (case-insensitive, trimmed)
+        const apiPermName = matchedPermission.permissionName?.trim().toLowerCase();
+        const requestedPermName = permName.trim().toLowerCase();
+
+        return apiPermName === requestedPermName;
+    }, [getBookingPermissionIds, getAllPermissionsList]);
+
+    // ============================================
+    // END PERMISSION SYSTEM
+    // ============================================
 
     const handleAdd = () => {
         setCurrentBooking(null);
@@ -533,8 +587,6 @@ const BookingComponent: React.FC = () => {
             leadId: booking.leadId,
             name: booking.name,
             phone: booking.phone,
-            // projectId: null, // Will need to be fetched or stored
-            // plotId: null, // Will need to be fetched or stored
             projectTitle: booking.projectTitle || booking.projectName,
             plotNumber: booking.plotNumber,
             bookingAmount: booking.bookingAmount,
@@ -555,7 +607,6 @@ const BookingComponent: React.FC = () => {
         try {
             if (deleteMode === 'single') {
                 const id = (deleteTarget as { id: number }).id;
-                // Use your booking delete API here
                 const token = getAuthToken();
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/bookings/deleteBooking/${id}`,
@@ -575,9 +626,7 @@ const BookingComponent: React.FC = () => {
 
                 toast.success('Booking deleted successfully');
             } else if (deleteMode === 'bulk') {
-                // Implement bulk delete if your API supports it
                 const ids = deleteTarget as number[];
-                // await dispatch(deleteBulkLeads(ids)).unwrap();
                 setSelectedIds([]);
                 toast.success(`${ids.length} booking(s) deleted successfully`);
             }
@@ -714,6 +763,7 @@ const BookingComponent: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                    {/* Permission ID 21 = add */}
                     {hasPermission(21, 'add') && (
                         <button
                             onClick={handleAdd}
@@ -757,8 +807,11 @@ const BookingComponent: React.FC = () => {
                 onDateChange={handleDateChange}
                 searchTerm={searchTerm}
                 onSearch={handleSearch}
+
                 hasEditPermission={hasPermission(22, "edit")}
+
                 hasDeletePermission={hasPermission(4, "delete")}
+
                 hasBulkPermission={
                     hasPermission(25, "bulk assign") || hasPermission(4, "delete")
                 }
@@ -777,18 +830,7 @@ const BookingComponent: React.FC = () => {
                 isLoading={isSaving}
             />
 
-            <DeleteConfirmationModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onDelete={confirmDelete}
-                title={deleteMode === 'bulk' ? 'Confirm Bulk Deletion' : 'Confirm Deletion'}
-                message={
-                    deleteMode === 'bulk'
-                        ? `Are you sure you want to delete ${Array.isArray(deleteTarget) ? deleteTarget.length : 0} selected bookings?`
-                        : `Are you sure you want to delete "${deleteTarget?.name ?? ''}"?`
-                }
-                Icon={Trash2}
-            />
+
 
             <BulkAssignRoleModal
                 isOpen={isAssignModalOpen}
@@ -802,4 +844,3 @@ const BookingComponent: React.FC = () => {
 };
 
 export default BookingComponent;
-
