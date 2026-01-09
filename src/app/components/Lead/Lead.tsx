@@ -121,6 +121,7 @@ const LeadComponent: React.FC = () => {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [selectedPlatform, setSelectedPlatform] = useState("");
     const [selectedAssignedTo, setSelectedAssignedTo] = useState("");
+    const [failedLeadsFileUrl, setFailedLeadsFileUrl] = useState<string | undefined>(undefined);
 
     // Store the last fetch parameters for intelligent refetch
     const [lastFetchParams, setLastFetchParams] = useState<any>({});
@@ -445,9 +446,11 @@ const LeadComponent: React.FC = () => {
         setPreviewData([]);
         setFileName('');
         setSelectedFile(null);
+        setFailedLeadsFileUrl(undefined);
     };
 
     const handleOpenUploadPreview = () => {
+        setFailedLeadsFileUrl(undefined);
         setIsUploadPreviewOpen(true);
     };
 
@@ -455,6 +458,7 @@ const LeadComponent: React.FC = () => {
         if (!file) return;
         setFileName(file.name);
         setSelectedFile(file);
+        setFailedLeadsFileUrl(undefined);
         const reader = new FileReader();
         reader.onload = (event: any) => {
             try {
@@ -485,13 +489,34 @@ const LeadComponent: React.FC = () => {
             return;
         }
         setUploadLoading(true);
+        setFailedLeadsFileUrl(undefined);
         try {
-            await dispatch(uploadLeads(selectedFile)).unwrap();
-            toast.success('Leads uploaded successfully');
-            resetUploadStates();
-            handleRefetch(true);
+            const response = await dispatch(uploadLeads(selectedFile)).unwrap();
+            if (response?.success) {
+                toast.success('Leads uploaded successfully');
+                resetUploadStates();
+                handleRefetch(true);
+            } else {
+                const results = response?.results;
+                if (results?.failedLeadsFileUrl) {
+                    setFailedLeadsFileUrl(results.failedLeadsFileUrl);
+                }
+                if (results?.successful > 0 && results?.failed > 0) {
+                    toast.warning(`Partial success: ${results.successful} uploaded, ${results.failed} failed`);
+                    handleRefetch(true);
+                } else if (results?.failed > 0) {
+                    toast.error(response?.message || `All ${results.failed} leads failed to upload`);
+                } else {
+                    toast.error(response?.message || 'Failed to upload leads');
+                }
+            }
         } catch (err: any) {
-            toast.error(err?.message || 'Failed to upload leads');
+            const errorResponse = err?.response?.data || err;
+            if (errorResponse?.results?.failedLeadsFileUrl) {
+                setFailedLeadsFileUrl(errorResponse.results.failedLeadsFileUrl);
+            }
+
+            toast.error(errorResponse?.message || err?.message || 'Failed to upload leads');
         } finally {
             setUploadLoading(false);
         }
@@ -845,6 +870,7 @@ const LeadComponent: React.FC = () => {
                 previewData={previewData}
                 isLoading={uploadLoading}
                 totalRows={previewData.length}
+                failedLeadsFileUrl={failedLeadsFileUrl}
             />
 
             <ExportModal

@@ -1,6 +1,6 @@
 'use client';
 import React, { useRef, useState, useEffect } from "react";
-import { X, Upload, FileSpreadsheet, AlertCircle, Download, CloudUpload, CheckCircle, XCircle } from "lucide-react";
+import { X, Upload, FileSpreadsheet, AlertCircle, Download, CloudUpload, CheckCircle, XCircle, FileWarning } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { toast } from "react-toastify";
 
@@ -13,6 +13,7 @@ interface UploadPreviewModalProps {
     isLoading: boolean;
     totalRows: number;
     onFileSelect: (file: File) => void;
+    failedLeadsFileUrl?: string;
 }
 
 const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
@@ -24,6 +25,7 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
     isLoading,
     totalRows,
     onFileSelect,
+    failedLeadsFileUrl, // NEW PROP
 }) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [localPreviewData, setLocalPreviewData] = useState<any[]>([]);
@@ -258,6 +260,11 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
         a.click();
         URL.revokeObjectURL(url);
     };
+    const handleDownloadFailedLeads = () => {
+        if (failedLeadsFileUrl) {
+            window.open(failedLeadsFileUrl, '_blank');
+        }
+    };
 
     useEffect(() => {
         if (!isOpen) {
@@ -298,6 +305,32 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
                         <X className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
                 </div>
+                {failedLeadsFileUrl && (
+                    <div className="px-4 py-3 sm:px-6 sm:py-4 bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-700">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900">
+                                    <FileWarning className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-red-700 dark:text-red-300 text-sm sm:text-base">
+                                        Some leads failed to upload
+                                    </p>
+                                    <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">
+                                        Download the file to see which leads failed and why
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleDownloadFailedLeads}
+                                className="flex items-center gap-2 px-4 py-2 text-sm sm:text-base bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 rounded-lg hover:bg-red-200 dark:hover:bg-red-700 transition-colors font-medium"
+                            >
+                                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                                Download Failed Leads
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* File Info */}
                 <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
