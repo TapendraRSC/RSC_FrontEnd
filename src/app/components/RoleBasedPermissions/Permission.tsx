@@ -63,7 +63,9 @@ const UserPermissions: React.FC = () => {
             });
             setPermissions(normalized);
         }
-    }, [pages?.data?.permissions, list?.data?.permissions, rolePermissions, selectedRole.id]);
+    }, [pages?.data?.data, list?.data?.permissions, rolePermissions, selectedRole.id]);
+    // }, [pages?.data?.permissions, list?.data?.permissions, rolePermissions, selectedRole.id]);
+
 
     const handleRoleSelection = (role: any) => {
         setSelectedRole({ id: role.id, roleType: role.roleType });
