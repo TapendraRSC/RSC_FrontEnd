@@ -61,8 +61,14 @@ const Sidebar = () => {
         }
     }, [dispatch]);
 
+    // Menu structure - all items are permission-based (no hardcoded alwaysShow)
     const menuStructure = {
-        dashboard: { pageName: 'Dashboard', title: 'Dashboard', href: '/', type: 'single' },
+        dashboard: {
+            pageName: 'Dashboard',
+            title: 'Dashboard',
+            href: '/',
+            type: 'single'
+        },
         allMasters: {
             title: 'All Masters',
             type: 'dropdown',
@@ -80,49 +86,92 @@ const Sidebar = () => {
                 { pageName: 'Google Analytics', title: 'Google Analytics', href: '/googleanalytics' },
             ]
         },
-        projectstatus: { pageName: 'Project Status', title: 'Project Status', href: '/projectstatus', type: 'single' },
-        Lead: { pageName: 'Lead', title: 'Lead', href: '/lead', type: 'single' },
-        Booking: { pageName: 'Booking', title: 'Booking', href: '/booking', type: 'single' },
-        support: { pageName: 'Support', title: 'Support', href: '/support', type: 'single', alwaysShow: true },
-        Assistantdirector: { pageName: 'Assistantdirector', title: 'Assistant Director', href: '/Assistantdirector', type: 'single', alwaysShow: true },
+        projectstatus: {
+            pageName: 'Project Status',
+            title: 'Project Status',
+            href: '/projectstatus',
+            type: 'single'
+        },
+        Lead: {
+            pageName: 'Lead',
+            title: 'Lead',
+            href: '/lead',
+            type: 'single'
+        },
+        Booking: {
+            pageName: 'Booking',
+            title: 'Booking',
+            href: '/booking',
+            type: 'single'
+        },
+        Assistantdirector: {
+            pageName: 'Assistantdirector',
+            title: 'Assistant Director',
+            href: '/Assistantdirector',
+            type: 'single'
+        },
+        support: {
+            pageName: 'Support',
+            title: 'Support',
+            href: '/support',
+            type: 'single',
+            alwaysShow: true // Only support remains always visible
+        },
     };
-    const isAssistantDirectorUser = rolePermissions?.permissions?.some(
-        (perm: any) => perm.pageName === 'Assistantdirector' && perm.permissionIds?.includes(17)
-    );
 
-    const isViewPermissionValid = (ids: number[]) => ids.includes(17);
+    // Check if user has VIEW permission (17) for a page
+    const hasViewPermission = (pageName: string): boolean => {
+        if (!rolePermissions?.permissions) return false;
+        const permission = rolePermissions.permissions.find(
+            (perm: any) => perm.pageName === pageName
+        );
+        return permission?.permissionIds?.includes(17) ?? false;
+    };
+
+    // Check if user has any permission for a page (view, add, edit, delete, etc.)
+    const hasAnyPermission = (pageName: string): boolean => {
+        if (!rolePermissions?.permissions) return false;
+        const permission = rolePermissions.permissions.find(
+            (perm: any) => perm.pageName === pageName
+        );
+        return permission?.permissionIds?.length > 0;
+    };
 
     const getFilteredMenu = () => {
         if (!rolePermissions?.permissions) return {};
+
         const filtered: any = {};
+
         Object.entries(menuStructure).forEach(([key, item]: any) => {
+            // Always show items marked with alwaysShow (like support)
             if (item.alwaysShow) {
                 filtered[key] = item;
                 return;
             }
 
             if (item.type === 'single') {
-                const permission = rolePermissions.permissions.find(
-                    (perm: any) => perm.pageName === item.pageName && isViewPermissionValid(perm.permissionIds)
-                );
-                if (permission) filtered[key] = item;
+                // Show menu item if user has VIEW permission (17)
+                if (hasViewPermission(item.pageName)) {
+                    filtered[key] = item;
+                }
             }
+
             if (item.type === 'dropdown') {
-                const children = item.children.filter((child: any) => {
-                    const permission = rolePermissions.permissions.find(
-                        (perm: any) => perm.pageName === child.pageName && isViewPermissionValid(perm.permissionIds)
-                    );
-                    return permission;
-                });
-                if (children.length > 0) filtered[key] = { ...item, children };
+                // Filter children based on VIEW permission
+                const children = item.children.filter((child: any) =>
+                    hasViewPermission(child.pageName)
+                );
+
+                if (children.length > 0) {
+                    filtered[key] = { ...item, children };
+                }
             }
         });
+
         return filtered;
     };
 
     const filteredMenuItems = getFilteredMenu();
-    const shouldShowDashboard = filteredMenuItems.dashboard && !isAssistantDirectorUser;
-    const shouldShowAssistantDirector = filteredMenuItems.Assistantdirector && isAssistantDirectorUser;
 
     useEffect(() => {
         if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -156,6 +205,22 @@ const Sidebar = () => {
         );
     }
 
+    // Helper function to render a single menu item
+    const renderMenuItem = (key: string, item: any) => {
+        if (!item) return null;
+
+        return (
+            <li key={key} className="menu nav-item">
+                <Link
+                    href={item.href}
+                    className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === item.href ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
+                >
+                    <span>{item.title}</span>
+                </Link>
+            </li>
+        );
+    };
+
     return (
         <>
             {sidebarOpen && (
@@ -187,27 +252,13 @@ const Sidebar = () => {
                             }}
                         >
                             <ul className="space-y-0.5 p-4 font-semibold">
-                                {shouldShowAssistantDirector && (
-                                    <li className="menu nav-item">
-                                        <Link
-                                            href={filteredMenuItems.Assistantdirector.href}
-                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/Assistantdirector' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
-                                        >
-                                            <span>{filteredMenuItems.Assistantdirector.title}</span>
-                                        </Link>
-                                    </li>
-                                )}
-                                {shouldShowDashboard && (
-                                    <li className="menu nav-item">
-                                        <Link
-                                            href={filteredMenuItems.dashboard.href}
-                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
-                                        >
-                                            <span>{filteredMenuItems.dashboard.title}</span>
-                                        </Link>
-                                    </li>
-                                )}
+                                {/* Dashboard - shown if user has permission */}
+                                {filteredMenuItems.dashboard && renderMenuItem('dashboard', filteredMenuItems.dashboard)}
 
+                                {/* Assistant Director - shown if user has permission */}
+                                {filteredMenuItems.Assistantdirector && renderMenuItem('Assistantdirector', filteredMenuItems.Assistantdirector)}
+
+                                {/* All Masters Dropdown */}
                                 {filteredMenuItems.allMasters && (
                                     <li className="menu nav-item">
                                         <button
@@ -240,40 +291,16 @@ const Sidebar = () => {
                                     </li>
                                 )}
 
-                                {filteredMenuItems.projectstatus && (
-                                    <li className="menu nav-item">
-                                        <Link
-                                            href={filteredMenuItems.projectstatus.href}
-                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/projectstatus' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
-                                        >
-                                            <span>{filteredMenuItems.projectstatus.title}</span>
-                                        </Link>
-                                    </li>
-                                )}
+                                {/* Project Status */}
+                                {filteredMenuItems.projectstatus && renderMenuItem('projectstatus', filteredMenuItems.projectstatus)}
 
-                                {filteredMenuItems.Lead && (
-                                    <li className="menu nav-item">
-                                        <Link
-                                            href={filteredMenuItems.Lead.href}
-                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/lead' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
-                                        >
-                                            <span>{filteredMenuItems.Lead.title}</span>
-                                        </Link>
-                                    </li>
-                                )}
+                                {/* Lead */}
+                                {filteredMenuItems.Lead && renderMenuItem('Lead', filteredMenuItems.Lead)}
 
+                                {/* Booking */}
+                                {filteredMenuItems.Booking && renderMenuItem('Booking', filteredMenuItems.Booking)}
 
-                                {filteredMenuItems.Booking && (
-                                    <li className="menu nav-item">
-                                        <Link
-                                            href={filteredMenuItems.Booking.href}
-                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === '/booking' ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
-                                        >
-                                            <span>{filteredMenuItems.Booking.title}</span>
-                                        </Link>
-                                    </li>
-                                )}
-
+                                {/* Support - Always visible with special styling */}
                                 {filteredMenuItems.support && (
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
                                         <Link

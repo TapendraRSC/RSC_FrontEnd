@@ -162,14 +162,26 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     [projects]
   );
 
-  const plotOptions: DropdownOption[] = useMemo(() => {
+  // const plotOptions: DropdownOption[] = useMemo(() => {
+  //   if (!plots || !Array.isArray(plots) || plots.length === 0) {
+  //     return [];
+  //   }
+  //   return plots.map((p: any) => ({
+  //     label: `Plot ${p.plotNumber} - ${p.sqYard} Sq.Yd (${p.status || "Available"
+  //       })`,
+  //     value: p.id,
+  //   }));
+  // }, [plots]);
+
+
+  const plotOptions = useMemo(() => {
     if (!plots || !Array.isArray(plots) || plots.length === 0) {
       return [];
     }
     return plots.map((p: any) => ({
-      label: `Plot ${p.plotNumber} - ${p.sqYard} Sq.Yd (${p.status || "Available"
-        })`,
+      label: `Plot ${p.plotNumber} - ${p.sqYard} Sq.Yd (${p.status || "Available"})`,
       value: p.id,
+      disabled: p.status?.toLowerCase() === "booked" || p.status?.toLowerCase() === "sold",
     }));
   }, [plots]);
 

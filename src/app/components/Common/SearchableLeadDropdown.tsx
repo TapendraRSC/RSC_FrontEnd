@@ -18,7 +18,7 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
     options,
     selected,
     onChange,
-    placeholder = "Select Lead",
+    placeholder = 'Select Lead',
     disabled = false,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -26,15 +26,16 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Filter options based on search
     const filteredOptions = options.filter((opt) =>
         opt.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
                 setIsOpen(false);
                 setSearchTerm('');
             }
@@ -43,7 +44,6 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Focus input when dropdown opens
     useEffect(() => {
         if (isOpen && inputRef.current) {
             inputRef.current.focus();
@@ -64,20 +64,23 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
 
     return (
         <div ref={dropdownRef} className="relative w-full">
-            {/* Selected Value Display */}
+            {/* Display */}
             <div
-                className={`w-full px-4 py-2.5 border rounded-lg flex items-center justify-between cursor-pointer
-                    ${disabled 
-                        ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' 
-                        : 'bg-white dark:bg-gray-800 hover:border-blue-500'
+                className={`w-full h-11 px-3 border rounded-lg flex items-center justify-between cursor-pointer text-sm
+          ${disabled
+                        ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-300 dark:border-gray-600'
+                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-blue-500'
                     }
-                    ${isOpen 
-                        ? 'border-blue-500 ring-2 ring-blue-500/20' 
+          ${isOpen
+                        ? 'border-blue-500 ring-2 ring-blue-500/20'
                         : 'border-gray-300 dark:border-gray-600'
                     }`}
                 onClick={() => !disabled && setIsOpen(!isOpen)}
             >
-                <span className={`truncate ${selected ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+                <span
+                    className={`truncate ${selected ? 'text-gray-900 dark:text-white' : 'text-gray-400'
+                        }`}
+                >
                     {selected ? selected.label : placeholder}
                 </span>
                 <div className="flex items-center gap-1">
@@ -86,26 +89,42 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                             onClick={handleClear}
                             className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
                         >
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <svg
+                                className="w-3.5 h-3.5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
                             </svg>
                         </button>
                     )}
                     <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''
+                            }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                        />
                     </svg>
                 </div>
             </div>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown */}
             {isOpen && !disabled && (
                 <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
-                    {/* Search Input */}
+                    {/* Search */}
                     <div className="p-2 border-b border-gray-200 dark:border-gray-700">
                         <div className="relative">
                             <svg
@@ -114,7 +133,12 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                />
                             </svg>
                             <input
                                 ref={inputRef}
@@ -122,22 +146,20 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search lead..."
-                                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md 
-                                           bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white
-                                           focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full h-9 pl-8 pr-3 text-xs border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                         </div>
                     </div>
 
-                    {/* Options List */}
+                    {/* Options */}
                     <div className="max-h-48 overflow-y-auto">
                         {filteredOptions.length > 0 ? (
                             filteredOptions.map((option) => (
                                 <div
                                     key={option.value}
                                     onClick={() => handleSelect(option)}
-                                    className={`px-4 py-2.5 cursor-pointer transition-colors
-                                        ${selected?.value === option.value
+                                    className={`px-4 py-2.5 cursor-pointer text-sm transition-colors
+                    ${selected?.value === option.value
                                             ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                                             : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
                                         }`}
@@ -145,8 +167,16 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                                     <div className="flex items-center justify-between">
                                         <span className="truncate">{option.label}</span>
                                         {selected?.value === option.value && (
-                                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            <svg
+                                                className="w-4 h-4 text-blue-600"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                    clipRule="evenodd"
+                                                />
                                             </svg>
                                         )}
                                     </div>

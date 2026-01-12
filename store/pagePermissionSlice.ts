@@ -8,14 +8,21 @@ interface PagePermission {
     pageName: string;
 }
 
-// Define the PagePermissionData interface
+// Define the API Response interface
+interface ApiResponse {
+    message: string;
+    success: boolean;
+    data?: PagePermission;
+    id?: number;
+}
+
+// Define the PagePermissionData interface - FIXED to match actual API response
 interface PagePermissionData {
     page: number;
     limit: number;
-    permissions: PagePermission[];
+    data: PagePermission[];  // Changed from 'permissions' to 'data'
     total: number;
     totalPages: number;
-    data: any
 }
 
 // Define the PagePermissionState interface
@@ -50,24 +57,24 @@ export const fetchPages = createAsyncThunk<PagePermissionData, { page?: number; 
     }
 );
 
-// Async thunk to add a page permission
-export const addPage = createAsyncThunk<PagePermission, { pageName: string }>(
+// Async thunk to add a page permission - FIXED return type
+export const addPage = createAsyncThunk<ApiResponse, { pageName: string }>(
     'pages/addPage',
     async (pageData, { rejectWithValue }) => {
         try {
             const response = await axiosInstance.post('/pages/addPage', pageData);
-            if (response.status !== 201) {
+            if (response.status !== 201 && response.status !== 200) {
                 throw new Error('Failed to add page');
             }
-            return response.data;
+            return response.data; // Returns { message, success, data }
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to add page');
         }
     }
 );
 
-// Async thunk to update a page permission
-export const updatePage = createAsyncThunk<PagePermission, { id: number; pageName: string }>(
+// Async thunk to update a page permission - FIXED return type
+export const updatePage = createAsyncThunk<ApiResponse, { id: number; pageName: string }>(
     'pages/updatePage',
     async ({ id, pageName }, { rejectWithValue }) => {
         try {
@@ -75,15 +82,15 @@ export const updatePage = createAsyncThunk<PagePermission, { id: number; pageNam
             if (response.status !== 200) {
                 throw new Error('Failed to update page');
             }
-            return response.data;
+            return response.data; // Returns { message, success }
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update page');
         }
     }
 );
 
-// Async thunk to delete a page permission
-export const deletePage = createAsyncThunk<number, number>(
+// Async thunk to delete a page permission - FIXED return type
+export const deletePage = createAsyncThunk<ApiResponse & { deletedId: number }, number>(
     'pages/deletePage',
     async (id, { rejectWithValue }) => {
         try {
@@ -91,7 +98,7 @@ export const deletePage = createAsyncThunk<number, number>(
             if (response.status !== 200) {
                 throw new Error('Failed to delete page');
             }
-            return id;
+            return { ...response.data, deletedId: id }; // Include the deleted ID
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to delete page');
         }
@@ -105,6 +112,7 @@ const pagePermissionSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
+            // Fetch Pages
             .addCase(fetchPages.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -117,45 +125,49 @@ const pagePermissionSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || 'Something went wrong';
             })
+
+            // Add Page
             .addCase(addPage.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(addPage.fulfilled, (state, action: PayloadAction<PagePermission>) => {
+            .addCase(addPage.fulfilled, (state, action: PayloadAction<ApiResponse>) => {
                 state.loading = false;
-                if (state.list) {
-                    state.list.data.permissions.push(action.payload);
-                }
+                // Don't manually update state - fetchPages will refresh the list
+                // This prevents errors when data structure doesn't match
             })
             .addCase(addPage.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to add page';
             })
+
+            // Update Page
             .addCase(updatePage.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(updatePage.fulfilled, (state, action: PayloadAction<PagePermission>) => {
+            .addCase(updatePage.fulfilled, (state, action: PayloadAction<ApiResponse>) => {
                 state.loading = false;
-                if (state.list) {
-                    const index = state.list.data.permissions.findIndex(p => p.id === action.payload.id);
-                    if (index !== -1) {
-                        state.list.data.permissions[index] = action.payload;
-                    }
-                }
+                // Don't manually update state - fetchPages will refresh the list
+                // This prevents errors when data structure doesn't match
             })
             .addCase(updatePage.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to update page';
             })
+
+            // Delete Page
             .addCase(deletePage.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(deletePage.fulfilled, (state, action: PayloadAction<number>) => {
+            .addCase(deletePage.fulfilled, (state, action: PayloadAction<ApiResponse & { deletedId: number }>) => {
                 state.loading = false;
-                if (state.list) {
-                    state.list.data.permissions = state.list.data.permissions.filter(p => p.id !== action.payload);
+                // Optionally remove from local state for instant UI update
+                if (state.list?.data?.data) {
+                    state.list.data.data = state.list.data.data.filter(
+                        (p: PagePermission) => p.id !== action.payload.deletedId
+                    );
                 }
             })
             .addCase(deletePage.rejected, (state, action) => {
