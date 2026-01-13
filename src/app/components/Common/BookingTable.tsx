@@ -113,17 +113,22 @@ const formatDate = (dateString: string | any) => {
     return new Intl.DateTimeFormat('en-US', options).format(date);
 };
 
-const formatCurrency = (amount: string | number) => {
-    if (!amount || amount === 'N/A') return 'N/A';
+const formatCurrency = (amount: string | number | null | undefined) => {
+    // Agar amount nahi hai, null hai, undefined hai ya 'N/A' hai, to 'N/A' return karega
+    if (amount === null || amount === undefined || amount === '' || amount === 'N/A') {
+        return 'N/A';
+    }
+
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    if (isNaN(num)) return amount;
+
+    if (isNaN(num)) return String(amount);
+
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         maximumFractionDigits: 0
     }).format(num);
 };
-
 const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState('all');
