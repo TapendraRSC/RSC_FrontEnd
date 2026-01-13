@@ -110,12 +110,18 @@ const Sidebar = () => {
             href: '/Assistantdirector',
             type: 'single'
         },
+        Collection: {
+            pageName: 'Collection',
+            title: 'Collection',
+            href: '/collection',
+            type: 'single'
+        },
         support: {
             pageName: 'Support',
             title: 'Support',
             href: '/support',
             type: 'single',
-            alwaysShow: true // Only support remains always visible
+            alwaysShow: true
         },
     };
 
@@ -299,6 +305,8 @@ const Sidebar = () => {
 
                                 {/* Booking */}
                                 {filteredMenuItems.Booking && renderMenuItem('Booking', filteredMenuItems.Booking)}
+
+                                {filteredMenuItems.Collection && renderMenuItem('Collection', filteredMenuItems.Collection)}
 
                                 {/* Support - Always visible with special styling */}
                                 {filteredMenuItems.support && (
