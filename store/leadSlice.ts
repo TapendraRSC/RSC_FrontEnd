@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "@/libs/axios";
-import { toast } from "react-toastify";
 
 // ------------------ Async Thunks ------------------
 
@@ -43,7 +42,8 @@ export const fetchLeads = createAsyncThunk(
             );
             return res.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch leads';
+            return rejectWithValue({ message: errorMessage, data: err.response?.data });
         }
     }
 );
@@ -57,7 +57,8 @@ export const fetchLeadById = createAsyncThunk(
             const res = await axiosInstance.get(`/leads/getLead/${id}`);
             return res.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch lead';
+            return rejectWithValue({ message: errorMessage, data: err.response?.data });
         }
     }
 );
@@ -71,15 +72,16 @@ export const createLead = createAsyncThunk(
             return res.data.data;
         } catch (err: any) {
             const errorData = err.response?.data;
-            console.log("Error Data:", errorData); // Debugging line
-            const errorMessage = errorData?.message || err.message;
+            console.log("Create Lead Error Data:", errorData);
 
-            toast.error(errorMessage);
+            const errorMessage = errorData?.message || err.message || 'Failed to create lead';
 
+            // Return structured error object
             return rejectWithValue({
                 message: errorMessage,
-                duplicate: errorData?.duplicate,
-                success: errorData?.success
+                duplicate: errorData?.duplicate || false,
+                success: errorData?.success || false,
+                data: errorData
             });
         }
     }
@@ -89,14 +91,23 @@ export const createLead = createAsyncThunk(
 export const updateLead = createAsyncThunk(
     "leads/update",
     async (
-        { id, payload }: { id: string; payload: any },
+        { id, payload }: { id: string | number; payload: any },
         { rejectWithValue }
     ) => {
         try {
             const res = await axiosInstance.put(`/leads/editLead/${id}`, payload);
             return res.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorData = err.response?.data;
+            console.log("Update Lead Error Data:", errorData);
+
+            const errorMessage = errorData?.message || err.message || 'Failed to update lead';
+
+            return rejectWithValue({
+                message: errorMessage,
+                success: errorData?.success || false,
+                data: errorData
+            });
         }
     }
 );
@@ -109,7 +120,8 @@ export const deleteLead = createAsyncThunk(
             await axiosInstance.delete(`/leads/deleteLead/${id}`);
             return id;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to delete lead';
+            return rejectWithValue({ message: errorMessage, data: err.response?.data });
         }
     }
 );
@@ -126,9 +138,14 @@ export const uploadLeads = createAsyncThunk(
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            return res.data.data;
+            return res.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to upload leads';
+            return rejectWithValue({
+                message: errorMessage,
+                data: err.response?.data,
+                results: err.response?.data?.results
+            });
         }
     }
 );
@@ -138,11 +155,12 @@ export const deleteBulkLeads = createAsyncThunk(
     async (leadIds: number[], { rejectWithValue }) => {
         try {
             const res = await axiosInstance.delete("/leads/deleteBulkLeads", {
-                data: { ids: leadIds }, // ✅ Backend expects "ids" key
+                data: { ids: leadIds },
             });
-            return leadIds; // Return the IDs that were sent for deletion
+            return leadIds;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to delete leads';
+            return rejectWithValue({ message: errorMessage, data: err.response?.data });
         }
     }
 );
@@ -155,8 +173,8 @@ export const transferSelectedLeads = createAsyncThunk(
     ) => {
         try {
             const res = await axiosInstance.post("/leads/transfer-leads", {
-                assignId: assignedTo, // ✅ Backend expects "assignId"
-                leadIds, // ✅ Backend expects "leadIds"
+                assignId: assignedTo,
+                leadIds,
             });
             return {
                 leadIds,
@@ -164,7 +182,8 @@ export const transferSelectedLeads = createAsyncThunk(
                 newAssignedUserName: res.data.newAssignedUserName || "Unknown User"
             };
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to transfer leads';
+            return rejectWithValue({ message: errorMessage, data: err.response?.data });
         }
     }
 );
@@ -179,21 +198,13 @@ export interface Lead {
     city: string;
     state: string;
     assignedTo: number;
-
-    // Platform info
     platformId: number;
     platformType?: string;
-
-    // Plot info
     plotId: number;
     plotNumber?: string;
     plotPrice?: number;
-
-    // Lead stage
     leadStageId: number;
     leadStage?: string;
-
-    // Lead status
     leadStatusId: number;
     leadStatus?: string;
     assignedUserName?: string;
@@ -243,9 +254,11 @@ const leadSlice = createSlice({
             // ✅ Fetch Leads
             .addCase(fetchLeads.pending, (state) => {
                 state.loading = true;
+                state.error = null;
             })
             .addCase(fetchLeads.fulfilled, (state, action) => {
                 state.loading = false;
+                state.error = null;
                 state.page = action.payload.page;
                 state.limit = action.payload.limit;
                 state.totalPages = action.payload.totalPages;
@@ -277,33 +290,52 @@ const leadSlice = createSlice({
                         createdAt: item.createdAt,
                         updatedAt: item.updatedAt,
                     })) || [];
-
             })
-            .addCase(fetchLeads.rejected, (state, action) => {
+            .addCase(fetchLeads.rejected, (state, action: any) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = action.payload?.message || 'Failed to fetch leads';
             })
 
             // ✅ Fetch By ID
+            .addCase(fetchLeadById.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(fetchLeadById.fulfilled, (state, action) => {
+                state.loading = false;
                 state.current = action.payload;
+            })
+            .addCase(fetchLeadById.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload?.message || 'Failed to fetch lead';
             })
 
             // ✅ Create Lead
-            // ✅ Create Lead - Updated cases
             .addCase(createLead.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(createLead.fulfilled, (state, action) => {
                 state.loading = false;
-                state.list.push(action.payload);
+                state.error = null;
+                if (action.payload) {
+                    state.list.unshift(action.payload); // Add to beginning
+                    state.total += 1;
+                }
             })
             .addCase(createLead.rejected, (state, action: any) => {
                 state.loading = false;
-                state.error = action.payload?.message || action.payload;
+                state.error = action.payload?.message || 'Failed to create lead';
+            })
+
+            // ✅ Update Lead
+            .addCase(updateLead.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
             .addCase(updateLead.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
                 if (action.payload && action.payload.id) {
                     const index = state.list.findIndex(
                         (l) => l.id === action.payload.id
@@ -311,26 +343,58 @@ const leadSlice = createSlice({
                     if (index !== -1) {
                         state.list[index] = action.payload;
                     }
+                    // Update current if it's the same lead
+                    if (state.current && state.current.id === action.payload.id) {
+                        state.current = action.payload;
+                    }
                 }
             })
-            .addCase(deleteLead.fulfilled, (state, action) => {
-                state.list = state.list.filter((l: any) => l.id !== action.payload);
+            .addCase(updateLead.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload?.message || 'Failed to update lead';
             })
 
+            // ✅ Delete Lead
+            .addCase(deleteLead.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deleteLead.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                const deletedId = Number(action.payload);
+                state.list = state.list.filter((l) => l.id !== deletedId);
+                state.total = Math.max(0, state.total - 1);
+                if (state.current && state.current.id === deletedId) {
+                    state.current = null;
+                }
+            })
+            .addCase(deleteLead.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload?.message || 'Failed to delete lead';
+            })
+
+            // ✅ Upload Leads
             .addCase(uploadLeads.pending, (state) => {
                 state.loading = true;
+                state.error = null;
             })
             .addCase(uploadLeads.fulfilled, (state, action) => {
                 state.loading = false;
-                if (Array.isArray(action.payload)) {
-                    // agar API multiple leads return kare
-                    state.list = [...state.list, ...action.payload];
+                state.error = null;
+                // Handle based on response structure
+                const data = action.payload?.data;
+                if (Array.isArray(data)) {
+                    state.list = [...data, ...state.list];
+                    state.total += data.length;
                 }
             })
-            .addCase(uploadLeads.rejected, (state, action) => {
+            .addCase(uploadLeads.rejected, (state, action: any) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = action.payload?.message || 'Failed to upload leads';
             })
+
+            // ✅ Delete Bulk Leads
             .addCase(deleteBulkLeads.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -344,15 +408,14 @@ const leadSlice = createSlice({
                         (lead) => !deletedIds.includes(lead.id)
                     );
                     state.total = Math.max(0, state.total - deletedIds.length);
-                    // Clear current if it was deleted
                     if (state.current && deletedIds.includes(state.current.id)) {
                         state.current = null;
                     }
                 }
             })
-            .addCase(deleteBulkLeads.rejected, (state, action) => {
+            .addCase(deleteBulkLeads.rejected, (state, action: any) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = action.payload?.message || 'Failed to delete leads';
             })
 
             // ✅ Transfer Selected Leads
@@ -375,7 +438,6 @@ const leadSlice = createSlice({
                         : lead
                 );
 
-                // Update current if it was transferred
                 if (state.current && leadIds.includes(state.current.id)) {
                     state.current = {
                         ...state.current,
@@ -384,10 +446,10 @@ const leadSlice = createSlice({
                     };
                 }
             })
-            .addCase(transferSelectedLeads.rejected, (state, action) => {
+            .addCase(transferSelectedLeads.rejected, (state, action: any) => {
                 state.loading = false;
-                state.error = action.payload as string;
-            })
+                state.error = action.payload?.message || 'Failed to transfer leads';
+            });
     },
 });
 

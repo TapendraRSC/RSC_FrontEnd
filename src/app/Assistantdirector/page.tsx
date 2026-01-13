@@ -28,7 +28,7 @@ type SortConfig = {
     direction: "asc" | "desc";
 };
 
-// Helper function to get token
+
 const getAuthToken = (): string | null => {
     if (typeof window === "undefined") return null;
     const possibleKeys = ["token", "accessToken", "access_token", "authToken", "auth_token"];
@@ -49,7 +49,7 @@ const getAuthToken = (): string | null => {
     return null;
 };
 
-// Get roleId from localStorage
+
 const getRoleId = (): string => {
     if (typeof window === "undefined") return "1";
     const roleId = localStorage.getItem("roleId");
@@ -64,7 +64,6 @@ const getRoleId = (): string => {
     return "1";
 };
 
-// Variable to track if API was called (outside component to prevent re-calls)
 let apiCalled = false;
 
 const Director = () => {
@@ -80,11 +79,11 @@ const Director = () => {
 
     const [openMessage, setOpenMessage] = useState<string | null>(null);
 
-    // Permission states
+   
     const [permissionIds, setPermissionIds] = useState<number[]>([]);
     const [allPermissionsList, setAllPermissionsList] = useState<any[]>([]);
 
-    // Delete modal state
+   
     const [deleteModal, setDeleteModal] = useState<{ open: boolean; item: Contact | null }>({
         open: false,
         item: null

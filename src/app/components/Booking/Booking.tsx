@@ -2,22 +2,14 @@
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Trash2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-    deleteLead,
-    uploadLeads,
-    deleteBulkLeads,
-    transferSelectedLeads
-} from '../../../../store/leadSlice';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { exportUsers } from '../../../../store/userSlice';
 import { RootState } from '../../../../store/store';
 import ComprehensiveLeadModal from './BookingModal';
-import UploadPreviewModal from '../../components/Common/UploadPreviewModal';
-import BulkAssignRoleModal from '../Common/BulkAssignRoleModal';
 import BookingTable from '../Common/BookingTable';
 
 // Booking API response type
@@ -129,14 +121,11 @@ const BookingComponent: React.FC = () => {
 
     const [projectList, setProjectList] = useState<Project[]>([]);
 
-    // Get role permissions from Redux store
-    // This comes from /rolePermissions/roles/{roleId}/permissions API
+
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
 
-    // Get all permissions list from Redux store
-    // This comes from /permissions/getAllPermissions API
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
@@ -437,46 +426,45 @@ const BookingComponent: React.FC = () => {
             const bookingDate = booking.bookingDate ? formatDate(booking.bookingDate) : 'N/A';
 
             return {
-                // Core identifiers
+
                 id: booking.id,
                 leadId: booking.leadId,
                 bookingNumber: booking.bookingNumber || `#${booking.id}`,
                 leadNo: booking.bookingNumber || `#${booking.id}`,
 
-                // Personal info
                 name: booking.name || 'N/A',
                 phone: booking.phone || 'N/A',
-                email: '', // Not in API response
+                email: '',
 
-                // Project & Plot info
+
                 projectName: booking.projectName || 'N/A',
                 projectTitle: booking.projectName || 'N/A',
                 plotProjectTitle: booking.projectName || 'N/A',
                 plotNumber: booking.plotNumber || 'N/A',
 
-                // Financial info
+
                 bookingAmount: booking.bookingAmount || '0',
                 totalPlotAmount: booking.totalPlotAmount || '0',
                 budget: booking.totalPlotAmount || 'N/A',
 
-                // Status info
+
                 status: booking.status || 'N/A',
                 leadStatus: booking.status || 'N/A',
                 stage: booking.status || 'Booking',
 
-                // Assignment info
+
                 assignedTo: booking.createdByName || 'Not Assigned',
                 assignedUserName: booking.createdByName || 'Not Assigned',
                 createdBy: booking.createdByName || 'System',
                 sharedBy: booking.createdByName || 'N/A',
 
-                // Dates
+
                 createdDate: bookingDate,
                 createdAt: booking.bookingDate || null,
                 updatedAt: booking.bookingDate || null,
                 bookingDate: booking.bookingDate || null,
 
-                // Follow-up (not in current API, but keeping for compatibility)
+
                 nextFollowUp: 'Not Scheduled',
                 latestFollowUpDate: null,
                 lastFollowUpDate: 'N/A',
@@ -498,21 +486,16 @@ const BookingComponent: React.FC = () => {
         });
     }, [bookingList]);
 
-    // Dispatch Redux actions to fetch permissions
+
     useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }) as any);
         dispatch(fetchRolePermissionsSidebar() as any);
         dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }) as any);
     }, [dispatch]);
 
-    // ============================================
-    // PERMISSION SYSTEM - ID WISE CHECK
-    // ============================================
 
-    // Get Booking page permission IDs from role permissions
-    // First checks 'Booking' page, then fallback to 'Lead' page
     const getBookingPermissionIds = useCallback((): number[] => {
-        // Check for 'Booking' page first
+
         const bookingPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Booking' || p.pageName === 'booking'
         );
@@ -520,61 +503,53 @@ const BookingComponent: React.FC = () => {
             return bookingPerm.permissionIds;
         }
 
-        // Fallback to 'Lead' page if Booking not found
+
         const leadPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Lead' || p.pageName === 'lead'
         );
         return leadPerm?.permissionIds || [];
     }, [rolePermissions]);
 
-    // Get all permissions list from API
-    // This comes from /permissions/getAllPermissions API via Redux
+
     const getAllPermissionsList = useCallback(() => {
         // Handle different response structures
         const permissionsList =
-            allPermissions?.data?.permissions ||  // { data: { permissions: [...] } }
-            // allPermissions?.permissions ||         // { permissions: [...] }
-            allPermissions?.data ||                // { data: [...] }
+            allPermissions?.data?.permissions ||
+            // allPermissions?.permissions ||         
+            allPermissions?.data ||
             (Array.isArray(allPermissions) ? allPermissions : []);
 
         return Array.isArray(permissionsList) ? permissionsList : [];
     }, [allPermissions]);
 
-    // hasPermission function - checks by ID and verifies name from API
-    // Usage: hasPermission(22, "edit") - checks if permission ID 22 exists and name matches "edit"
     const hasPermission = useCallback((permId: number, permName: string): boolean => {
         const bookingPermissionIds = getBookingPermissionIds();
 
-        // Step 1: Check if this permission ID exists in role's Booking page permissions
+
         if (!bookingPermissionIds.includes(permId)) {
             return false;
         }
 
-        // Step 2: Get all permissions from API and verify the name matches
+
         const permissionsList = getAllPermissionsList();
 
-        // Find the permission by ID in the master list
+
         const matchedPermission = permissionsList.find(
             (p: any) => p.id === permId
         );
 
-        // If permission not found in master list, deny (safety check)
+
         if (!matchedPermission) {
-            // If API data not loaded yet but ID exists in role, allow it
-            // This prevents blocking while data is loading
+
             return permissionsList.length === 0;
         }
 
-        // Step 3: Verify permission name matches (case-insensitive, trimmed)
         const apiPermName = matchedPermission.permissionName?.trim().toLowerCase();
         const requestedPermName = permName.trim().toLowerCase();
 
         return apiPermName === requestedPermName;
     }, [getBookingPermissionIds, getAllPermissionsList]);
 
-    // ============================================
-    // END PERMISSION SYSTEM
-    // ============================================
 
     const handleAdd = () => {
         setCurrentBooking(null);
@@ -656,28 +631,7 @@ const BookingComponent: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleBulkAssignRole = async (assignedTo: string | number) => {
-        if (!selectedIds || selectedIds?.length === 0) {
-            toast.error('No bookings selected for assignment');
-            return;
-        }
-        const numericIds = selectedIds?.map(id => Number(id));
-        const numericAssignedTo = Number(assignedTo);
 
-        try {
-            await (dispatch as any)(transferSelectedLeads({
-                leadIds: numericIds,
-                assignedTo: numericAssignedTo
-            })).unwrap();
-            toast.success(`${numericIds.length} booking(s) transferred successfully`);
-            setSelectedIds([]);
-            handleRefetch(true);
-        } catch (error: any) {
-            toast.error(error?.message || 'Failed to transfer selected bookings');
-        } finally {
-            setIsAssignModalOpen(false);
-        }
-    };
 
     const handleBookingClick = (booking: any) => {
         setCurrentBooking(booking);
@@ -695,57 +649,6 @@ const BookingComponent: React.FC = () => {
         setPreviewData([]);
         setFileName('');
         setSelectedFile(null);
-    };
-
-    const handleOpenUploadPreview = () => {
-        setIsUploadPreviewOpen(true);
-    };
-
-    const handleFileSelect = (file: File) => {
-        if (!file) return;
-        setFileName(file.name);
-        setSelectedFile(file);
-
-        const reader = new FileReader();
-        reader.onload = (event: any) => {
-            try {
-                const text = event.target.result as string;
-                const rows = text.split('\n').map((row: string) => row.split(','));
-                const preview = rows.map((cols: string[]) => ({
-                    name: cols[0] || '',
-                    email: cols[1] || '',
-                    phone: cols[2] || '',
-                    city: cols[3] || '',
-                    state: cols[4] || '',
-                    project: cols[5] || '',
-                }));
-                setPreviewData(preview.filter((r) => r.name));
-            } catch (err) {
-                toast.error('Failed to parse file');
-                resetUploadStates();
-            }
-        };
-        reader.readAsText(file);
-    };
-
-    const handleClosePreview = () => resetUploadStates();
-
-    const handleConfirmUpload = async () => {
-        if (!selectedFile) {
-            toast.error('No file selected');
-            return;
-        }
-        setUploadLoading(true);
-        try {
-            await (dispatch as any)(uploadLeads(selectedFile)).unwrap();
-            toast.success('Bookings uploaded successfully');
-            resetUploadStates();
-            handleRefetch(true);
-        } catch (err: any) {
-            toast.error(err?.message || 'Failed to upload bookings');
-        } finally {
-            setUploadLoading(false);
-        }
     };
 
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
@@ -832,13 +735,7 @@ const BookingComponent: React.FC = () => {
 
 
 
-            <BulkAssignRoleModal
-                isOpen={isAssignModalOpen}
-                onClose={() => setIsAssignModalOpen(false)}
-                onConfirm={handleBulkAssignRole}
-                selectedIds={selectedIds}
-                currentUser={currentUser}
-            />
+
         </div>
     );
 };

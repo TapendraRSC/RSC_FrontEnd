@@ -72,6 +72,17 @@ const VALID_TABS = [
     'future-followup'
 ];
 
+// Helper function to extract error message
+const getErrorMessage = (error: any): string => {
+    if (!error) return 'An unknown error occurred';
+    if (typeof error === 'string') return error;
+    if (error.message) return error.message;
+    if (error.data?.message) return error.data.message;
+    if (error.error?.message) return error.error.message;
+    if (error.response?.data?.message) return error.response.data.message;
+    return 'An error occurred';
+};
+
 const LeadComponent: React.FC = () => {
     const dispatch = useDispatch<any>();
     const searchParams = useSearchParams();
@@ -131,7 +142,7 @@ const LeadComponent: React.FC = () => {
         const tabFromUrl = searchParams.get('tab');
         if (tabFromUrl && VALID_TABS.includes(tabFromUrl)) {
             setActiveTab(tabFromUrl);
-            setCurrentPage(1); // Reset to first page when tab changes from URL
+            setCurrentPage(1);
         }
     }, [searchParams]);
 
@@ -177,7 +188,6 @@ const LeadComponent: React.FC = () => {
             params.assignedTo = selectedAssignedTo;
         }
 
-        // Store the last fetch parameters
         setLastFetchParams(params);
 
         console.log("Fetching leads with params:", params);
@@ -191,7 +201,6 @@ const LeadComponent: React.FC = () => {
 
     // Intelligent refetch that maintains current tab context
     const handleRefetch = useCallback((force: boolean = false) => {
-        // Only refetch if explicitly forced or if we have valid parameters
         if (!force && Object.keys(lastFetchParams).length === 0) {
             return;
         }
@@ -221,7 +230,6 @@ const LeadComponent: React.FC = () => {
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         setCurrentPage(1);
-        // Update URL without full page reload (optional - for better UX)
         const url = new URL(window.location.href);
         url.searchParams.set('tab', tab);
         window.history.replaceState({}, '', url.toString());
@@ -305,7 +313,6 @@ const LeadComponent: React.FC = () => {
     useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
         dispatch(fetchRolePermissionsSidebar());
-        // Fetch master data for dropdowns
         dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: '' }));
         dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
     }, [dispatch]);
@@ -360,7 +367,8 @@ const LeadComponent: React.FC = () => {
             }
             handleRefetch(true);
         } catch (error: any) {
-            toast.error(error?.message || 'Failed to delete');
+            const errorMsg = getErrorMessage(error);
+            toast.error(errorMsg);
         } finally {
             setIsDeleteModalOpen(false);
             setDeleteTarget(null);
@@ -369,20 +377,35 @@ const LeadComponent: React.FC = () => {
 
     const handleSaveLead = async (data: any) => {
         setIsSaving(true);
-        const action = currentLead
-            ? updateLead({ id: currentLead.id, payload: data })
-            : createLead(data);
+
         try {
-            await dispatch(action).unwrap();
-            toast.success(
-                currentLead ? 'Lead updated successfully' : 'Lead added successfully'
-            );
+            if (currentLead) {
+                // Update existing lead
+                await dispatch(updateLead({ id: currentLead.id, payload: data })).unwrap();
+                toast.success('Lead updated successfully');
+            } else {
+                // Create new lead
+                await dispatch(createLead(data)).unwrap();
+                toast.success('Lead added successfully');
+            }
+
             setIsModalOpen(false);
             setCurrentLead(null);
             handleRefetch(true);
         } catch (error: any) {
-            console.error('Error saving lead:', error);
-            toast.error(error?.message || 'Failed to save lead');
+            console.error('Error saving lead - Raw error:', error);
+            console.error('Error type:', typeof error);
+            console.error('Error keys:', error ? Object.keys(error) : 'null');
+
+            const errorMsg = getErrorMessage(error);
+            console.error('Extracted error message:', errorMsg);
+
+            // Check for duplicate error
+            if (error?.duplicate) {
+                toast.error(`Duplicate lead: ${errorMsg}`);
+            } else {
+                toast.error(errorMsg);
+            }
         } finally {
             setIsSaving(false);
         }
@@ -424,7 +447,8 @@ const LeadComponent: React.FC = () => {
             setSelectedIds([]);
             handleRefetch(true);
         } catch (error: any) {
-            toast.error(error?.message || 'Failed to transfer selected leads');
+            const errorMsg = getErrorMessage(error);
+            toast.error(errorMsg);
         } finally {
             setIsAssignModalOpen(false);
         }
@@ -497,7 +521,7 @@ const LeadComponent: React.FC = () => {
                 resetUploadStates();
                 handleRefetch(true);
             } else {
-                const results = response?.results;
+                const results = response?.results || response?.data?.results;
                 if (results?.failedLeadsFileUrl) {
                     setFailedLeadsFileUrl(results.failedLeadsFileUrl);
                 }
@@ -510,13 +534,17 @@ const LeadComponent: React.FC = () => {
                     toast.error(response?.message || 'Failed to upload leads');
                 }
             }
-        } catch (err: any) {
-            const errorResponse = err?.response?.data || err;
-            if (errorResponse?.results?.failedLeadsFileUrl) {
-                setFailedLeadsFileUrl(errorResponse.results.failedLeadsFileUrl);
+        } catch (error: any) {
+            console.error('Upload error:', error);
+
+            if (error?.results?.failedLeadsFileUrl) {
+                setFailedLeadsFileUrl(error.results.failedLeadsFileUrl);
+            } else if (error?.data?.results?.failedLeadsFileUrl) {
+                setFailedLeadsFileUrl(error.data.results.failedLeadsFileUrl);
             }
 
-            toast.error(errorResponse?.message || err?.message || 'Failed to upload leads');
+            const errorMsg = getErrorMessage(error);
+            toast.error(errorMsg);
         } finally {
             setUploadLoading(false);
         }
@@ -529,21 +557,9 @@ const LeadComponent: React.FC = () => {
         { label: 'Name', accessor: 'name' },
         { label: 'Phone', accessor: 'phone' },
         { label: 'Email', accessor: 'email' },
-        // { label: 'Status', accessor: 'status' },
-        // { label: 'Stage', accessor: 'stage' },
         { label: 'Assigned To', accessor: 'assignedTo' },
-        // { label: 'Source', accessor: 'source' },
         { label: 'Platform', accessor: 'platformType' },
         { label: 'Created Date', accessor: 'createdDate' },
-        // { label: 'Next Follow Up', accessor: 'nextFollowUp' },
-        // { label: 'Profession', accessor: 'profession' },
-        // { label: 'Address', accessor: 'address' },
-        // { label: 'City', accessor: 'city' },
-        // { label: 'State', accessor: 'state' },
-        // { label: 'Budget', accessor: 'budget' },
-        // { label: 'Plot Number', accessor: 'plotNumber' },
-        // { label: 'Plot Price', accessor: 'plotPrice' },
-        // { label: 'Remark', accessor: 'remark' },
     ];
 
     // Transform lead data for export
@@ -551,7 +567,6 @@ const LeadComponent: React.FC = () => {
         const createdAt = lead.createdAt ? formatDate(lead.createdAt) : 'N/A';
         const latestFollowUpDate = lead.latestFollowUpDate ? formatDate(lead.latestFollowUpDate) : 'Not Scheduled';
         const lastFollowUpDate = lead.lastFollowUpDate ? formatDate(lead.lastFollowUpDate) : 'N/A';
-
 
         return {
             id: lead.id,
@@ -580,8 +595,7 @@ const LeadComponent: React.FC = () => {
         };
     };
 
-
-    // Extract leads from API response (handles multiple response structures)
+    // Extract leads from API response
     const extractLeadsFromResponse = (resultAction: any): any[] => {
         if (!resultAction) return [];
 
@@ -603,77 +617,13 @@ const LeadComponent: React.FC = () => {
         return [];
     };
 
-
-
-    // const handleFetchExportRange = useCallback(async (start: number, end: number): Promise<any[]> => {
-    //     try {
-    //         const totalToFetch = end - start;
-    //         const category = getCategoryFromTab(activeTab);
-    //         const BATCH_SIZE = 100; // Tera backend 100 deta hai ek baar mein
-
-    //         console.log(`Export: Fetching ${totalToFetch} records`);
-
-    //         let allLeads: any[] = [];
-    //         const totalPages = Math.ceil(totalToFetch / BATCH_SIZE);
-
-    //         // Har page ke liye API call
-    //         for (let page = 1; page <= totalPages; page++) {
-    //             console.log(`Fetching page ${page} of ${totalPages}...`);
-
-    //             const params: any = {
-    //                 page: page,
-    //                 limit: BATCH_SIZE,
-    //                 searchValue: searchTerm,
-    //                 fromDate,
-    //                 toDate,
-    //                 ...(category && { category }),
-    //                 ...(selectedPlatform && { platformId: selectedPlatform }),
-    //                 ...(selectedAssignedTo && { assignedTo: selectedAssignedTo }),
-    //             };
-
-    //             const resultAction = await dispatch(fetchLeads(params)).unwrap();
-    //             const batchLeads = extractLeadsFromResponse(resultAction);
-
-    //             console.log(`Page ${page}: Got ${batchLeads.length} records`);
-
-    //             if (batchLeads.length === 0) break;
-
-    //             allLeads = [...allLeads, ...batchLeads];
-
-    //             // Agar requested records mil gaye toh ruk jao
-    //             if (allLeads.length >= totalToFetch) break;
-    //         }
-
-    //         console.log(`Export: Total fetched ${allLeads.length} records`);
-
-    //         if (allLeads.length === 0) {
-    //             throw new Error('No data found to export');
-    //         }
-
-    //         // Sirf utne records lo jitne maange the
-    //         const slicedLeads = allLeads.slice(0, totalToFetch);
-    //         const transformedLeads = slicedLeads.map(transformLeadForExport);
-
-    //         return transformedLeads;
-
-    //     } catch (error: any) {
-    //         console.error('Export range fetch failed:', error);
-    //         toast.error(error?.message || 'Failed to fetch export data');
-    //         throw error;
-    //     }
-    // }, [dispatch, activeTab, searchTerm, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
-
-
-
     const handleFetchExportRange = useCallback(async (start: number, end: number): Promise<any[]> => {
         try {
             const totalToFetch = end - start;
             const category = getCategoryFromTab(activeTab);
-            // const BATCH_SIZE = 100;
             const BATCH_SIZE = 500;
 
             console.log(`Export: Fetching records from ${start} to ${end} (Total: ${totalToFetch})`);
-
 
             const startPage = Math.floor(start / BATCH_SIZE) + 1;
             const endPage = Math.ceil(end / BATCH_SIZE);
@@ -681,7 +631,6 @@ const LeadComponent: React.FC = () => {
             console.log(`Starting from page ${startPage} to page ${endPage}`);
 
             let allLeads: any[] = [];
-
 
             for (let page = startPage; page <= endPage; page++) {
                 console.log(`Fetching page ${page}...`);
@@ -713,7 +662,6 @@ const LeadComponent: React.FC = () => {
                 throw new Error('No data found to export');
             }
 
-
             const offsetInFirstPage = start % BATCH_SIZE;
             const slicedLeads = allLeads.slice(offsetInFirstPage, offsetInFirstPage + totalToFetch);
 
@@ -725,12 +673,11 @@ const LeadComponent: React.FC = () => {
 
         } catch (error: any) {
             console.error('Export range fetch failed:', error);
-            toast.error(error?.message || 'Failed to fetch export data');
+            const errorMsg = getErrorMessage(error);
+            toast.error(errorMsg);
             throw error;
         }
     }, [dispatch, activeTab, searchTerm, fromDate, toDate, selectedPlatform, selectedAssignedTo]);
-
-
 
     return (
         <div className="p-2 sm:p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
