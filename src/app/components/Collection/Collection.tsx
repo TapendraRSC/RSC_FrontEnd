@@ -619,10 +619,10 @@ const CollectionComponent: React.FC = () => {
                 loading={loading}
                 // totalPages={totalPages}
                 // totalRecords={total}
-                currentPage={currentPage}
-                pageSize={pageSize}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
+                // currentPage={currentPage}
+                // pageSize={pageSize}
+                // onPageChange={handlePageChange}
+                // onPageSizeChange={handlePageSizeChange}
                 onAddLead={handleAdd}
                 onEditLead={handleEdit}
                 onDeleteLead={handleDelete}
@@ -643,8 +643,8 @@ const CollectionComponent: React.FC = () => {
                 // fromDate={fromDate}
                 // toDate={toDate}
                 // onDateChange={handleDateChange}
-                searchTerm={searchTerm}
-                onSearch={handleSearch}
+                // searchTerm={searchTerm}
+                // onSearch={handleSearch}
                 // Permissions from API - hasPermission(id, name)
                 hasEditPermission={hasPermission(22, 'edit')}
                 // hasDeletePermission={hasPermission(4, 'delete')}
