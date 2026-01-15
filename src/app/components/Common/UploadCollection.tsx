@@ -297,15 +297,16 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             toast.error('Please fix header errors before uploading');
             return;
         }
-
+   
         setIsLoading(true);
 
         try {
             const token = getAuthToken();
             const formData = new FormData();
             formData.append('file', selectedFile);
-
-            const response = await fetch(`${BASE_URL}/collection/uploadCollections`, {
+    
+            // const response = await fetch(`${BASE_URL}/collection/uploadCollections`, { 
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/uploadCollections`, {
                 method: 'POST',
                 headers: {
                     ...(token && { 'Authorization': `Bearer ${token}` })
