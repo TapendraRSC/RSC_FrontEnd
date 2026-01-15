@@ -265,10 +265,26 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
           </div>
           <div className="flex gap-2">
              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="text-sm border rounded-lg p-1.5 bg-white dark:bg-gray-800"><option value={5}>5 entries</option><option value={25}>25 entries</option> <option value={50}>50 entries</option> <option value={100}>100 entries</option></select>
-             <div className="flex border rounded-lg overflow-hidden">
-                <button onClick={() => setViewMode("card")} className={`p-1.5 ${viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-white'}`}><LayoutGrid size={16}/></button>
-                <button onClick={() => setViewMode("table")} className={`p-1.5 ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-white'}`}><Table2 size={16}/></button>
-             </div>
+           <div className="flex border rounded-lg overflow-hidden">
+  <button
+    onClick={() => setViewMode("card")}
+    className={`p-1.5 hover:bg-black hover:text-white ${
+      viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-black text-white'
+    }`}
+  >
+    <LayoutGrid size={16} />
+  </button>
+
+  <button
+    onClick={() => setViewMode("table")}
+    className={`p-1.5 hover:bg-black hover:text-white ${
+      viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-black text-white'
+    }`}
+  >
+    <Table2 size={16} />
+  </button>
+</div>
+
           </div>
         </div>
 
@@ -302,7 +318,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
             </thead>
             <tbody className="divide-y divide-gray-200">
               {paginatedCollections.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50">
+                <tr key={item.id}>
                   {getCollectionColumns().map(c => <td key={c.accessor} className="px-4 py-4">{(item as any)[c.accessor] || "N/A"}</td>)}
                   <td className="px-4 py-4"><button onClick={() => onEditLead && onEditLead(item)} className="text-blue-500"><Edit size={16}/></button></td>
                 </tr>
