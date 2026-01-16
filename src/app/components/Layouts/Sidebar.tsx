@@ -61,7 +61,6 @@ const Sidebar = () => {
         }
     }, [dispatch]);
 
-    // Menu structure - all items are permission-based (no hardcoded alwaysShow)
     const menuStructure = {
         dashboard: {
             pageName: 'Dashboard',
@@ -86,31 +85,31 @@ const Sidebar = () => {
                 { pageName: 'Google Analytics', title: 'Google Analytics', href: '/googleanalytics' },
             ]
         },
+        assistantdirector: {
+            pageName: 'Assistantdirector',
+            title: 'Assistant Director',
+            href: '/Assistantdirector',
+            type: 'single'
+        },
         projectstatus: {
             pageName: 'Project Status',
             title: 'Project Status',
             href: '/projectstatus',
             type: 'single'
         },
-        Lead: {
+        lead: {
             pageName: 'Lead',
             title: 'Lead',
             href: '/lead',
             type: 'single'
         },
-        Booking: {
+        booking: {
             pageName: 'Booking',
             title: 'Booking',
             href: '/booking',
             type: 'single'
         },
-        Assistantdirector: {
-            pageName: 'Assistantdirector',
-            title: 'Assistant Director',
-            href: '/Assistantdirector',
-            type: 'single'
-        },
-        Collection: {
+        collection: {
             pageName: 'Collection',
             title: 'Collection',
             href: '/collection',
@@ -125,23 +124,7 @@ const Sidebar = () => {
         },
     };
 
-    // Check if user has VIEW permission (17) for a page
-    const hasViewPermission = (pageName: string): boolean => {
-        if (!rolePermissions?.permissions) return false;
-        const permission = rolePermissions.permissions.find(
-            (perm: any) => perm.pageName === pageName
-        );
-        return permission?.permissionIds?.includes(17) ?? false;
-    };
-
-    // Check if user has any permission for a page (view, add, edit, delete, etc.)
-    const hasAnyPermission = (pageName: string): boolean => {
-        if (!rolePermissions?.permissions) return false;
-        const permission = rolePermissions.permissions.find(
-            (perm: any) => perm.pageName === pageName
-        );
-        return permission?.permissionIds?.length > 0;
-    };
+    const isViewPermissionValid = (ids: number[]) => ids?.includes(17) ?? false;
 
     const getFilteredMenu = () => {
         if (!rolePermissions?.permissions) return {};
@@ -149,24 +132,27 @@ const Sidebar = () => {
         const filtered: any = {};
 
         Object.entries(menuStructure).forEach(([key, item]: any) => {
-            // Always show items marked with alwaysShow (like support)
             if (item.alwaysShow) {
                 filtered[key] = item;
                 return;
             }
 
             if (item.type === 'single') {
-                // Show menu item if user has VIEW permission (17)
-                if (hasViewPermission(item.pageName)) {
+                const permission = rolePermissions.permissions.find(
+                    (perm: any) => perm.pageName === item.pageName
+                );
+                if (permission && isViewPermissionValid(permission.permissionIds)) {
                     filtered[key] = item;
                 }
             }
 
             if (item.type === 'dropdown') {
-                // Filter children based on VIEW permission
-                const children = item.children.filter((child: any) =>
-                    hasViewPermission(child.pageName)
-                );
+                const children = item.children.filter((child: any) => {
+                    const permission = rolePermissions.permissions.find(
+                        (perm: any) => perm.pageName === child.pageName
+                    );
+                    return permission && isViewPermissionValid(permission.permissionIds);
+                });
 
                 if (children.length > 0) {
                     filtered[key] = { ...item, children };
@@ -211,7 +197,6 @@ const Sidebar = () => {
         );
     }
 
-    // Helper function to render a single menu item
     const renderMenuItem = (key: string, item: any) => {
         if (!item) return null;
 
@@ -258,11 +243,11 @@ const Sidebar = () => {
                             }}
                         >
                             <ul className="space-y-0.5 p-4 font-semibold">
-                                {/* Dashboard - shown if user has permission */}
+                                {/* Sales Dashboard */}
                                 {filteredMenuItems.dashboard && renderMenuItem('dashboard', filteredMenuItems.dashboard)}
 
-                                {/* Assistant Director - shown if user has permission */}
-                                {filteredMenuItems.Assistantdirector && renderMenuItem('Assistantdirector', filteredMenuItems.Assistantdirector)}
+                                {/* Assistant Director */}
+
 
                                 {/* All Masters Dropdown */}
                                 {filteredMenuItems.allMasters && (
@@ -297,39 +282,32 @@ const Sidebar = () => {
                                     </li>
                                 )}
 
+                                {filteredMenuItems.assistantdirector && renderMenuItem('assistantdirector', filteredMenuItems.assistantdirector)}
+
                                 {/* Project Status */}
                                 {filteredMenuItems.projectstatus && renderMenuItem('projectstatus', filteredMenuItems.projectstatus)}
 
                                 {/* Lead */}
-                                {filteredMenuItems.Lead && renderMenuItem('Lead', filteredMenuItems.Lead)}
+                                {filteredMenuItems.lead && renderMenuItem('lead', filteredMenuItems.lead)}
 
                                 {/* Booking */}
-                                {filteredMenuItems.Booking && renderMenuItem('Booking', filteredMenuItems.Booking)}
+                                {filteredMenuItems.booking && renderMenuItem('booking', filteredMenuItems.booking)}
 
-                                {filteredMenuItems.Collection && renderMenuItem('Collection', filteredMenuItems.Collection)}
+                                {/* Collection */}
+                                {filteredMenuItems.collection && renderMenuItem('collection', filteredMenuItems.collection)}
 
                                 {/* Support - Always visible with special styling */}
                                 {filteredMenuItems.support && (
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
                                         <Link
                                             href={filteredMenuItems.support.href}
-                                            className={`
-                                                nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left 
-                                                transition-all duration-200 hover:scale-[1.02]
-                                                bg-gradient-to-r from-blue-50 to-blue-100
-                                                dark:from-blue-950/60 dark:to-blue-900/40
-                                                border border-blue-200 dark:border-blue-700
-                                                shadow-sm hover:shadow-md
-                                                ${pathname === '/support'
-                                                    ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-100'
-                                                    : 'text-blue-700 dark:text-blue-200 hover:text-blue-800 dark:hover:text-blue-100'
-                                                }
-                                            `}
+                                            className={`nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-all duration-200 hover:scale-[1.02] bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/60 dark:to-blue-900/40 border border-blue-200 dark:border-blue-700 shadow-sm hover:shadow-md ${pathname === '/support' ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-100' : 'text-blue-700 dark:text-blue-200 hover:text-blue-800 dark:hover:text-blue-100'}`}
                                         >
                                             <LifeBuoy className="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                                             <span className="font-semibold tracking-wide uppercase text-sm">
                                                 {filteredMenuItems.support.title}
                                             </span>
+
                                             <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-200/60 dark:bg-blue-500/30 text-blue-700 dark:text-blue-100 font-medium">
                                                 Help
                                             </span>
@@ -346,3 +324,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+

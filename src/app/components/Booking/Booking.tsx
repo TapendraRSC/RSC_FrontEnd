@@ -52,33 +52,52 @@ const getAuthToken = (): string | null => {
 
     const possibleKeys = ['token', 'accessToken', 'access_token', 'authToken', 'auth_token'];
 
+    // Check localStorage first
     for (const key of possibleKeys) {
         const token = localStorage.getItem(key);
-        if (token) {
+        if (token && token !== 'undefined' && token !== 'null') {
             return token;
         }
     }
 
+    // Check for user object in localStorage
     const userStr = localStorage.getItem('user');
     if (userStr) {
         try {
             const user = JSON.parse(userStr);
-            if (user.token) return user.token;
-            if (user.accessToken) return user.accessToken;
-            if (user.access_token) return user.access_token;
+            if (user.token && user.token !== 'undefined') return user.token;
+            if (user.accessToken && user.accessToken !== 'undefined') return user.accessToken;
+            if (user.access_token && user.access_token !== 'undefined') return user.access_token;
         } catch (e) {
             console.error('Error parsing user from localStorage:', e);
         }
     }
 
+    // Check sessionStorage as fallback
     for (const key of possibleKeys) {
         const token = sessionStorage.getItem(key);
-        if (token) {
+        if (token && token !== 'undefined' && token !== 'null') {
             return token;
         }
     }
 
     return null;
+};
+
+// Helper function to build headers with optional auth token
+const buildHeaders = (includeAuth: boolean = true): HeadersInit => {
+    const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+    };
+
+    if (includeAuth) {
+        const token = getAuthToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+    }
+
+    return headers;
 };
 
 const formatDate = (dateString: string | Date | null) => {
@@ -120,7 +139,6 @@ const BookingComponent: React.FC = () => {
     const [total, setTotal] = useState(0);
 
     const [projectList, setProjectList] = useState<Project[]>([]);
-
 
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
@@ -200,19 +218,18 @@ const BookingComponent: React.FC = () => {
     const fetchProjectsData = useCallback(async () => {
         try {
             const token = getAuthToken();
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/projects/getAllProjects?page=1&limit=100`;
 
-            const headers: HeadersInit = {
-                'Content-Type': 'application/json',
-            };
-
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+            // Don't make the API call if there's no token
+            if (!token) {
+                console.warn('No auth token available for fetching projects');
+                return;
             }
+
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/projects/getAllProjects?page=1&limit=100`;
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
-                headers,
+                headers: buildHeaders(true),
                 credentials: 'include',
             });
 
@@ -225,6 +242,9 @@ const BookingComponent: React.FC = () => {
                 } else if (result.data && Array.isArray(result.data)) {
                     setProjectList(result.data);
                 }
+            } else if (response.status === 401) {
+                console.warn('Unauthorized: Token may be invalid or expired');
+                toast.error('Session expired. Please login again.');
             }
         } catch (error) {
             console.error("Error fetching projects:", error);
@@ -233,6 +253,17 @@ const BookingComponent: React.FC = () => {
 
     // Main API call to fetch bookings
     const fetchBookingsData = useCallback(async (overrideTab?: string) => {
+        const token = getAuthToken();
+
+        // Don't make the API call if there's no token
+        if (!token) {
+            console.warn('No auth token available for fetching bookings');
+            setBookingList([]);
+            setTotal(0);
+            setTotalPages(1);
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -299,19 +330,9 @@ const BookingComponent: React.FC = () => {
                 limit: pageSize
             });
 
-            const token = getAuthToken();
-
-            const headers: HeadersInit = {
-                'Content-Type': 'application/json',
-            };
-
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-
             const response = await fetch(apiUrl, {
                 method: 'GET',
-                headers,
+                headers: buildHeaders(true),
                 credentials: 'include',
             });
 
@@ -426,7 +447,6 @@ const BookingComponent: React.FC = () => {
             const bookingDate = booking.bookingDate ? formatDate(booking.bookingDate) : 'N/A';
 
             return {
-
                 id: booking.id,
                 leadId: booking.leadId,
                 bookingNumber: booking.bookingNumber || `#${booking.id}`,
@@ -436,34 +456,28 @@ const BookingComponent: React.FC = () => {
                 phone: booking.phone || 'N/A',
                 email: '',
 
-
                 projectName: booking.projectName || 'N/A',
                 projectTitle: booking.projectName || 'N/A',
                 plotProjectTitle: booking.projectName || 'N/A',
                 plotNumber: booking.plotNumber || 'N/A',
 
-
                 bookingAmount: booking.bookingAmount || '0',
                 totalPlotAmount: booking.totalPlotAmount || '0',
                 budget: booking.totalPlotAmount || 'N/A',
 
-
                 status: booking.status || 'N/A',
                 leadStatus: booking.status || 'N/A',
                 stage: booking.status || 'Booking',
-
 
                 assignedTo: booking.createdByName || 'Not Assigned',
                 assignedUserName: booking.createdByName || 'Not Assigned',
                 createdBy: booking.createdByName || 'System',
                 sharedBy: booking.createdByName || 'N/A',
 
-
                 createdDate: bookingDate,
                 createdAt: booking.bookingDate || null,
                 updatedAt: booking.bookingDate || null,
                 bookingDate: booking.bookingDate || null,
-
 
                 nextFollowUp: 'Not Scheduled',
                 latestFollowUpDate: null,
@@ -486,16 +500,13 @@ const BookingComponent: React.FC = () => {
         });
     }, [bookingList]);
 
-
     useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }) as any);
         dispatch(fetchRolePermissionsSidebar() as any);
         dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }) as any);
     }, [dispatch]);
 
-
     const getBookingPermissionIds = useCallback((): number[] => {
-
         const bookingPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Booking' || p.pageName === 'booking'
         );
@@ -503,19 +514,16 @@ const BookingComponent: React.FC = () => {
             return bookingPerm.permissionIds;
         }
 
-
         const leadPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Lead' || p.pageName === 'lead'
         );
         return leadPerm?.permissionIds || [];
     }, [rolePermissions]);
 
-
     const getAllPermissionsList = useCallback(() => {
         // Handle different response structures
         const permissionsList =
             allPermissions?.data?.permissions ||
-            // allPermissions?.permissions ||         
             allPermissions?.data ||
             (Array.isArray(allPermissions) ? allPermissions : []);
 
@@ -525,22 +533,17 @@ const BookingComponent: React.FC = () => {
     const hasPermission = useCallback((permId: number, permName: string): boolean => {
         const bookingPermissionIds = getBookingPermissionIds();
 
-
         if (!bookingPermissionIds.includes(permId)) {
             return false;
         }
 
-
         const permissionsList = getAllPermissionsList();
-
 
         const matchedPermission = permissionsList.find(
             (p: any) => p.id === permId
         );
 
-
         if (!matchedPermission) {
-
             return permissionsList.length === 0;
         }
 
@@ -549,7 +552,6 @@ const BookingComponent: React.FC = () => {
 
         return apiPermName === requestedPermName;
     }, [getBookingPermissionIds, getAllPermissionsList]);
-
 
     const handleAdd = () => {
         setCurrentBooking(null);
@@ -583,19 +585,26 @@ const BookingComponent: React.FC = () => {
             if (deleteMode === 'single') {
                 const id = (deleteTarget as { id: number }).id;
                 const token = getAuthToken();
+
+                if (!token) {
+                    toast.error('Authentication required. Please login again.');
+                    return;
+                }
+
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/bookings/deleteBooking/${id}`,
                     {
                         method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...(token && { 'Authorization': `Bearer ${token}` })
-                        },
+                        headers: buildHeaders(true),
                         credentials: 'include',
                     }
                 );
 
                 if (!response.ok) {
+                    if (response.status === 401) {
+                        toast.error('Session expired. Please login again.');
+                        return;
+                    }
                     throw new Error('Failed to delete booking');
                 }
 
@@ -630,8 +639,6 @@ const BookingComponent: React.FC = () => {
         setDeleteTarget(ids);
         setIsDeleteModalOpen(true);
     };
-
-
 
     const handleBookingClick = (booking: any) => {
         setCurrentBooking(booking);
@@ -710,11 +717,8 @@ const BookingComponent: React.FC = () => {
                 onDateChange={handleDateChange}
                 searchTerm={searchTerm}
                 onSearch={handleSearch}
-
                 hasEditPermission={hasPermission(22, "edit")}
-
                 hasDeletePermission={hasPermission(4, "delete")}
-
                 hasBulkPermission={
                     hasPermission(25, "bulk assign") || hasPermission(4, "delete")
                 }
@@ -732,10 +736,6 @@ const BookingComponent: React.FC = () => {
                 initialData={currentBooking}
                 isLoading={isSaving}
             />
-
-
-
-
         </div>
     );
 };

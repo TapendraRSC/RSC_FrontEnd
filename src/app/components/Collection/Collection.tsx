@@ -11,6 +11,7 @@ import { exportUsers } from '../../../../store/userSlice';
 import { RootState } from '../../../../store/store';
 import CollectionTable from '../Common/CollectionTable';
 import UploadCollection from '../../components/Common/UploadCollection';
+import CollectionModal from './CollectionModal';
 
 // Collection API response type - matching actual API response
 interface CollectionData {
@@ -61,7 +62,7 @@ interface Permission {
     permissionName: string;
 }
 
-// Helper function to get token
+// Helper function to get token - FIXED VERSION
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
 
@@ -69,16 +70,16 @@ const getAuthToken = (): string | null => {
 
     for (const key of possibleKeys) {
         const token = localStorage.getItem(key);
-        if (token) return token;
+        if (token && token !== 'undefined' && token !== 'null') return token;
     }
 
     const userStr = localStorage.getItem('user');
-    if (userStr) {
+    if (userStr && userStr !== 'undefined' && userStr !== 'null') {
         try {
             const user = JSON.parse(userStr);
-            if (user.token) return user.token;
-            if (user.accessToken) return user.accessToken;
-            if (user.access_token) return user.access_token;
+            if (user.token && user.token !== 'undefined' && user.token !== 'null') return user.token;
+            if (user.accessToken && user.accessToken !== 'undefined' && user.accessToken !== 'null') return user.accessToken;
+            if (user.access_token && user.access_token !== 'undefined' && user.access_token !== 'null') return user.access_token;
         } catch (e) {
             console.error('Error parsing user from localStorage:', e);
         }
@@ -86,10 +87,20 @@ const getAuthToken = (): string | null => {
 
     for (const key of possibleKeys) {
         const token = sessionStorage.getItem(key);
-        if (token) return token;
+        if (token && token !== 'undefined' && token !== 'null') return token;
     }
 
     return null;
+};
+
+// Helper function to get headers with proper token handling
+const getAuthHeaders = (): HeadersInit => {
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    const token = getAuthToken();
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
 };
 
 const formatDate = (dateString: string | Date | null) => {
@@ -140,6 +151,42 @@ const CollectionComponent: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [currentCollection, setCurrentCollection] = useState<any>(null);
+
+    // ... (Keep all existing useEffects and Permission Logic)
+
+
+    const handleSave = async (formData: any) => {
+        setIsLoading(true);
+        try {
+            const id = currentCollection?.id;
+
+            if (!id) return;
+
+            // Backend ko correct URL aur data bhejna
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/updateCollection/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                toast.success('Collection updated successfully');
+                setIsModalOpen(false);
+                fetchCollectionsData();
+            } else {
+                toast.error(result.message || 'Update failed');
+            }
+        } catch (error: any) {
+            toast.error('Something went wrong during update');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const getInitialTab = (): string => {
         const tabFromUrl = searchParams.get('tab');
         if (tabFromUrl && VALID_TABS.includes(tabFromUrl)) {
@@ -154,9 +201,9 @@ const CollectionComponent: React.FC = () => {
     const [toDate, setToDate] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    // const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [currentCollection, setCurrentCollection] = useState<any>(null);
+    // const [currentCollection, setCurrentCollection] = useState(null);
     const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
     const [currentTimelineCollection, setCurrentTimelineCollection] = useState<any>(null);
@@ -259,15 +306,11 @@ const CollectionComponent: React.FC = () => {
     // Fetch Projects
     const fetchProjectsData = useCallback(async () => {
         try {
-            const token = getAuthToken();
             const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/projects/getAllProjects?page=1&limit=100`;
-
-            const headers: HeadersInit = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
-                headers,
+                headers: getAuthHeaders(),
                 credentials: 'include',
             });
 
@@ -321,13 +364,9 @@ const CollectionComponent: React.FC = () => {
                 limit: pageSize
             });
 
-            const token = getAuthToken();
-            const headers: HeadersInit = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-
             const response = await fetch(apiUrl, {
                 method: 'GET',
-                headers,
+                headers: getAuthHeaders(),
                 credentials: 'include',
             });
 
@@ -496,18 +535,13 @@ const CollectionComponent: React.FC = () => {
     // Delete Collection - DELETE http://localhost:8000/collection/deleteCollection/:id
     const confirmDelete = async () => {
         try {
-            const token = getAuthToken();
-
             if (deleteMode === 'single') {
                 const id = (deleteTarget as { id: number }).id;
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/deleteCollection/${id}`,
                     {
                         method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...(token && { 'Authorization': `Bearer ${token}` })
-                        },
+                        headers: getAuthHeaders(),
                         credentials: 'include',
                     }
                 );
@@ -521,10 +555,7 @@ const CollectionComponent: React.FC = () => {
                         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/deleteCollection/${id}`,
                         {
                             method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                ...(token && { 'Authorization': `Bearer ${token}` })
-                            },
+                            headers: getAuthHeaders(),
                             credentials: 'include',
                         }
                     );
@@ -614,46 +645,27 @@ const CollectionComponent: React.FC = () => {
                 </div>
             </div>
 
+
+
             <CollectionTable
-                leads={transformCollectionsForTable}
+                colletion={transformCollectionsForTable}
                 loading={loading}
-                // totalPages={totalPages}
-                // totalRecords={total}
-                // currentPage={currentPage}
-                // pageSize={pageSize}
-                // onPageChange={handlePageChange}
-                // onPageSizeChange={handlePageSizeChange}
-                onAddLead={handleAdd}
-                onEditLead={handleEdit}
-                onDeleteLead={handleDelete}
-                onBulkDelete={handleBulkDelete}
-                // onBulkAssign={handleAssignCollections}
+                onEditColletion={handleEdit}
+                onDeleteColletion={handleDelete}
                 onLeadClick={handleCollectionClick}
-                // onFollowUp={(collection: any) => {
-                //     setSelectedCollectionId(collection);
-                //     setIsFollowUpModalOpen(true);
-                // }}
-                // onRefetch={() => handleRefetch(true)}
-                // selectedPlatform={selectedProject}
-                // onPlatformChange={handleProjectChange}
-                // selectedAssignedTo={selectedAssignedTo}
-                // onAssignedToChange={handleAssignedToChange}
-                // Selectedactivity={selectedActivity}
-                // onselectedActivity={handleActivityChange}
-                // fromDate={fromDate}
-                // toDate={toDate}
-                // onDateChange={handleDateChange}
-                // searchTerm={searchTerm}
-                // onSearch={handleSearch}
-                // Permissions from API - hasPermission(id, name)
                 hasEditPermission={hasPermission(22, 'edit')}
-                // hasDeletePermission={hasPermission(4, 'delete')}
-                // hasBulkPermission={hasPermission(25, 'bulk assign') || hasPermission(4, 'delete')}
-                // currentUser={currentUser}
                 disableInternalFetch={true}
             />
 
-            {/* Upload Collection Modal */}
+
+            <CollectionModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSave}
+                initialData={currentCollection}
+                isLoading={isLoading}
+            />
+
             <UploadCollection
                 isOpen={isUploadModalOpen}
                 onClose={handleCloseUpload}

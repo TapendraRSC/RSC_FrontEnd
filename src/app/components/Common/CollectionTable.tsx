@@ -1,20 +1,18 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Search, ChevronLeft, ChevronRight, ChevronUp, Phone, User, FileText, Calendar, Edit, Trash2, X, LayoutGrid, Table2, Clock, CheckCircle, XCircle, RefreshCw, Building2, Calendar as CalendarIcon, IndianRupee, Hash, Mail, Ruler, Receipt, FileCheck, Wallet, Banknote, CreditCard, Calculator, Briefcase, Scale, Gavel, Wifi, BadgeIndianRupee, TrendingUp, AlertCircle, Filter,
+  Search, ChevronLeft, ChevronRight, Phone, User, Edit, Trash2, X, LayoutGrid, Table2, Clock, CheckCircle, XCircle, RefreshCw, Building2, Calendar as CalendarIcon, IndianRupee, Hash, Mail, Ruler, Receipt, FileCheck, Wallet, Banknote, CreditCard, Calculator, Briefcase, Scale, Gavel, Wifi, BadgeIndianRupee, TrendingUp, AlertCircle, Filter,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../../../store/store";
 import { fetchPermissions } from "../../../../store/permissionSlice";
 import { fetchRolePermissionsSidebar } from "../../../../store/sidebarPermissionSlice";
 import { exportUsers } from "../../../../store/userSlice";
 
 interface CollectionTableProps {
-  leads?: Collection[];
-  onAddLead?: () => void;
-  onEditLead?: (collection: Collection) => void;
-  onDeleteLead?: (collection: Collection) => void;
-  onBulkDelete?: (collectionIds: number[]) => void;
+  colletion?: Collection[];
+  onAddColletion?: () => void;
+  onEditColletion?: (collection: Collection) => void;
+  onDeleteColletion?: (collection: Collection) => void;
   onBulkAssign?: (collectionIds: number[]) => void;
   onLeadClick?: (collection: Collection) => void;
   onFollowUp?: (collection: Collection) => void;
@@ -155,7 +153,7 @@ const getStatusIcon = (status: string | null | undefined) => {
 };
 
 const CollectionTable: React.FC<CollectionTableProps> = ({
-  leads = [], onAddLead, onEditLead, onDeleteLead, onBulkDelete, onBulkAssign, onLeadClick, onFollowUp, loading = false, title = "Collection Panel", hasEditPermission = true, hasDeletePermission = true, hasBulkPermission = true, currentUser, onRefetch, disableInternalFetch = false,
+  colletion = [], onAddColletion, onEditColletion, onDeleteColletion, onBulkAssign, onLeadClick, onFollowUp, loading = false, title = "Collection Panel", hasEditPermission = true, hasDeletePermission = true, hasBulkPermission = true, currentUser, onRefetch, disableInternalFetch = false,
 }) => {
   const dispatch = useDispatch<any>();
   const [sortConfig, setSortConfig] = useState<{ key: keyof Collection; direction: "asc" | "desc"; } | null>(null);
@@ -181,23 +179,35 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
     }
   }, [dispatch, disableInternalFetch]);
 
-  // Logic: Employee badalne par Plot reset ho jaye
+
   useEffect(() => { setSelectedPlot("All"); }, [selectedUser]);
 
   const filterOptions = useMemo(() => ({
-    projects: ["All", ...Array.from(new Set(leads.map(l => l.projectName || l.projectTitle).filter(Boolean)))],
-    users: ["All", ...Array.from(new Set(leads.map(l => l.employeeName || l.createdBy).filter(Boolean)))],
-    registries: ["All", ...Array.from(new Set(leads.map(l => l.registryStatus).filter(Boolean)))],
-    emiPlans: ["All", ...Array.from(new Set(leads.map(l => l.emiPlan || l.emi).filter(Boolean)))]
-  }), [leads]);
+    projects: ["All", ...Array.from(new Set(colletion.map(l => l.projectName || l.projectTitle).filter(Boolean)))],
+    users: ["All", ...Array.from(new Set(colletion.map(l => l.employeeName || l.createdBy).filter(Boolean)))],
+    registries: ["All", ...Array.from(new Set(colletion.map(l => l.registryStatus).filter(Boolean)))],
+    emiPlans: ["All", ...Array.from(new Set(colletion.map(l => l.emiPlan || l.emi).filter(Boolean)))]
+  }), [colletion]);
 
-  // Dependent Logic: Employee select ho toh uske hi plots dikhe
+
   const availablePlots = useMemo(() => {
-    const data = selectedUser === "All" ? leads : leads.filter(l => (l.employeeName || l.createdBy) === selectedUser);
-    return ["All", ...Array.from(new Set(data.map(l => l.plotNumber).filter(Boolean)))];
-  }, [leads, selectedUser]);
+    if (selectedProject === "All") return ["All"];
 
-  const filteredCollections = useMemo(() => leads.filter((item) => {
+    let data = colletion.filter(
+      l => (l.projectName || l.projectTitle) === selectedProject
+    );
+
+    if (selectedUser !== "All") {
+      data = data.filter(
+        l => (l.employeeName || l.createdBy) === selectedUser
+      );
+    }
+
+    return ["All", ...Array.from(new Set(data.map(l => l.plotNumber).filter(Boolean)))];
+  }, [colletion, selectedProject, selectedUser]);
+
+
+  const filteredCollections = useMemo(() => colletion.filter((item) => {
     const lowSearch = searchTerm.toLowerCase().trim();
     const matchesSearch = !lowSearch || (item.clientName || "").toLowerCase().includes(lowSearch) || (item.employeeName || "").toLowerCase().includes(lowSearch) || (item.plotNumber || "").toLowerCase().includes(lowSearch) || (item.mobileNumber || "").toLowerCase().includes(lowSearch);
     const matchesProject = selectedProject === "All" || (item.projectName || item.projectTitle) === selectedProject;
@@ -206,7 +216,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
     const matchesRegistry = selectedRegistry === "All" || item.registryStatus === selectedRegistry;
     const matchesEmi = selectedEmiPlan === "All" || (item.emiPlan || item.emi) === selectedEmiPlan;
     return matchesSearch && matchesProject && matchesUser && matchesPlot && matchesRegistry && matchesEmi;
-  }), [leads, searchTerm, selectedProject, selectedUser, selectedPlot, selectedRegistry, selectedEmiPlan]);
+  }), [colletion, searchTerm, selectedProject, selectedUser, selectedPlot, selectedRegistry, selectedEmiPlan]);
 
   const sortedCollections = useMemo(() => {
     if (!sortConfig) return filteredCollections;
@@ -246,7 +256,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      {/* Header Info */}
+
       <div className="rounded-lg shadow-sm border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row justify-between items-center p-3 gap-3">
           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
@@ -256,7 +266,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
         </div>
       </div>
 
-      {/* Filter Box */}
+
       <div className="rounded-lg shadow-sm border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-3 space-y-3">
         <div className="flex flex-col md:flex-row gap-3 items-center">
           <div className="relative flex-1 w-full">
@@ -264,26 +274,24 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
             <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
           </div>
           <div className="flex gap-2">
-             <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="text-sm border rounded-lg p-1.5 bg-white dark:bg-gray-800"><option value={5}>5 entries</option><option value={25}>25 entries</option> <option value={50}>50 entries</option> <option value={100}>100 entries</option></select>
-           <div className="flex border rounded-lg overflow-hidden">
-  <button
-    onClick={() => setViewMode("card")}
-    className={`p-1.5 hover:bg-black hover:text-white ${
-      viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-black text-white'
-    }`}
-  >
-    <LayoutGrid size={16} />
-  </button>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="text-sm border rounded-lg p-1.5 bg-white dark:bg-gray-800"><option value={5}>5 entries</option><option value={25}>25 entries</option> <option value={50}>50 entries</option> <option value={100}>100 entries</option></select>
+            <div className="flex border rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode("card")}
+                className={`p-1.5 hover:bg-black hover:text-white ${viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-black text-white'
+                  }`}
+              >
+                <LayoutGrid size={16} />
+              </button>
 
-  <button
-    onClick={() => setViewMode("table")}
-    className={`p-1.5 hover:bg-black hover:text-white ${
-      viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-black text-white'
-    }`}
-  >
-    <Table2 size={16} />
-  </button>
-</div>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`p-1.5 hover:bg-black hover:text-white ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-black text-white'
+                  }`}
+              >
+                <Table2 size={16} />
+              </button>
+            </div>
 
           </div>
         </div>
@@ -296,7 +304,17 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
             <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full text-xs p-2 rounded-lg border bg-gray-50 dark:bg-gray-700">{filterOptions.users.map(o => <option key={o} value={o}>{o}</option>)}</select>
           </div>
           <div><label className="text-[10px] uppercase font-bold text-gray-500">Plot No.</label>
-            <select value={selectedPlot} onChange={(e) => setSelectedPlot(e.target.value)} className="w-full text-xs p-2 rounded-lg border bg-gray-50 dark:bg-gray-700">{availablePlots.map(o => <option key={o} value={o}>{o}</option>)}</select>
+            <select
+              value={selectedPlot}
+              onChange={(e) => setSelectedPlot(e.target.value)}
+              disabled={selectedProject === "All"}
+              className={`w-full text-xs p-2 rounded-lg border 
+    ${selectedProject === "All"
+                  ? "bg-gray-200 cursor-not-allowed opacity-60"
+                  : "bg-gray-50 dark:bg-gray-700"
+                }`}
+            >
+              {availablePlots.map(o => <option key={o} value={o}>{o}</option>)}</select>
           </div>
           <div><label className="text-[10px] uppercase font-bold text-gray-500">Registry</label>
             <select value={selectedRegistry} onChange={(e) => setSelectedRegistry(e.target.value)} className="w-full text-xs p-2 rounded-lg border bg-gray-50 dark:bg-gray-700">{filterOptions.registries.map(o => <option key={o} value={o}>{o}</option>)}</select>
@@ -307,9 +325,9 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
         </div>
       </div>
 
-      {/* Content Rendering */}
+
       {loading ? (
-        <div className="p-12 text-center bg-white rounded-lg border"><div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div></div>
+        <div className="p-12 text-center bg-transparent rounded-lg border"><div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div></div>
       ) : viewMode === "table" ? (
         <div className="rounded-lg shadow-sm border overflow-x-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
@@ -320,7 +338,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
               {paginatedCollections.map(item => (
                 <tr key={item.id}>
                   {getCollectionColumns().map(c => <td key={c.accessor} className="px-4 py-4">{(item as any)[c.accessor] || "N/A"}</td>)}
-                  <td className="px-4 py-4"><button onClick={() => onEditLead && onEditLead(item)} className="text-blue-500"><Edit size={16}/></button></td>
+                  <td className="px-4 py-4"><button onClick={() => onEditColletion && onEditColletion(item)} className="text-blue-500"><Edit size={16} /></button></td>
                 </tr>
               ))}
             </tbody>
@@ -338,11 +356,17 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">{collection.projectName || "N/A"}</span>
                         <span className="text-xs text-gray-600 dark:text-gray-400">Registry Status:</span>
-                        {!collection.registryStatus || collection.registryStatus === "N/A" ? (
+                        {!collection.registryStatus || collection.registryStatus === "Pending" || collection.registryStatus === "N/A" ? (
                           <span className="px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 border bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700">
                             <Clock className="w-3 h-3" /><span className="capitalize">Pending</span>
                           </span>
-                        ) : formatted.formattedRegistryStatus}
+                        ) :
+                          <span className="px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 border bg-red-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700">
+                            <Clock className="w-3 h-3" /><span className="capitalize">Done</span>
+                          </span>
+                          // formatted.formattedRegistryStatus
+
+                        }
                       </div>
                       <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-50 cursor-pointer" onClick={() => onLeadClick && onLeadClick(collection)}>{collection.clientName || "Unnamed Client"}</h3>
                     </div>
@@ -382,9 +406,9 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
                     <div><p className="text-xs text-gray-600 dark:text-gray-400 flex items-center mb-1"><Scale className="h-3 w-3 mr-1" /> Difference</p><p className={`text-xl font-bold ${parseFloat(String(collection.difference || 0)) < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>{formatted.formattedDifference}</p></div>
                   </div>
 
-                  {hoveredId === collection.id && onEditLead && (
+                  {hoveredId === collection.id && onEditColletion && (
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
-                        <button onClick={() => onEditLead(collection)} className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-all hover:scale-105 hover:shadow-lg active:scale-95"><Edit className="h-4 w-4" /> Edit</button>
+                      <button onClick={() => onEditColletion(collection)} className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-all hover:scale-105 hover:shadow-lg active:scale-95"><Edit className="h-4 w-4" /> Edit</button>
                     </div>
                   )}
                 </div>
