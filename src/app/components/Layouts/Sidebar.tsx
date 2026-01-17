@@ -1,9 +1,30 @@
-'use client';
+"use client";
 import Link from 'next/link';
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChevronDown, X, LifeBuoy } from 'lucide-react';
+import {
+    ChevronDown,
+    X,
+    LifeBuoy,
+    LayoutDashboard,
+    Users,
+    Shield,
+    FileKey,
+    UserCog,
+    GitBranch,
+    Activity,
+    Map,
+    Share2,
+    BarChart3,
+    UserCheck,
+    FolderKanban,
+    Target,
+    CalendarCheck,
+    Wallet,
+    Building2,
+    Sparkles
+} from 'lucide-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import 'react-perfect-scrollbar/dist/css/styles.css';
 import AnimateHeight from 'react-animate-height';
@@ -44,19 +65,47 @@ export const SidebarProvider = ({ children }: { children: React.ReactNode }) => 
     );
 };
 
+
+const iconMap: Record<string, React.ReactNode> = {
+    'Dashboard': <LayoutDashboard className="w-5 h-5" />,
+    'User Management': <Users className="w-5 h-5" />,
+    'Roles': <Shield className="w-5 h-5" />,
+    'Permissions': <FileKey className="w-5 h-5" />,
+    'Page Permissions': <FileKey className="w-5 h-5" />,
+    'User Permissions': <UserCog className="w-5 h-5" />,
+    'Lead Stage Master View': <GitBranch className="w-5 h-5" />,
+    'Status Master View': <Activity className="w-5 h-5" />,
+    'Land': <Map className="w-5 h-5" />,
+    'Lead Platform': <Share2 className="w-5 h-5" />,
+    'Google Analytics': <BarChart3 className="w-5 h-5" />,
+    'Assistant Director': <UserCheck className="w-5 h-5" />,
+    'Project Status': <FolderKanban className="w-5 h-5" />,
+    'Lead': <Target className="w-5 h-5" />,
+    'Booking': <CalendarCheck className="w-5 h-5" />,
+    'Collection': <Wallet className="w-5 h-5" />,
+    'Support': <LifeBuoy className="w-5 h-5" />,
+    'All Masters': <Sparkles className="w-5 h-5" />,
+};
+
+
 const Sidebar = () => {
     const pathname = usePathname();
     const dispatch = useDispatch<AppDispatch>();
     const { sidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
-    const [currentMenu, setCurrentMenu] = useState<string>('');
+    const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+
+    // Track if we already fetched permissions
+    const hasFetchedRef = useRef(false);
 
     const { permissions: rolePermissions, loading: rolePermissionsLoading } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
 
+    // Fetch only once on mount
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
-        if (token) {
+        if (token && !hasFetchedRef.current) {
+            hasFetchedRef.current = true;
             dispatch(fetchRolePermissionsSidebar());
         }
     }, [dispatch]);
@@ -66,61 +115,69 @@ const Sidebar = () => {
             pageName: 'Dashboard',
             title: 'Dashboard',
             href: '/',
-            type: 'single'
+            type: 'single',
+            icon: iconMap['Dashboard']
         },
         allMasters: {
             title: 'All Masters',
             type: 'dropdown',
             key: 'All Masters',
+            icon: iconMap['All Masters'],
             children: [
-                { pageName: 'User Management', title: 'User Management', href: '/users' },
-                { pageName: 'Roles', title: 'Roles', href: '/roles' },
-                { pageName: 'Permissions', title: 'Permissions', href: '/permissions' },
-                { pageName: 'Page Permissions', title: 'Page Permissions', href: '/pagepermissions' },
-                { pageName: 'User Permissions', title: 'User Permissions', href: '/rolebasedpermissions' },
-                { pageName: 'Lead Stage Master View', title: 'Lead Stage Master View', href: '/leadstagemasterpage' },
-                { pageName: 'Status Master View', title: 'Status Master View', href: '/statusmasterview' },
-                { pageName: 'Land', title: 'Land', href: '/land' },
-                { pageName: 'Lead Platform', title: 'Lead Platform', href: '/leadplatform' },
-                { pageName: 'Google Analytics', title: 'Google Analytics', href: '/googleanalytics' },
+                { pageName: 'User Management', title: 'User Management', href: '/users', icon: iconMap['User Management'] },
+                { pageName: 'Roles', title: 'Roles', href: '/roles', icon: iconMap['Roles'] },
+                { pageName: 'Permissions', title: 'Permissions', href: '/permissions', icon: iconMap['Permissions'] },
+                { pageName: 'Page Permissions', title: 'Page Permissions', href: '/pagepermissions', icon: iconMap['Page Permissions'] },
+                { pageName: 'User Permissions', title: 'User Permissions', href: '/rolebasedpermissions', icon: iconMap['User Permissions'] },
+                { pageName: 'Lead Stage Master View', title: 'Lead Stage Master', href: '/leadstagemasterpage', icon: iconMap['Lead Stage Master View'] },
+                { pageName: 'Status Master View', title: 'Status Master', href: '/statusmasterview', icon: iconMap['Status Master View'] },
+                { pageName: 'Land', title: 'Land', href: '/land', icon: iconMap['Land'] },
+                { pageName: 'Lead Platform', title: 'Lead Platform', href: '/leadplatform', icon: iconMap['Lead Platform'] },
+                { pageName: 'Google Analytics', title: 'Google Analytics', href: '/googleanalytics', icon: iconMap['Google Analytics'] },
             ]
         },
         assistantdirector: {
             pageName: 'Assistantdirector',
             title: 'Assistant Director',
             href: '/Assistantdirector',
-            type: 'single'
+            type: 'single',
+            icon: iconMap['Assistant Director']
         },
         projectstatus: {
             pageName: 'Project Status',
             title: 'Project Status',
             href: '/projectstatus',
-            type: 'single'
+            type: 'single',
+            icon: iconMap['Project Status']
         },
         lead: {
             pageName: 'Lead',
             title: 'Lead',
             href: '/lead',
-            type: 'single'
+            type: 'single',
+            icon: iconMap['Lead']
         },
         booking: {
             pageName: 'Booking',
             title: 'Booking',
             href: '/booking',
-            type: 'single'
+            type: 'single',
+            icon: iconMap['Booking']
         },
         collection: {
             pageName: 'Collection',
             title: 'Collection',
             href: '/collection',
-            type: 'single'
+            type: 'single',
+            icon: iconMap['Collection']
         },
         support: {
             pageName: 'Support',
             title: 'Support',
             href: '/support',
             type: 'single',
-            alwaysShow: true
+            alwaysShow: true,
+            icon: iconMap['Support']
         },
     };
 
@@ -128,15 +185,12 @@ const Sidebar = () => {
 
     const getFilteredMenu = () => {
         if (!rolePermissions?.permissions) return {};
-
         const filtered: any = {};
-
         Object.entries(menuStructure).forEach(([key, item]: any) => {
             if (item.alwaysShow) {
                 filtered[key] = item;
                 return;
             }
-
             if (item.type === 'single') {
                 const permission = rolePermissions.permissions.find(
                     (perm: any) => perm.pageName === item.pageName
@@ -145,7 +199,6 @@ const Sidebar = () => {
                     filtered[key] = item;
                 }
             }
-
             if (item.type === 'dropdown') {
                 const children = item.children.filter((child: any) => {
                     const permission = rolePermissions.permissions.find(
@@ -153,20 +206,46 @@ const Sidebar = () => {
                     );
                     return permission && isViewPermissionValid(permission.permissionIds);
                 });
-
                 if (children.length > 0) {
                     filtered[key] = { ...item, children };
                 }
             }
         });
-
         return filtered;
     };
 
     const filteredMenuItems = getFilteredMenu();
 
+    const handleMenuToggle = useCallback((menuKey: string) => {
+        setOpenMenus(prev => ({
+            ...prev,
+            [menuKey]: !prev[menuKey]
+        }));
+    }, []);
+
+    const isActiveLink = useCallback((href: string) => pathname === href, [pathname]);
+
+    const hasActiveChild = useCallback((children?: any[]) => {
+        return children?.some(child => child.href && isActiveLink(child.href));
+    }, [isActiveLink]);
+
+    // Auto-open All Masters dropdown if child is active
     useEffect(() => {
-        if (window.innerWidth < 1024) setSidebarOpen(false);
+        const allMastersChildren = menuStructure.allMasters.children;
+        const isInAllMasters = allMastersChildren.some(child => pathname === child.href);
+        if (isInAllMasters && !openMenus['All Masters']) {
+            setOpenMenus(prev => ({ ...prev, 'All Masters': true }));
+        }
+    }, [pathname]);
+
+    // Close sidebar on mobile navigation - with delay
+    useEffect(() => {
+        if (window.innerWidth < 1024) {
+            const timer = setTimeout(() => {
+                setSidebarOpen(false);
+            }, 100);
+            return () => clearTimeout(timer);
+        }
     }, [pathname, setSidebarOpen]);
 
     useEffect(() => {
@@ -186,12 +265,26 @@ const Sidebar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [sidebarOpen, setSidebarOpen]);
 
-    if (rolePermissionsLoading) {
+    // FIX: Only show loading on FIRST load, not on every navigation
+    const isInitialLoading = rolePermissionsLoading && !rolePermissions?.permissions;
+
+    if (isInitialLoading) {
         return (
-            <nav className="sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-gray-900 transition-transform duration-300 ease-in-out lg:translate-x-0">
-                <div className="p-4 space-y-3 animate-pulse">
-                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <nav className="sidebar fixed top-0 bottom-0 z-50 h-full w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 lg:translate-x-0">
+                <div className="p-5 space-y-4">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 animate-pulse" />
+                        <div className="space-y-2">
+                            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                            <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                        </div>
+                    </div>
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-3 px-3 py-2">
+                            <div className="w-5 h-5 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                            <div className="h-4 flex-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                        </div>
+                    ))}
                 </div>
             </nav>
         );
@@ -199,15 +292,132 @@ const Sidebar = () => {
 
     const renderMenuItem = (key: string, item: any) => {
         if (!item) return null;
+        const isActive = isActiveLink(item.href);
 
         return (
-            <li key={key} className="menu nav-item">
+            <li key={key}>
                 <Link
                     href={item.href}
-                    className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${pathname === item.href ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
+                    className={`
+                        group relative flex items-center gap-3 rounded-xl px-3 py-2.5
+                        transition-all duration-300 ease-in-out
+                        hover:pl-5 
+                        ${isActive
+                            ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30 pl-5'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/80 hover:text-gray-900 dark:hover:text-white'
+                        }
+                    `}
                 >
-                    <span>{item.title}</span>
+                    <span className={`
+                        relative flex-shrink-0 transition-all duration-300
+                        ${isActive
+                            ? 'text-white scale-110'
+                            : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:scale-110'
+                        }
+                    `}>
+                        {item.icon}
+                    </span>
+
+                    <span className="relative font-medium text-sm tracking-wide transition-transform duration-300">
+                        {item.title}
+                    </span>
+
+                    {isActive && (
+                        <span className="absolute right-3 w-2 h-2 rounded-full bg-white/80 animate-pulse" />
+                    )}
                 </Link>
+            </li>
+        );
+    };
+
+    const renderDropdownMenu = (key: string, item: any) => {
+        if (!item) return null;
+        const isOpen = openMenus[item.key];
+        const hasActive = hasActiveChild(item.children);
+
+        return (
+            <li key={key}>
+                <button
+                    type="button"
+                    onClick={() => handleMenuToggle(item.key)}
+                    className={`
+                        group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5
+                        transition-all duration-300 ease-in-out
+                        hover:pl-5
+                        ${hasActive
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 pl-5'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/80 hover:text-gray-900 dark:hover:text-white'
+                        }
+                    `}
+                >
+                    <div className="flex items-center gap-3">
+                        <span className={`
+                            flex-shrink-0 transition-all duration-300
+                            ${hasActive
+                                ? 'text-blue-500 dark:text-blue-400 scale-110'
+                                : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:scale-110'
+                            }
+                        `}>
+                            {item.icon}
+                        </span>
+                        <span className="font-medium text-sm tracking-wide">{item.title}</span>
+                    </div>
+
+                    <div className={`
+                        flex items-center justify-center w-6 h-6 rounded-lg
+                        transition-all duration-300
+                        ${isOpen ? 'bg-gray-200 dark:bg-gray-700' : 'bg-transparent'}
+                    `}>
+                        <ChevronDown className={`
+                            w-4 h-4 transition-transform duration-300 ease-out
+                            ${hasActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}
+                            ${isOpen ? 'rotate-180' : 'rotate-0'}
+                        `} />
+                    </div>
+                </button>
+
+                <AnimateHeight duration={300} height={isOpen ? 'auto' : 0} easing="ease-out">
+                    <ul className="mt-2 ml-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-1">
+                        {item.children.map((child: any, index: number) => {
+                            const isChildActive = child.href && isActiveLink(child.href);
+                            return (
+                                <li
+                                    key={index}
+                                    className="transform transition-all duration-300"
+                                    style={{
+                                        transitionDelay: isOpen ? `${index * 50}ms` : '0ms',
+                                        opacity: isOpen ? 1 : 0,
+                                        transform: isOpen ? 'translateX(0)' : 'translateX(-10px)'
+                                    }}
+                                >
+                                    <Link
+                                        href={child.href}
+                                        className={`
+                                            group flex items-center gap-3 px-3 py-2 rounded-lg text-sm
+                                            transition-all duration-300 ease-in-out
+                                            hover:pl-5
+                                            ${isChildActive
+                                                ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:to-indigo-500/20 text-blue-600 dark:text-blue-400 font-medium border-l-2 border-blue-500 -ml-[2px] pl-5'
+                                                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-white'
+                                            }
+                                        `}
+                                    >
+                                        <span className={`
+                                            flex-shrink-0 w-4 h-4 transition-all duration-200
+                                            ${isChildActive
+                                                ? 'text-blue-500 dark:text-blue-400'
+                                                : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+                                            }
+                                        `}>
+                                            {child.icon}
+                                        </span>
+                                        <span>{child.title}</span>
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </AnimateHeight>
             </li>
         );
     };
@@ -215,102 +425,97 @@ const Sidebar = () => {
     return (
         <>
             {sidebarOpen && (
-                <div onClick={toggleSidebar} className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" />
+                <div
+                    onClick={toggleSidebar}
+                    className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300"
+                    aria-hidden="true"
+                />
             )}
+
             <nav
-                className={`sidebar fixed top-0 bottom-0 z-50 h-full w-[260px] bg-white dark:bg-gray-900 shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] dark:shadow-[5px_0_25px_0_rgba(0,0,0,0.3)] transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+                className={`
+                    sidebar fixed top-0 left-0 z-50 h-screen w-[280px]
+                    bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl
+                    border-r border-gray-200/80 dark:border-gray-800/80
+                    shadow-2xl shadow-gray-900/5 dark:shadow-black/20
+                    transition-all duration-300 ease-out
+                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                    lg:translate-x-0
+                `}
             >
                 <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-                        <Link href="/" className="main-logo flex items-center gap-2">
-                            <span className="text-2xl font-semibold text-gray-900 dark:text-white">RSC Group</span>
+                    <div className="flex items-center justify-between h-[72px] px-5 border-b border-gray-200/80 dark:border-gray-800/80">
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <div className="relative">
+                                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 group-hover:scale-105 transition-all duration-300">
+                                    <Building2 className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-500 animate-ping opacity-20" />
+                            </div>
+                            <div className="relative">
+                                {/* <span
+                                    className="text-xl font-extrabold block leading-tight
+        bg-[length:300%_300%]
+        bg-gradient-to-r from-indigo-500 via-pink-500 to-orange-500
+        dark:from-cyan-400 dark:via-purple-400 dark:to-pink-400
+        bg-clip-text text-transparent animate-gradient
+        drop-shadow-[0_0_12px_rgba(236,72,153,0.35)]"
+                                >
+                                    RSC Group
+                                </span> */}
+
+
+                                <span
+                                    className="
+    text-2xl md:text-3xl font-extrabold block leading-tight
+    bg-[length:400%_400%]
+    bg-gradient-to-r 
+    from-indigo-500 via-fuchsia-500 via-pink-500 to-orange-400
+    dark:from-cyan-400 dark:via-purple-400 dark:to-pink-400
+    bg-clip-text text-transparent
+    animate-gradient-slow
+    drop-shadow-[0_0_18px_rgba(236,72,153,0.45)]
+    tracking-wide
+  "
+                                >
+                                    RSC Group
+                                </span>
+
+                            </div>
+
                         </Link>
                         <button
+                            type="button"
                             onClick={toggleSidebar}
-                            className="lg:hidden h-8 w-8 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            className="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 hover:scale-105 active:scale-95"
+                            aria-label="Close sidebar"
                         >
-                            <X className="w-5 h-5 text-gray-900 dark:text-white" />
+                            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                         </button>
                     </div>
 
                     <div className="flex-1 overflow-hidden">
                         <PerfectScrollbar
-                            className="h-full"
-                            options={{
-                                wheelSpeed: 2,
-                                wheelPropagation: false,
-                                suppressScrollX: true,
-                            }}
+                            className="h-full px-4 py-6"
+                            options={{ wheelSpeed: 1, wheelPropagation: false, suppressScrollX: true }}
                         >
-                            <ul className="space-y-0.5 p-4 font-semibold">
-                                {/* Sales Dashboard */}
+                            <ul className="space-y-1.5">
                                 {filteredMenuItems.dashboard && renderMenuItem('dashboard', filteredMenuItems.dashboard)}
-
-                                {/* Assistant Director */}
-
-
-                                {/* All Masters Dropdown */}
-                                {filteredMenuItems.allMasters && (
-                                    <li className="menu nav-item">
-                                        <button
-                                            onClick={() =>
-                                                setCurrentMenu(
-                                                    currentMenu === filteredMenuItems.allMasters.key ? '' : filteredMenuItems.allMasters.key
-                                                )
-                                            }
-                                            className={`nav-link group flex w-full items-center justify-between rounded px-3 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-gray-100 ${currentMenu === filteredMenuItems.allMasters.key ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
-                                        >
-                                            <span>{filteredMenuItems.allMasters.title}</span>
-                                            <ChevronDown
-                                                className={`w-5 h-5 transition-transform text-gray-900 dark:text-gray-100 ${currentMenu === filteredMenuItems.allMasters.key ? 'rotate-0' : '-rotate-90'}`}
-                                            />
-                                        </button>
-                                        <AnimateHeight duration={300} height={currentMenu === filteredMenuItems.allMasters.key ? 'auto' : 0}>
-                                            <ul className="sub-menu pl-6 py-2 space-y-1 text-sm">
-                                                {filteredMenuItems.allMasters.children.map((child: any, index: number) => (
-                                                    <li key={index}>
-                                                        <Link
-                                                            href={child.href}
-                                                            className={`block px-3 py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white ${pathname === child.href ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : ''}`}
-                                                        >
-                                                            {child.title}
-                                                        </Link>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </AnimateHeight>
-                                    </li>
-                                )}
-
+                                {filteredMenuItems.allMasters && renderDropdownMenu('allMasters', filteredMenuItems.allMasters)}
                                 {filteredMenuItems.assistantdirector && renderMenuItem('assistantdirector', filteredMenuItems.assistantdirector)}
-
-                                {/* Project Status */}
                                 {filteredMenuItems.projectstatus && renderMenuItem('projectstatus', filteredMenuItems.projectstatus)}
-
-                                {/* Lead */}
                                 {filteredMenuItems.lead && renderMenuItem('lead', filteredMenuItems.lead)}
-
-                                {/* Booking */}
                                 {filteredMenuItems.booking && renderMenuItem('booking', filteredMenuItems.booking)}
-
-                                {/* Collection */}
                                 {filteredMenuItems.collection && renderMenuItem('collection', filteredMenuItems.collection)}
-
-                                {/* Support - Always visible with special styling */}
                                 {filteredMenuItems.support && (
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
                                         <Link
                                             href={filteredMenuItems.support.href}
-                                            className={`nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-all duration-200 hover:scale-[1.02] bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/60 dark:to-blue-900/40 border border-blue-200 dark:border-blue-700 shadow-sm hover:shadow-md ${pathname === '/support' ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-100' : 'text-blue-700 dark:text-blue-200 hover:text-blue-800 dark:hover:text-blue-100'}`}
+                                            className={`nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-all duration-300 ease-in-out hover:pl-5 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/60 dark:to-blue-900/40 border border-blue-200 dark:border-blue-700 shadow-sm hover:shadow-md ${pathname === '/support' ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-100 pl-5' : 'text-blue-700 dark:text-blue-200 hover:text-blue-800 dark:hover:text-blue-100'}`}
                                         >
                                             <LifeBuoy className="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                                            <span className="font-semibold tracking-wide uppercase text-sm">
-                                                {filteredMenuItems.support.title}
-                                            </span>
-
-                                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-200/60 dark:bg-blue-500/30 text-blue-700 dark:text-blue-100 font-medium">
-                                                Help
-                                            </span>
+                                            <span className="font-semibold tracking-wide uppercase text-sm">{filteredMenuItems.support.title}</span>
+                                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-200/60 dark:bg-blue-500/30 text-blue-700 dark:text-blue-100 font-medium">Help</span>
                                         </Link>
                                     </li>
                                 )}
@@ -324,4 +529,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-

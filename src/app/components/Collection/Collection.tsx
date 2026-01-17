@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Upload, Loader2 } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPermissions } from '../../../../store/permissionSlice';
@@ -13,7 +13,6 @@ import CollectionTable from '../Common/CollectionTable';
 import UploadCollection from '../../components/Common/UploadCollection';
 import CollectionModal from './CollectionModal';
 
-// Collection API response type - matching actual API response
 interface CollectionData {
     id: number;
     projectName: string;
@@ -49,20 +48,17 @@ interface CollectionApiResponse {
     data: CollectionData[];
 }
 
-// Project type
 interface Project {
     id: number | string;
     title: string;
     name?: string;
 }
 
-// Permission interface from API
 interface Permission {
     id: number;
     permissionName: string;
 }
 
-// Helper function to get token - FIXED VERSION
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
 
@@ -93,7 +89,6 @@ const getAuthToken = (): string | null => {
     return null;
 };
 
-// Helper function to get headers with proper token handling
 const getAuthHeaders = (): HeadersInit => {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
     const token = getAuthToken();
@@ -142,7 +137,6 @@ const CollectionComponent: React.FC = () => {
     const [total, setTotal] = useState(0);
     const [projectList, setProjectList] = useState<Project[]>([]);
 
-    // Redux state for permissions
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
@@ -155,9 +149,6 @@ const CollectionComponent: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [currentCollection, setCurrentCollection] = useState<any>(null);
 
-    // ... (Keep all existing useEffects and Permission Logic)
-
-
     const handleSave = async (formData: any) => {
         setIsLoading(true);
         try {
@@ -165,7 +156,6 @@ const CollectionComponent: React.FC = () => {
 
             if (!id) return;
 
-            // Backend ko correct URL aur data bhejna
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/updateCollection/${id}`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
@@ -201,21 +191,12 @@ const CollectionComponent: React.FC = () => {
     const [toDate, setToDate] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
-    // const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    // const [currentCollection, setCurrentCollection] = useState(null);
-    const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
-    const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
-    const [currentTimelineCollection, setCurrentTimelineCollection] = useState<any>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [selectedCollectionId, setSelectedCollectionId] = useState<any>(null);
     const [deleteMode, setDeleteMode] = useState<'single' | 'bulk'>('single');
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
-    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-    // Filter states
     const [selectedProject, setSelectedProject] = useState("");
     const [selectedAssignedTo, setSelectedAssignedTo] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("");
@@ -232,18 +213,10 @@ const CollectionComponent: React.FC = () => {
     }, [searchParams]);
 
     useEffect(() => {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(prefersDark ? 'dark' : 'light');
-    }, []);
-
-    // Fetch permissions on mount
-    useEffect(() => {
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }) as any);
         dispatch(fetchRolePermissionsSidebar() as any);
         dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }) as any);
     }, [dispatch]);
-
-    // ============= PERMISSION LOGIC - API BASED =============
 
     const getAllPermissionsList = useCallback((): Permission[] => {
         const permissionsList =
@@ -290,8 +263,6 @@ const CollectionComponent: React.FC = () => {
         return apiPermName === requestedPermName;
     }, [getCollectionPermissionIds, getAllPermissionsList]);
 
-    // ============= END PERMISSION LOGIC =============
-
     const getStatusFromTab = (tabId: string) => {
         const tabToStatus: Record<string, string> = {
             'list': '',
@@ -303,7 +274,6 @@ const CollectionComponent: React.FC = () => {
         return tabToStatus[tabId] || '';
     };
 
-    // Fetch Projects
     const fetchProjectsData = useCallback(async () => {
         try {
             const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/projects/getAllProjects?page=1&limit=100`;
@@ -329,7 +299,6 @@ const CollectionComponent: React.FC = () => {
         }
     }, []);
 
-    // Fetch Collections - GET http://localhost:8000/collection/getAllCollections
     const fetchCollectionsData = useCallback(async (overrideTab?: string) => {
         setLoading(true);
 
@@ -386,7 +355,6 @@ const CollectionComponent: React.FC = () => {
             if (result.success) {
                 setCollectionList(result.data || []);
                 setTotal(result.count || result.data?.length || 0);
-                // Calculate total pages based on count and pageSize
                 setTotalPages(Math.ceil((result.count || result.data?.length || 0) / pageSize));
             } else {
                 setCollectionList([]);
@@ -419,75 +387,22 @@ const CollectionComponent: React.FC = () => {
         fetchCollectionsData();
     }, [fetchCollectionsData, lastFetchParams]);
 
-    const handleActivityChange = (activityStatus: string) => {
-        setSelectedActivity(activityStatus);
-        setCurrentPage(1);
-    };
-
-    const handleTabChange = (tab: string) => {
-        setActiveTab(tab);
-        setCurrentPage(1);
-        const url = new URL(window.location.href);
-        url.searchParams.set('tab', tab);
-        window.history.replaceState({}, '', url.toString());
-    };
-
-    const handleSearch = (term: string) => {
-        setSearchTerm(term);
-        setCurrentPage(1);
-    };
-
-    const handleDateChange = (newFromDate: string, newToDate: string) => {
-        setFromDate(newFromDate);
-        setToDate(newToDate);
-        setCurrentPage(1);
-    };
-
-    const handleProjectChange = (projectId: string) => {
-        setSelectedProject(projectId);
-        setCurrentPage(1);
-    };
-
-    const handleAssignedToChange = (assignedTo: string) => {
-        setSelectedAssignedTo(assignedTo);
-        setCurrentPage(1);
-    };
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(1);
-    };
-
-    // Transform collection data for CollectionTable - mapping API response fields
     const transformCollectionsForTable = useMemo((): any[] => {
         return (collectionList || []).map((collection: CollectionData) => {
             return {
-                // ID fields
                 id: collection.id,
-
-                // Project & Plot info
                 projectName: collection.projectName || 'N/A',
                 projectTitle: collection.projectName || 'N/A',
                 plotNumber: collection.plotNumber || 'N/A',
                 plotSize: collection.plotSize || 'N/A',
-
-                // People info
                 employeeName: collection.employeeName || 'N/A',
                 clientName: collection.clientName || 'N/A',
                 name: collection.clientName || 'N/A',
                 createdBy: collection.employeeName || 'N/A',
-
-                // Contact info
                 mobileNumber: collection.mobileNumber || 'N/A',
                 phone: collection.mobileNumber || 'N/A',
                 emailId: collection.emailId || 'N/A',
                 email: collection.emailId || 'N/A',
-
-                // Financial info
                 price: collection.price || '0',
                 plotValue: collection.plotValue || '0',
                 emi: collection.emiPlan || '0',
@@ -503,23 +418,14 @@ const CollectionComponent: React.FC = () => {
                 totalAmount: collection.totalAmount || '0',
                 difference: collection.difference || '0',
                 incentive: collection.incentive || '0',
-
-                // Status
                 registryStatus: collection.registryStatus || 'N/A',
                 status: collection.registryStatus || 'N/A',
-
-                // Dates
                 createdAt: collection.createdAt || null,
                 updatedAt: collection.updatedAt || null,
                 createdDate: formatDate(collection.createdAt),
             };
         });
     }, [collectionList]);
-
-    const handleAdd = () => {
-        setCurrentCollection(null);
-        setIsModalOpen(true);
-    };
 
     const handleEdit = (collection: any) => {
         setCurrentCollection(collection);
@@ -532,7 +438,6 @@ const CollectionComponent: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    // Delete Collection - DELETE http://localhost:8000/collection/deleteCollection/:id
     const confirmDelete = async () => {
         try {
             if (deleteMode === 'single') {
@@ -585,29 +490,9 @@ const CollectionComponent: React.FC = () => {
         handleRefetch(true);
     };
 
-    const handleBulkDelete = (ids: number[]) => {
-        if (!ids || ids.length === 0) {
-            toast.error('No collections selected for deletion');
-            return;
-        }
-        setDeleteMode('bulk');
-        setDeleteTarget(ids);
-        setIsDeleteModalOpen(true);
-    };
-
     const handleCollectionClick = (collection: any) => {
         setCurrentCollection(collection);
-        setCurrentTimelineCollection(collection);
-        setIsTimelineModalOpen(true);
     };
-
-    const handleAssignCollections = (collectionIds: number[]) => {
-        setSelectedIds(collectionIds);
-        setIsAssignModalOpen(true);
-    };
-
-    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
     return (
         <div className="p-1 md:p-2 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -621,7 +506,6 @@ const CollectionComponent: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {/* Upload Button - API: id=26, name='upload' */}
                     {hasPermission(26, 'upload') && (
                         <button
                             onClick={handleOpenUpload}
@@ -631,21 +515,8 @@ const CollectionComponent: React.FC = () => {
                             <span>Upload</span>
                         </button>
                     )}
-
-                    {/* Add Button - API: id=21, name='add' */}
-                    {hasPermission(21, 'add') && (
-                        <button
-                            onClick={handleAdd}
-                            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
-                        >
-                            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            <span>Add New Collection</span>
-                        </button>
-                    )}
                 </div>
             </div>
-
-
 
             <CollectionTable
                 colletion={transformCollectionsForTable}
@@ -656,7 +527,6 @@ const CollectionComponent: React.FC = () => {
                 hasEditPermission={hasPermission(22, 'edit')}
                 disableInternalFetch={true}
             />
-
 
             <CollectionModal
                 isOpen={isModalOpen}
