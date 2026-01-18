@@ -88,7 +88,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
         "Email Id", "Plot Number", "EMI Plan", "Plot Size", "Price",
         "Registry Status", "Plot Value", "Payment Received", "Pending Amount",
         "Commission", "Maintenance", "Stamp Duty", "Legal Fees",
-        "Online Amount", "Cash Amount", "Total Amount", "Incentive"
+        "Online Amount", "Cash Amount", "Total Amount", "Incentive", "CP Name"
     ];
 
     const validateHeaders = (headers: string[]): boolean => {
@@ -297,14 +297,14 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             toast.error('Please fix header errors before uploading');
             return;
         }
-   
+
         setIsLoading(true);
 
         try {
             const token = getAuthToken();
             const formData = new FormData();
             formData.append('file', selectedFile);
-    
+
             // const response = await fetch(`${BASE_URL}/collection/uploadCollections`, { 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/uploadCollections`, {
                 method: 'POST',
@@ -352,7 +352,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             "Email Id", "Plot Number", "EMI Plan", "Plot Size", "Price",
             "Registry Status", "Plot Value", "Payment Received", "Pending Amount",
             "Commission", "Maintenance", "Stamp Duty", "Legal Fees",
-            "Online Amount", "Cash Amount", "Total Amount", "Incentive"
+            "Online Amount", "Cash Amount", "Total Amount", "Incentive", "CP Name"
         ];
 
         const rows = [
@@ -360,13 +360,13 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
                 "RSC DHOLERA CITY", "Amit Sharma", "John Doe", "9876543210",
                 "john@example.com", "A-101", "5000", "1500 Sq.Ft", "1500000",
                 "Pending", "1500000", "500000", "1000000", "15000",
-                "2000", "90000", "5000", "300000", "200000", "500000", "2000"
+                "2000", "90000", "5000", "300000", "200000", "500000", "2000", "CP Alpha"
             ],
             [
                 "RSC GREEN VALLEY", "Sneha Patel", "Jane Smith", "9876543211",
                 "jane@example.com", "B-205", "0", "1200 Sq.Ft", "1200000",
                 "Completed", "1200000", "1200000", "0", "12000",
-                "1500", "72000", "5000", "1000000", "200000", "1200000", "5000"
+                "1500", "72000", "5000", "1000000", "200000", "1200000", "5000", "CP Beta"
             ]
         ];
 
@@ -868,7 +868,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                         <AlertCircle className="w-4 h-4" />
-                        Headers must come only from: Project Name, Employee Name, Client Name, Mobile Number, Email Id, Plot Number, EMI Plan, Plot Size, Price, Registry Status, Plot Value, Payment Received, Pending Amount, Commission, Maintenance, Stamp Duty, Legal Fees, Online Amount, Cash Amount, Total Amount, Incentive
+                        Headers must come only from: Project Name, Employee Name, Client Name, Mobile Number, Email Id, Plot Number, EMI Plan, Plot Size, Price, Registry Status, Plot Value, Payment Received, Pending Amount, Commission, Maintenance, Stamp Duty, Legal Fees, Online Amount, Cash Amount, Total Amount, Incentive, CP Name
                         <span></span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">

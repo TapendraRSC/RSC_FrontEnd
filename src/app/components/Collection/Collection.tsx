@@ -39,6 +39,7 @@ interface CollectionData {
     incentive: string;
     createdAt: string;
     updatedAt: string;
+    CPName: string;
 }
 
 interface CollectionApiResponse {
@@ -423,6 +424,7 @@ const CollectionComponent: React.FC = () => {
                 createdAt: collection.createdAt || null,
                 updatedAt: collection.updatedAt || null,
                 createdDate: formatDate(collection.createdAt),
+                CPName: collection.CPName || null,
             };
         });
     }, [collectionList]);
