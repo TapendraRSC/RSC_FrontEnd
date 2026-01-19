@@ -714,7 +714,8 @@ const CalculationModal: React.FC<{
   data: CalculationData;
   selectedProject: string;
   selectedUser: string;
-}> = ({ isOpen, onClose, data, selectedProject, selectedUser }) => {
+  selectedCPName: string;
+}> = ({ isOpen, onClose, data, selectedProject, selectedUser, selectedCPName }) => {
   if (!isOpen) return null;
 
   const calculationItems = [
@@ -754,7 +755,12 @@ const CalculationModal: React.FC<{
                     Employee: {selectedUser}
                   </span>
                 )}
-                {selectedProject === "All" && selectedUser === "All" && (
+                {selectedCPName !== "All" && (
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs sm:text-sm text-white font-medium">
+                    CP Name: {selectedCPName}
+                  </span>
+                )}
+                {selectedProject === "All" && selectedUser === "All" && selectedCPName === "All" && (
                   <span className="px-3 py-1 bg-white/20 rounded-full text-xs sm:text-sm text-white font-medium">
                     All Records
                   </span>
@@ -839,10 +845,39 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
 
   useEffect(() => { setSelectedPlot("All"); }, [selectedUser]);
 
+  // Reset CP Name when employee changes
+  useEffect(() => { setSelectedCPName("All"); }, [selectedUser]);
+
   // Check if any collection has valid CPName data
   const anyCPNameExists = useMemo(() => {
     return colletion.some(l => isValidCPName(l.CPName));
   }, [colletion]);
+
+  // Get CP Names for selected employee only
+  // availableCPNames useMemo को इस तरह update करें:
+
+  const availableCPNames = useMemo(() => {
+    if (selectedUser === "All") return ["All"];
+
+    // Filter collections by selected employee
+    const employeeCollections = colletion.filter(l => (l.employeeName || l.createdBy) === selectedUser);
+
+    // Get unique valid CP names for this employee - explicitly filter and cast to string[]
+    const cpNames = employeeCollections
+      .map(l => l.CPName)
+      .filter((cp): cp is string => isValidCPName(cp));
+
+    const uniqueCPNames = Array.from(new Set(cpNames));
+
+    if (uniqueCPNames.length === 0) return ["All"];
+
+    return ["All", ...uniqueCPNames];
+  }, [colletion, selectedUser]);
+
+  // Check if CP field should be enabled (employee selected AND has CP data)
+  const isCPFieldEnabled = useMemo(() => {
+    return selectedUser !== "All" && availableCPNames.length > 1;
+  }, [selectedUser, availableCPNames]);
 
   const filterOptions = useMemo(() => {
     const options: any = {
@@ -852,18 +887,34 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
       emiPlans: ["All", ...Array.from(new Set(colletion.map(l => l.emiPlan || l.emi).filter(Boolean)))],
     };
 
-    // Only add cpNames filter if any valid CPName data exists (excludes null, undefined, empty, N/A)
-    if (anyCPNameExists) {
-      options.cpNames = ["All", ...Array.from(new Set(colletion.map(l => l.CPName).filter(cp => isValidCPName(cp))))];
+    return options;
+  }, [colletion]);
+
+  // const availablePlots = useMemo(() => {
+  //   if (selectedProject === "All") return ["All"];
+  //   let data = colletion.filter(l => (l.projectName || l.projectTitle) === selectedProject);
+  //   if (selectedUser !== "All") { data = data.filter(l => (l.employeeName || l.createdBy) === selectedUser); }
+  //   return ["All", ...Array.from(new Set(data.map(l => l.plotNumber).filter(Boolean)))];
+  // }, [colletion, selectedProject, selectedUser]);
+
+
+  // availablePlots useMemo ko update karo - line ~280 ke aas paas
+  const availablePlots = useMemo(() => {
+    // Agar dono "All" hain to disable rakho
+    if (selectedProject === "All" && selectedUser === "All") return ["All"];
+
+    let data = colletion;
+
+    // Project filter
+    if (selectedProject !== "All") {
+      data = data.filter(l => (l.projectName || l.projectTitle) === selectedProject);
     }
 
-    return options;
-  }, [colletion, anyCPNameExists]);
+    // Employee filter
+    if (selectedUser !== "All") {
+      data = data.filter(l => (l.employeeName || l.createdBy) === selectedUser);
+    }
 
-  const availablePlots = useMemo(() => {
-    if (selectedProject === "All") return ["All"];
-    let data = colletion.filter(l => (l.projectName || l.projectTitle) === selectedProject);
-    if (selectedUser !== "All") { data = data.filter(l => (l.employeeName || l.createdBy) === selectedUser); }
     return ["All", ...Array.from(new Set(data.map(l => l.plotNumber).filter(Boolean)))];
   }, [colletion, selectedProject, selectedUser]);
 
@@ -904,8 +955,22 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
 
   const handleCalculate = () => {
     let dataToCalculate = colletion;
-    if (selectedProject !== "All") { dataToCalculate = dataToCalculate.filter(item => (item.projectName || item.projectTitle) === selectedProject); }
-    if (selectedUser !== "All") { dataToCalculate = dataToCalculate.filter(item => (item.employeeName || item.createdBy) === selectedUser); }
+
+    // Filter by Project
+    if (selectedProject !== "All") {
+      dataToCalculate = dataToCalculate.filter(item => (item.projectName || item.projectTitle) === selectedProject);
+    }
+
+    // Filter by Employee
+    if (selectedUser !== "All") {
+      dataToCalculate = dataToCalculate.filter(item => (item.employeeName || item.createdBy) === selectedUser);
+    }
+
+    // Filter by CP Name - NEW ADDITION
+    if (selectedCPName !== "All") {
+      dataToCalculate = dataToCalculate.filter(item => item.CPName === selectedCPName);
+    }
+
     const calculations: CalculationData = {
       totalPlotValue: dataToCalculate.reduce((sum, item) => sum + parseAmount(item.plotValue), 0),
       totalPaymentReceived: dataToCalculate.reduce((sum, item) => sum + parseAmount(item.paymentReceived), 0),
@@ -982,8 +1047,29 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
           <div><label className="text-[10px] uppercase font-bold text-gray-500">Employee</label>
             <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full text-xs p-2 rounded-lg border bg-gray-50 dark:bg-gray-700">{filterOptions.users.map((o: string) => <option key={o} value={o}>{o}</option>)}</select>
           </div>
-          <div><label className="text-[10px] uppercase font-bold text-gray-500">Plot No.</label>
+          {/* <div><label className="text-[10px] uppercase font-bold text-gray-500">Plot No.</label>
             <select value={selectedPlot} onChange={(e) => setSelectedPlot(e.target.value)} disabled={selectedProject === "All"} className={`w-full text-xs p-2 rounded-lg border ${selectedProject === "All" ? "bg-gray-200 cursor-not-allowed opacity-60" : "bg-gray-50 dark:bg-gray-700"}`}>{availablePlots.map(o => <option key={o} value={o}>{o}</option>)}</select>
+          </div> */}
+          <div>
+            <label className="text-[10px] uppercase font-bold text-gray-500">
+              Plot No.
+            </label>
+            <select
+              value={selectedPlot}
+              onChange={(e) => setSelectedPlot(e.target.value)}
+              disabled={selectedProject === "All" && selectedUser === "All"}
+              className={`w-full text-xs p-2 rounded-lg border ${selectedProject === "All" && selectedUser === "All"
+                ? "bg-gray-200 cursor-not-allowed opacity-60"
+                : "bg-gray-50 dark:bg-gray-700"
+                }`}
+            >
+              {availablePlots.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
+            {selectedProject === "All" && selectedUser === "All" && (
+              <p className="text-[9px] text-gray-400 mt-1">Select Project or Employee first</p>
+            )}
           </div>
           <div><label className="text-[10px] uppercase font-bold text-gray-500">Registry</label>
             <select value={selectedRegistry} onChange={(e) => setSelectedRegistry(e.target.value)} className="w-full text-xs p-2 rounded-lg border bg-gray-50 dark:bg-gray-700">{filterOptions.registries.map((o: string) => <option key={o} value={o}>{o}</option>)}</select>
@@ -992,8 +1078,22 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
             <select value={selectedEmiPlan} onChange={(e) => setSelectedEmiPlan(e.target.value)} className="w-full text-xs p-2 rounded-lg border bg-gray-50 dark:bg-gray-700">{filterOptions.emiPlans.map((o: string) => <option key={o} value={o}>{o}</option>)}</select>
           </div>
           {anyCPNameExists && (
-            <div><label className="text-[10px] uppercase font-bold text-gray-500">CP Name</label>
-              <select value={selectedCPName} onChange={(e) => setSelectedCPName(e.target.value)} className="w-full text-xs p-2 rounded-lg border bg-gray-50 dark:bg-gray-700">{filterOptions.cpNames.map((o: string) => <option key={o} value={o}>{o}</option>)}</select>
+            <div>
+              <label className="text-[10px] uppercase font-bold text-gray-500">CP Name</label>
+              <select
+                value={selectedCPName}
+                onChange={(e) => setSelectedCPName(e.target.value)}
+                disabled={!isCPFieldEnabled}
+                className={`w-full text-xs p-2 rounded-lg border ${!isCPFieldEnabled ? "bg-gray-200 cursor-not-allowed opacity-60" : "bg-gray-50 dark:bg-gray-700"}`}
+              >
+                {availableCPNames.map((o: string) => <option key={o} value={o}>{o}</option>)}
+              </select>
+              {!isCPFieldEnabled && selectedUser === "All" && (
+                <p className="text-[9px] text-gray-400 mt-1">Select Employee first</p>
+              )}
+              {!isCPFieldEnabled && selectedUser !== "All" && (
+                <p className="text-[9px] text-gray-400 mt-1">No CP data available</p>
+              )}
             </div>
           )}
         </div>
@@ -1091,7 +1191,14 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
           })}
         </div>
       )}
-      <CalculationModal isOpen={isCalculationModalOpen} onClose={() => setIsCalculationModalOpen(false)} data={calculationData} selectedProject={selectedProject} selectedUser={selectedUser} />
+      <CalculationModal
+        isOpen={isCalculationModalOpen}
+        onClose={() => setIsCalculationModalOpen(false)}
+        data={calculationData}
+        selectedProject={selectedProject}
+        selectedUser={selectedUser}
+        selectedCPName={selectedCPName}
+      />
       <style jsx>{`.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; } .scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );

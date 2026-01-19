@@ -424,7 +424,7 @@ const CollectionComponent: React.FC = () => {
                 createdAt: collection.createdAt || null,
                 updatedAt: collection.updatedAt || null,
                 createdDate: formatDate(collection.createdAt),
-                CPName: collection.CPName || null,
+                CPName: collection.CPName || 'Not Available',
             };
         });
     }, [collectionList]);
