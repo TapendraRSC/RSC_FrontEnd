@@ -53,6 +53,8 @@ const ColletionModal: React.FC<ColletionModalProps> = ({
                 emiPlan: initialData.emiPlan || "",
                 plotSize: initialData.plotSize || "",
                 price: initialData.price || "",
+                plotOnlinePrice: initialData.plotOnlinePrice || "",
+                plotCreditPrice: initialData.plotCreditPrice || "",
                 registryStatus: initialData.registryStatus || "",
                 plotValue: initialData.plotValue || "",
                 paymentReceived: initialData.paymentReceived || "",
@@ -62,7 +64,11 @@ const ColletionModal: React.FC<ColletionModalProps> = ({
                 stampDuty: initialData.stampDuty || "",
                 legalFees: initialData.legalFees || "",
                 onlineAmount: initialData.onlineAmount || "",
+                receivedOnlineAmount: initialData.receivedOnlineAmount || "",
+                pendingOnlineAmount: initialData.pendingOnlineAmount || "",
                 cashAmount: initialData.cashAmount || "",
+                receivedCreditAmount: initialData.receivedCreditAmount || "",
+                pendingCreditAmount: initialData.pendingCreditAmount || "",
                 totalAmount: initialData.totalAmount || "",
                 incentive: initialData.incentive || "",
                 CPName: initialData.CPName || "",
@@ -101,6 +107,7 @@ const ColletionModal: React.FC<ColletionModalProps> = ({
                             Basic Information
                         </h3>
                         <FormInput
+                            disabled
                             label="Project Name"
                             name="projectName"
                             register={register}
@@ -190,6 +197,20 @@ const ColletionModal: React.FC<ColletionModalProps> = ({
                             errors={errors}
                             clearErrors={clearErrors}
                         />
+                        <FormInput
+                            label="Online Price"
+                            name="plotOnlinePrice"
+                            register={register}
+                            errors={errors}
+                            clearErrors={clearErrors}
+                        />
+                        <FormInput
+                            label="Credit Price"
+                            name="plotCreditPrice"
+                            register={register}
+                            errors={errors}
+                            clearErrors={clearErrors}
+                        />
 
                         {/* Registry Status Dropdown */}
                         <div className="flex flex-col">
@@ -251,8 +272,36 @@ const ColletionModal: React.FC<ColletionModalProps> = ({
                             clearErrors={clearErrors}
                         />
                         <FormInput
-                            label="Cash Amount"
+                            label="Received Online Amount"
+                            name="receivedOnlineAmount"
+                            register={register}
+                            errors={errors}
+                            clearErrors={clearErrors}
+                        />
+                        <FormInput
+                            label="Pending Online Amount"
+                            name="pendingOnlineAmount"
+                            register={register}
+                            errors={errors}
+                            clearErrors={clearErrors}
+                        />
+                        <FormInput
+                            label="Credit Points (Cash Amount)"
                             name="cashAmount"
+                            register={register}
+                            errors={errors}
+                            clearErrors={clearErrors}
+                        />
+                        <FormInput
+                            label="Received Credit Points"
+                            name="receivedCreditAmount"
+                            register={register}
+                            errors={errors}
+                            clearErrors={clearErrors}
+                        />
+                        <FormInput
+                            label="Pending Credit Points"
+                            name="pendingCreditAmount"
                             register={register}
                             errors={errors}
                             clearErrors={clearErrors}

@@ -84,12 +84,36 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
 
     // Allowed headers list (case-insensitive)
     const allowedHeaders = [
-        "Project Name", "Employee Name", "Client Name", "Mobile Number",
-        "Email Id", "Plot Number", "EMI Plan", "Plot Size", "Price",
-        "Registry Status", "Plot Value", "Payment Received", "Pending Amount",
-        "Commission", "Maintenance", "Stamp Duty", "Legal Fees",
-        "Online Amount", "Cash Amount", "Total Amount", "Incentive", "CP Name"
+        "Project Name",
+        "Employee Name",
+        "Client Name",
+        "Mobile Number",
+        "Email Id",
+        "Plot Number",
+        "EMI Plan",
+        "Plot Size",
+        "Price",
+        "Online Price",
+        "Credit Point",
+        "Plot Online Price",
+        "Plot Credit Point",
+        "Plot Value",
+        "Maintenance",
+        "Stamp Duty",
+        "Legal Fees",
+        "Total Amount",
+        "Payment Received",
+        "Online Payment Received",
+        "Credit Point Received",
+        "Pending Amount",
+        "Online Payment Pending",
+        "Credit Points Pending",
+        "Incentive",
+        "CP Name",
+        "Commission",
+        "Registry Status"
     ];
+
 
     const validateHeaders = (headers: string[]): boolean => {
         const normalizedHeaders = headers.map((h) =>
@@ -348,26 +372,69 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
 
     const handleDownloadSample = () => {
         const headers = [
-            "Project Name", "Employee Name", "Client Name", "Mobile Number",
-            "Email Id", "Plot Number", "EMI Plan", "Plot Size", "Price",
-            "Registry Status", "Plot Value", "Payment Received", "Pending Amount",
-            "Commission", "Maintenance", "Stamp Duty", "Legal Fees",
-            "Online Amount", "Cash Amount", "Total Amount", "Incentive", "CP Name"
+            "Project Name",
+            "Employee Name",
+            "Client Name",
+            "Mobile Number",
+            "Email Id",
+            "Plot Number",
+            "EMI Plan",
+            "Plot Size",
+            "Price",
+            "Online Price",
+            "Credit Point",
+            "Plot Online Price",
+            "Plot Credit Point",
+            "Plot Value",
+            "Maintenance",
+            "Stamp Duty",
+            "Legal Fees",
+            "Total Amount",
+            "Payment Received",
+            "Online Payment Received",
+            "Credit Point Received",
+            "Pending Amount",
+            "Online Payment Pending",
+            "Credit Points Pending",
+            "Incentive",
+            "CP Name",
+            "Commission",
+            "Registry Status"
         ];
+
 
         const rows = [
             [
-                "RSC DHOLERA CITY", "Amit Sharma", "John Doe", "9876543210",
-                "john@example.com", "A-101", "5000", "1500 Sq.Ft", "1500000",
-                "Pending", "1500000", "500000", "1000000", "15000",
-                "2000", "90000", "5000", "300000", "200000", "500000", "2000", "CP Alpha"
+                "Dummy",                       // Project Name
+                "Patel",            // Employee Name
+                "Sparsh Jain",                 // Client Name
+                "8120057290",                  // Mobile Number
+                "sparsh@gmail.com",       // Email Id
+                "210",                         // Plot Number
+                "45 Days",                     // EMI Plan
+                "144.99",                      // Plot Size
+                "6500",                        // Price
+                "4500",                        // Online Price
+                "2000",                        // Credit Point
+                "652455",                      // Plot Online Price
+                "289980",                      // Plot Credit Point
+                "942435",                      // Plot Value
+                "14499",                       // Maintenance
+                "55603",                       // Stamp Duty
+                "15000",                       // Legal Fees
+                "852455",                      // Total Amount
+                "852455",                      // Total Payment Received
+                "652455",                      // Online Payment Received
+                "200000",                      // Credit Point Received
+                "852455",                      // Total Pending Amount
+                "-185000",                     // Online Payment Pending
+                "-767208.01",                  // Credit Points Pending
+                "15000",                       // Incentive
+                "Jagmohan",              // CP Name
+                "150000",                      // Commission
+                "Pending"                      // Registry Status
             ],
-            [
-                "RSC GREEN VALLEY", "Sneha Patel", "Jane Smith", "9876543211",
-                "jane@example.com", "B-205", "0", "1200 Sq.Ft", "1200000",
-                "Completed", "1200000", "1200000", "0", "12000",
-                "1500", "72000", "5000", "1000000", "200000", "1200000", "5000", "CP Beta"
-            ]
+
         ];
 
         const csvContent = [
@@ -868,7 +935,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                         <AlertCircle className="w-4 h-4" />
-                        Headers must come only from: Project Name, Employee Name, Client Name, Mobile Number, Email Id, Plot Number, EMI Plan, Plot Size, Price, Registry Status, Plot Value, Payment Received, Pending Amount, Commission, Maintenance, Stamp Duty, Legal Fees, Online Amount, Cash Amount, Total Amount, Incentive, CP Name
+                        Headers must come only from: Project Name, Employee Name, Client Name, Mobile Number, Email Id, Plot Number, EMI Plan, Plot Size, Price, Registry Status, Plot Value, Payment Received, Pending Amount, Commission, Maintenance, Stamp Duty, Legal Fees, Online Amount, Credit Points,Plot Online Price,Plot Credit Point, Total Payment Received,Online Payment Received,Credit Point Received,Total Pending Amount, Total Amount, Incentive, CP Name
                         <span></span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">

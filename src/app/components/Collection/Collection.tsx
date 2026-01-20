@@ -40,6 +40,12 @@ interface CollectionData {
     createdAt: string;
     updatedAt: string;
     CPName: string;
+    receivedOnlineAmount: string;
+    receivedCreditAmount: string;
+    pendingCreditAmount: string;
+    pendingOnlineAmount: string;
+    plotOnlinePrice: string;
+    plotCreditPrice: string;
 }
 
 interface CollectionApiResponse {
@@ -425,6 +431,12 @@ const CollectionComponent: React.FC = () => {
                 updatedAt: collection.updatedAt || null,
                 createdDate: formatDate(collection.createdAt),
                 CPName: collection.CPName || 'Not Available',
+                receivedOnlineAmount: collection.receivedOnlineAmount || '0',
+                receivedCreditAmount: collection.receivedCreditAmount || '0',
+                pendingCreditAmount: collection.pendingCreditAmount || '0',
+                pendingOnlineAmount: collection.pendingOnlineAmount || '0',
+                plotOnlinePrice: collection.plotOnlinePrice || '0',
+                plotCreditPrice: collection.plotCreditPrice || '0',
             };
         });
     }, [collectionList]);
