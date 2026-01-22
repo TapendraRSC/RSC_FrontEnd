@@ -207,7 +207,7 @@ const ComponentsAuthLoginForm = () => {
                                 setOtpDigits(newOtp);
                                 inputRefs.current[3]?.focus();
                             }}
-                            className="form-input w-14 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 hover:border-blue-400 transition-all duration-200"
+                            className="form-input w-14 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 hover:border-orange-400 transition-all duration-200"
                             autoComplete="off"
                         />
                     ))}
@@ -225,7 +225,7 @@ const ComponentsAuthLoginForm = () => {
                     type="button"
                     onClick={resendOtp}
                     disabled={resendLoading || resendTimer > 0}
-                    className="text-sm text-blue-500 w-full disabled:text-gray-400 disabled:cursor-not-allowed"
+                    className="text-sm text-orange-500 w-full disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
                     {resendLoading
                         ? 'Resending...'

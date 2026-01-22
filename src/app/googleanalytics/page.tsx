@@ -330,7 +330,7 @@ const CampaignSource = () => {
             <div className="p-4 sm:p-6 w-full min-h-screen bg-slate-50 dark:bg-slate-950">
                 <ToastContainer position="top-right" />
 
-                <button onClick={resetAnalyticsState} className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 mb-6 transition">
+                <button onClick={resetAnalyticsState} className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 mb-6 transition">
                     <ArrowLeft size={20} /><span>Back to Campaigns</span>
                 </button>
 
@@ -344,13 +344,13 @@ const CampaignSource = () => {
                     </button>
                 </div>
 
-                {analyticsLoading && !filteredSummary && <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>}
+                {analyticsLoading && !filteredSummary && <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>}
 
                 {analyticsError && !filteredSummary && (
                     <div className="flex flex-col items-center justify-center py-20">
                         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
                         <p className="text-red-500 text-sm mb-4">{analyticsError}</p>
-                        <button onClick={() => fetchAnalytics(selectedCampaign.id)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Retry</button>
+                        <button onClick={() => fetchAnalytics(selectedCampaign.id)} className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm">Retry</button>
                     </div>
                 )}
 
@@ -360,8 +360,8 @@ const CampaignSource = () => {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                        <Activity size={20} className="text-blue-600 dark:text-blue-400" />
+                                    <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                                        <Activity size={20} className="text-orange-600 dark:text-orange-400" />
                                     </div>
                                     <span className="text-sm text-slate-500 dark:text-slate-400">Total Attempts</span>
                                 </div>
@@ -401,7 +401,7 @@ const CampaignSource = () => {
                             {/* Header with Title and Filter */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-2">
-                                    <LayoutGrid size={20} className="text-blue-500" />
+                                    <LayoutGrid size={20} className="text-orange-500" />
                                     <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Performance Trend</h2>
                                 </div>
 
@@ -412,7 +412,7 @@ const CampaignSource = () => {
                                             key={option.value}
                                             onClick={() => setSelectedRange(option.value)}
                                             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedRange === option.value
-                                                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                                                ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-sm'
                                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                                                 }`}
                                         >
@@ -557,7 +557,7 @@ const CampaignSource = () => {
 
                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm">
                                 <h3 className="text-base font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                    <Activity size={18} className="text-blue-500" />
+                                    <Activity size={18} className="text-orange-500" />
                                     Recent Form Logs
                                 </h3>
                                 {logs.length === 0 ? (
@@ -646,18 +646,18 @@ const CampaignSource = () => {
                     <button onClick={fetchCampaigns} disabled={campaignsLoading} className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
                         <RefreshCw size={16} className={campaignsLoading ? 'animate-spin' : ''} />
                     </button>
-                    <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                    <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm font-medium">
                         <Plus size={18} />Add Campaign
                     </button>
                 </div>
             </div>
 
-            {campaignsLoading && campaigns.length === 0 && <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>}
+            {campaignsLoading && campaigns.length === 0 && <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>}
 
             {campaignsError && campaigns.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20">
                     <p className="text-red-500 text-sm mb-4">{campaignsError}</p>
-                    <button onClick={fetchCampaigns} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Retry</button>
+                    <button onClick={fetchCampaigns} className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm">Retry</button>
                 </div>
             )}
 
@@ -665,7 +665,7 @@ const CampaignSource = () => {
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                     <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4"><TrendingUp className="w-8 h-8 text-slate-400" /></div>
                     <p className="text-slate-600 dark:text-slate-400 mb-4">No campaigns yet. Create your first campaign!</p>
-                    <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Create Campaign</button>
+                    <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm">Create Campaign</button>
                 </div>
             )}
 
@@ -677,7 +677,7 @@ const CampaignSource = () => {
                                 <h2 className="text-lg font-semibold text-slate-800 dark:text-white line-clamp-2">{campaign.campaign_name}</h2>
                                 {campaign.created_at && <p className="text-xs text-slate-500 dark:text-slate-400">Created: {formatDateTime(campaign.created_at)}</p>}
                             </div>
-                            <button onClick={() => setSelectedCampaign(campaign)} className="w-full px-4 py-2 rounded-lg text-sm bg-blue-600 text-white hover:bg-blue-700 transition">View Analytics</button>
+                            <button onClick={() => setSelectedCampaign(campaign)} className="w-full px-4 py-2 rounded-lg text-sm bg-orange-600 text-white hover:bg-orange-700 transition">View Analytics</button>
                         </div>
                     ))}
                 </div>
@@ -693,11 +693,11 @@ const CampaignSource = () => {
                         </div>
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Campaign Name</label>
-                            <input type="text" value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} placeholder="e.g. dholera_triangle" className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500" autoFocus disabled={isCreating} onKeyDown={(e) => { if (e.key === 'Enter' && newCampaignName.trim()) handleAddCampaign(); }} />
+                            <input type="text" value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} placeholder="e.g. dholera_triangle" className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500" autoFocus disabled={isCreating} onKeyDown={(e) => { if (e.key === 'Enter' && newCampaignName.trim()) handleAddCampaign(); }} />
                         </div>
                         <div className="flex gap-3">
                             <button onClick={() => { setIsModalOpen(false); setNewCampaignName(''); }} disabled={isCreating} className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">Cancel</button>
-                            <button onClick={handleAddCampaign} disabled={!newCampaignName.trim() || isCreating} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <button onClick={handleAddCampaign} disabled={!newCampaignName.trim() || isCreating} className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                                 {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" />Creating...</> : 'Create'}
                             </button>
                         </div>

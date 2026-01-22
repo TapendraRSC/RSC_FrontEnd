@@ -4,6 +4,7 @@ import {
     Camera, Mail, Phone, MapPin, Calendar, User,
     CreditCard, MessageCircle, Edit3, Copy, Check, Eye, EyeOff
 } from 'lucide-react';
+import Image from 'next/image';
 
 type UserProfile = {
     id: number;
@@ -39,6 +40,36 @@ const Profile = () => {
             }
         }
     }, []);
+
+
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/profile/get-profile`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token && { Authorization: `Bearer ${token}` }),
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const profileData = data.user || data.data || data;
+                    setUser(profileData);
+                }
+            } catch (err) {
+                console.error('Failed to fetch profile:', err);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -113,7 +144,14 @@ const Profile = () => {
                                 <img src={previewImage || user.profileImage!} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
-                                    <User size={36} />
+                                    {/* <User size={36} /> */}
+                                    <Image
+                                        src="/RSC-GOLD-NEW-with-R.png"
+                                        alt="RSC Logo"
+                                        width={40}
+                                        height={40}
+                                        className="w-full h-full object-contain p-1"
+                                    />
                                 </div>
                             )}
                         </div>

@@ -216,7 +216,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4" style={{ margin: "0px" }}>
                 <div className="bg-white dark:bg-gray-900 w-full max-w-md sm:max-w-2xl md:max-w-5xl rounded-3xl shadow-2xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 max-h-[95vh] flex flex-col animate-in zoom-in-95 duration-300">
                     {/* Modern Header with Gradient */}
-                    <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 dark:from-blue-800 dark:via-blue-900 dark:to-indigo-950 text-white px-6 sm:px-8 py-6 sm:py-8">
+                    <div className="relative bg-gradient-to-br from-orange-600 via-orange-700 to-indigo-800 dark:from-orange-800 dark:via-orange-900 dark:to-indigo-950 text-white px-6 sm:px-8 py-6 sm:py-8">
                         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
                         <div className="relative flex justify-between items-start">
                             <div>
@@ -226,7 +226,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                     </div>
                                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Lead Follow-up</h2>
                                 </div>
-                                <p className="text-blue-100 dark:text-blue-200 text-sm sm:text-base ml-14">
+                                <p className="text-orange-100 dark:text-orange-200 text-sm sm:text-base ml-14">
                                     Track and manage customer interactions
                                 </p>
                             </div>
@@ -240,11 +240,11 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                     </div>
 
                     {/* Customer Info Card */}
-                    <div className="px-6 sm:px-8 py-5 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border-b border-gray-200/50 dark:border-gray-700/50">
+                    <div className="px-6 sm:px-8 py-5 bg-gradient-to-br from-gray-50 to-orange-50/30 dark:from-gray-800 dark:to-orange-900/10 border-b border-gray-200/50 dark:border-gray-700/50">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
                             <div className="flex items-center gap-3 flex-1">
-                                <div className="p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
-                                    <Users className="w-5 h-5 text-blue-700 dark:text-blue-300" />
+                                <div className="p-2.5 bg-orange-100 dark:bg-orange-900/50 rounded-xl">
+                                    <Users className="w-5 h-5 text-orange-700 dark:text-orange-300" />
                                 </div>
                                 <div>
                                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Customer Name</p>
@@ -323,12 +323,12 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                                         minTime={isTodayField ? selectableNow : new Date(0, 0, 0, 0, 0)}
                                                         maxTime={new Date(0, 0, 0, 23, 59)}
                                                         disabled={isDisabledStatus}
-                                                        className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 ${fieldState.error
+                                                        className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm pr-12 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 ${fieldState.error
                                                             ? "border-rose-300 dark:border-rose-600"
                                                             : "border-gray-200 dark:border-gray-700"
                                                             } ${isDisabledStatus
                                                                 ? "bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed opacity-60"
-                                                                : "hover:border-blue-400"
+                                                                : "hover:border-orange-400"
                                                             }`}
                                                     />
                                                     {fieldState.error && (
@@ -375,11 +375,11 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                     rows={4}
                                     maxLength={100}
                                     className={`w-full rounded-xl border-2 px-4 py-3 text-sm shadow-sm
-        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+        focus:ring-2 focus:ring-orange-500 focus:border-orange-500
         dark:bg-gray-800 dark:text-gray-100 transition-all duration-200 resize-none
         ${errors.remark
                                             ? "border-rose-300 dark:border-rose-600"
-                                            : "border-gray-200 dark:border-gray-700 hover:border-blue-400"
+                                            : "border-gray-200 dark:border-gray-700 hover:border-orange-400"
                                         }`}
                                     placeholder="Enter detailed remarks about the follow-up interaction..."
                                 />
@@ -407,7 +407,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className={`px-8 py-3.5 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 dark:from-blue-700 dark:via-blue-800 dark:to-indigo-900 text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl focus:ring-4 focus:ring-blue-300 transition-all duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:-translate-y-1 hover:shadow-2xl"
+                                    className={`px-8 py-3.5 bg-gradient-to-r from-orange-600 via-orange-700 to-indigo-700 dark:from-orange-700 dark:via-orange-800 dark:to-indigo-900 text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl focus:ring-4 focus:ring-orange-300 transition-all duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:-translate-y-1 hover:shadow-2xl"
                                         }`}
                                 >
                                     {loading ? (
@@ -427,9 +427,9 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
 
                         {/* Follow-up History Table */}
                         <div className="border-2 border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="bg-gradient-to-r from-gray-100 via-gray-50 to-blue-50 dark:from-gray-800 dark:via-gray-800 dark:to-blue-900/20 px-6 py-4 border-b-2 border-gray-200 dark:border-gray-700">
+                            <div className="bg-gradient-to-r from-gray-100 via-gray-50 to-orange-50 dark:from-gray-800 dark:via-gray-800 dark:to-orange-900/20 px-6 py-4 border-b-2 border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center gap-3">
-                                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                    <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                                     <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">
                                         Recent Follow-up History
                                     </h3>
@@ -459,7 +459,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
                                         {followUps.length > 0 ? (
                                             followUps.map((f: any, index: number) => (
-                                                <tr key={`${f.id}-${index}`} className="hover:bg-blue-50/50 dark:hover:bg-gray-800/70 transition-colors duration-150">
+                                                <tr key={`${f.id}-${index}`} className="hover:bg-orange-50/50 dark:hover:bg-gray-800/70 transition-colors duration-150">
                                                     <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">
                                                         {index + 1}
                                                     </td>
@@ -486,7 +486,7 @@ const FollowUpLeadModal: React.FC<FollowUpLeadModalProps> = ({ isOpen, onClose, 
                                                         {f.budget || "Not specified"}
                                                     </td>
                                                     <td className="px-5 py-4">
-                                                        <span className="inline-flex px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 dark:from-blue-900/50 dark:to-indigo-900/50 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
+                                                        <span className="inline-flex px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-orange-100 to-indigo-100 text-orange-800 dark:from-orange-900/50 dark:to-indigo-900/50 dark:text-orange-200 border border-orange-200 dark:border-orange-700">
                                                             {f.followUpStatus || "N/A"}
                                                         </span>
                                                     </td>

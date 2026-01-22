@@ -69,10 +69,10 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                 className={`w-full h-11 px-3 border rounded-lg flex items-center justify-between cursor-pointer text-sm
           ${disabled
                         ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-300 dark:border-gray-600'
-                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-orange-500'
                     }
           ${isOpen
-                        ? 'border-blue-500 ring-2 ring-blue-500/20'
+                        ? 'border-orange-500 ring-2 ring-orange-500/20'
                         : 'border-gray-300 dark:border-gray-600'
                     }`}
                 onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -146,7 +146,7 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search lead..."
-                                className="w-full h-9 pl-8 pr-3 text-xs border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-full h-9 pl-8 pr-3 text-xs border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                             />
                         </div>
                     </div>
@@ -160,7 +160,7 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                                     onClick={() => handleSelect(option)}
                                     className={`px-4 py-2.5 cursor-pointer text-sm transition-colors
                     ${selected?.value === option.value
-                                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                                            ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
                                             : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
                                         }`}
                                 >
@@ -168,7 +168,7 @@ const SearchableLeadDropdown: React.FC<SearchableLeadDropdownProps> = ({
                                         <span className="truncate">{option.label}</span>
                                         {selected?.value === option.value && (
                                             <svg
-                                                className="w-4 h-4 text-blue-600"
+                                                className="w-4 h-4 text-orange-600"
                                                 fill="currentColor"
                                                 viewBox="0 0 20 20"
                                             >

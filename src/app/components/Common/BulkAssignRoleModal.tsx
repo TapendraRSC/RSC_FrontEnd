@@ -87,8 +87,8 @@ export default function BulkAssignRoleModal({
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-full bg-blue-100 dark:bg-blue-900/40">
-                            <Users className="text-blue-600 dark:text-blue-400" size={24} />
+                        <div className="p-2.5 rounded-full bg-orange-100 dark:bg-orange-900/40">
+                            <Users className="text-orange-600 dark:text-orange-400" size={24} />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -149,7 +149,7 @@ export default function BulkAssignRoleModal({
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                         >
                             Assign Selected Leads
                         </button>

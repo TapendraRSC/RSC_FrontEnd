@@ -395,7 +395,7 @@ const CustomTable = <T extends { id: number | string }>({
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                             {totalRecords ? `${totalRecords} total records` : 'No records available'}
                             {showBulkSelect && selectedIds.length > 0 && (
-                                <span className="ml-2 text-blue-600 dark:text-blue-400">
+                                <span className="ml-2 text-orange-600 dark:text-orange-400">
                                     • {selectedIds.length} selected
                                 </span>
                             )}
@@ -408,7 +408,7 @@ const CustomTable = <T extends { id: number | string }>({
                                 <input
                                     type="text"
                                     placeholder={searchPlaceholder}
-                                    className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 w-full sm:w-64 text-sm"
+                                    className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 w-full sm:w-64 text-sm"
                                     value={searchValue}
                                     onChange={(e) => onSearchChange(e.target.value)}
                                 />
@@ -418,14 +418,14 @@ const CustomTable = <T extends { id: number | string }>({
                             <button
                                 onClick={() => setIsFilterModalOpen(true)}
                                 className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${getActiveFiltersCount() > 0
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                    ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
                                     : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                                     }`}
                             >
                                 <Filter className="w-4 h-4" />
                                 <span>Filters</span>
                                 {getActiveFiltersCount() > 0 && (
-                                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full">
+                                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-orange-500 rounded-full">
                                         {getActiveFiltersCount()}
                                     </span>
                                 )}
@@ -439,8 +439,8 @@ const CustomTable = <T extends { id: number | string }>({
                     <div className="flex items-center gap-2 mt-4 sm:mt-0 sm:ml-6" style={{ marginTop: "8px" }}>
                         {/* Desktop: Selection counter with separator */}
                         <div className="hidden sm:flex items-center gap-3">
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
-                                <span className="text-sm font-medium text-blue-800">
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-full border border-orange-200">
+                                <span className="text-sm font-medium text-orange-800">
                                     {selectedIds.length} selected
                                 </span>
                             </div>
@@ -455,7 +455,7 @@ const CustomTable = <T extends { id: number | string }>({
                                         key={index}
                                         onClick={() => action.onClick(selectedIds)}
                                         disabled={action.disabled}
-                                        className="group relative inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 sm:gap-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg shadow-blue-500/25"
+                                        className="group relative inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 sm:gap-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 shadow-lg shadow-orange-500/25"
                                     >
                                         {/* Icon - always visible */}
                                         <span className="transition-transform duration-200 group-hover:scale-110">
@@ -476,7 +476,7 @@ const CustomTable = <T extends { id: number | string }>({
 
                         {/* Mobile: Selection count indicator */}
                         <div className="sm:hidden ml-2">
-                            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                            <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
                                 {selectedIds.length}
                             </span>
                         </div>
@@ -519,7 +519,7 @@ const CustomTable = <T extends { id: number | string }>({
                             </button>
                             <button
                                 onClick={() => setIsFilterModalOpen(false)}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                                className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700"
                             >
                                 Apply
                             </button>
@@ -542,7 +542,7 @@ const CustomTable = <T extends { id: number | string }>({
                                             ref={selectAllRef}
                                             checked={areAllSelected}
                                             onChange={handleSelectAll}
-                                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                                         />
                                     </th>
                                 )}
@@ -567,8 +567,8 @@ const CustomTable = <T extends { id: number | string }>({
                                                 </span>
                                                 {col.sortable !== false && onSortChange && (
                                                     <div className="flex flex-col ml-2 flex-shrink-0">
-                                                        <ChevronUp className={`w-3 h-3 transition-colors duration-150 ${sortConfig?.key === accessor && sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
-                                                        <ChevronDown className={`w-3 h-3 -mt-1 transition-colors duration-150 ${sortConfig?.key === accessor && sortConfig.direction === 'desc' ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
+                                                        <ChevronUp className={`w-3 h-3 transition-colors duration-150 ${sortConfig?.key === accessor && sortConfig.direction === 'asc' ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
+                                                        <ChevronDown className={`w-3 h-3 -mt-1 transition-colors duration-150 ${sortConfig?.key === accessor && sortConfig.direction === 'desc' ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
                                                     </div>
                                                 )}
                                             </div>
@@ -616,7 +616,7 @@ const CustomTable = <T extends { id: number | string }>({
                                     if (!row || !row.id) return null;
 
                                     const customRowClass = rowClassName ? rowClassName(row) : '';
-                                    const finalClassName = `hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 ${customRowClass || (showBulkSelect && isSelected(row.id) ? 'bg-blue-50 dark:bg-blue-900/20' : '')}`;
+                                    const finalClassName = `hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 ${customRowClass || (showBulkSelect && isSelected(row.id) ? 'bg-orange-50 dark:bg-orange-900/20' : '')}`;
 
                                     return (
                                         <tr key={row.id} className={finalClassName}>
@@ -628,7 +628,7 @@ const CustomTable = <T extends { id: number | string }>({
                                                         checked={isSelected(row.id)}
                                                         onChange={() => handleSelectRow(row.id)}
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                        className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                                                     />
                                                 </td>
                                             )}
@@ -700,7 +700,7 @@ const CustomTable = <T extends { id: number | string }>({
                                     Rows:
                                 </label>
                                 <select
-                                    className="border border-gray-300 dark:border-gray-600 rounded-lg px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="border border-gray-300 dark:border-gray-600 rounded-lg px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     value={pageSize}
                                     onChange={(e) => onPageSizeChange(Number(e.target.value))}
                                 >
@@ -733,7 +733,7 @@ const CustomTable = <T extends { id: number | string }>({
                                                 key={`pagination-${num}`}
                                                 onClick={() => onPageChange(Number(num))}
                                                 className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border transition-colors duration-150 flex-shrink-0 text-xs sm:text-sm min-w-8 sm:min-w-10 ${currentPage === num
-                                                    ? 'bg-blue-500 border-blue-500 text-white shadow-md'
+                                                    ? 'bg-orange-500 border-orange-500 text-white shadow-md'
                                                     : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                                                     }`}
                                             >

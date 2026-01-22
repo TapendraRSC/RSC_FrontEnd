@@ -143,7 +143,7 @@ export default function ProjectStatusModal({
                                 href={currentProjectStatus.projectImage}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 dark:text-blue-400 text-sm hover:underline mt-1 block"
+                                className="text-orange-500 dark:text-orange-400 text-sm hover:underline mt-1 block"
                             >
                                 View Current Image
                             </a>
@@ -169,7 +169,7 @@ export default function ProjectStatusModal({
                                 href={currentProjectStatus.projectPdf}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 dark:text-blue-400 text-sm hover:underline mt-1 block"
+                                className="text-orange-500 dark:text-orange-400 text-sm hover:underline mt-1 block"
                             >
                                 View Current PDF
                             </a>
@@ -188,7 +188,7 @@ export default function ProjectStatusModal({
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-60"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-60"
                         >
                             {isLoading ? (
                                 <svg

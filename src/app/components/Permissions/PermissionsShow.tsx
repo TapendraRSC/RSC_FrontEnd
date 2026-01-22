@@ -157,7 +157,7 @@ const PermissionsShow: React.FC = () => {
                 </div>
                 <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md dark:shadow-blue-800/30"
+                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md dark:shadow-orange-800/30"
                 >
                     <Plus className="w-4 h-4" />
                     Add Permission
@@ -195,7 +195,7 @@ const PermissionsShow: React.FC = () => {
                                 {/* Edit button */}
                                 <button
                                     onClick={() => handleEdit(row)}
-                                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition-colors"
+                                    className="text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded transition-colors"
                                     title="Edit"
                                 >
                                     <Pencil className="w-4 h-4" />

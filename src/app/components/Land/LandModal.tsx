@@ -48,7 +48,7 @@ const LandModal: React.FC<LandModalProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-700 pb-3 mb-4">
                     <div className="flex items-center gap-2">
-                        {/* <Map className="w-5 h-5 text-blue-500" /> */}
+                        {/* <Map className="w-5 h-5 text-orange-500" /> */}
                         <h2 className="text-lg font-semibold text-gray-100">
                             {initialData ? "Edit Land" : "Add Land"}
                         </h2>
@@ -71,7 +71,7 @@ const LandModal: React.FC<LandModalProps> = ({
                         <input
                             {...register("type", { required: "Type is required" })}
                             type="text"
-                            className="w-full border border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            className="w-full border border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                             placeholder="Enter land type"
                         />
                         {errors.type && (
@@ -92,7 +92,7 @@ const LandModal: React.FC<LandModalProps> = ({
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition"
+                            className="px-4 py-2 rounded-lg text-sm bg-orange-600 hover:bg-orange-700 text-white transition"
                         >
                             {initialData ? "Update" : "Save"}
                         </button>

@@ -54,7 +54,7 @@ const LeadPlatformCard = ({
                 <button
                     onClick={onEdit}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium
-                   transition-colors bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-gray-600 cursor-pointer"
+                   transition-colors bg-orange-50 dark:bg-gray-700 text-orange-600 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-gray-600 cursor-pointer"
                     title="Edit"
                 >
                     <Pencil className="w-4 h-4" />
@@ -224,7 +224,7 @@ const LeadPlateform: React.FC = () => {
                     {hasPermission(21, "add") && (
                         <button
                             onClick={handleAdd}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
                             title="Add New Platform"
                         >
                             <Plus className="w-4 h-4" />
@@ -266,7 +266,7 @@ const LeadPlateform: React.FC = () => {
                     <button
                         onClick={handleAdd}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium
-                   bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                   bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
                         title="Add New Platform"
                     >
                         <Plus className="w-5 h-5" />
@@ -289,7 +289,7 @@ const LeadPlateform: React.FC = () => {
                                     setSearchValue(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 dark:text-white"
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 dark:text-white"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
@@ -297,7 +297,7 @@ const LeadPlateform: React.FC = () => {
                         </div>
                         {loading ? (
                             <div className="flex justify-center py-12">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 dark:border-orange-400"></div>
                             </div>
                         ) : (
                             <>
@@ -402,7 +402,7 @@ const LeadPlateform: React.FC = () => {
                                     {hasPermission(22, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
-                                            className="p-1 rounded text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
+                                            className="p-1 rounded text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 cursor-pointer"
                                             title="Edit"
                                         >
                                             <Pencil className="w-4 h-4" />

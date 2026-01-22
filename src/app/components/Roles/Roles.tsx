@@ -209,7 +209,7 @@ export default function RolesPage() {
                 {hasPermission(22, "edit") && (
                     <button
                         onClick={() => handleEdit(role)}
-                        className="flex-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 bg-orange-50 dark:bg-orange-900 text-orange-600 dark:text-orange-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-orange-100 dark:hover:bg-orange-800 transition-colors flex items-center justify-center gap-2"
                     >
                         <Pencil className="w-4 h-4" />
                         Edit
@@ -253,7 +253,7 @@ export default function RolesPage() {
                 {hasPermission(21, "add") && (
                     <button
                         onClick={handleAdd}
-                        className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+                        className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
                     >
                         <Plus className="w-5 h-5" />
                         Add New Role
@@ -275,7 +275,7 @@ export default function RolesPage() {
                         {hasPermission(21, "add") && (
                             <button
                                 onClick={handleAdd}
-                                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
                             >
                                 <Plus className="w-4 h-4" />
                                 Add Role
@@ -295,7 +295,7 @@ export default function RolesPage() {
                                 placeholder="Search roles..."
                                 value={searchValue}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
@@ -303,7 +303,7 @@ export default function RolesPage() {
                         </div>
                         {isLoading ? (
                             <div className="flex justify-center py-12">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 dark:border-orange-400"></div>
                             </div>
                         ) : (
                             <>
@@ -375,7 +375,7 @@ export default function RolesPage() {
                                     {hasPermission(22, "edit") && (
                                         <button
                                             onClick={() => handleEdit(row)}
-                                            className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 rounded transition-colors"
+                                            className="text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 p-1 rounded transition-colors"
                                             title="Edit"
                                         >
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />

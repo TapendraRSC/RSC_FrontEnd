@@ -361,7 +361,7 @@ export default function PlotModal({
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-w-[120px]"
+                            className="flex items-center justify-center gap-2 px-6 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-w-[120px]"
                         >
                             {isLoading ? (
                                 <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">

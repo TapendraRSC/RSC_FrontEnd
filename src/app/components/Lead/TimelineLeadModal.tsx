@@ -66,7 +66,7 @@ const TimelineLeadModal: React.FC<TimelineLeadModalProps> = ({ isOpen, onClose, 
         }
         switch (type) {
             case 'call': return 'bg-green-500 border-green-400';
-            case 'email': return 'bg-blue-500 border-blue-400';
+            case 'email': return 'bg-orange-500 border-orange-400';
             default: return 'bg-purple-500 border-purple-400';
         }
     };
@@ -89,7 +89,7 @@ const TimelineLeadModal: React.FC<TimelineLeadModalProps> = ({ isOpen, onClose, 
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
                 {/* Header Section */}
                 <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 text-white p-6 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-purple-600/10"></div>
                     <button
                         onClick={onClose}
                         className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200"
@@ -150,7 +150,7 @@ const TimelineLeadModal: React.FC<TimelineLeadModalProps> = ({ isOpen, onClose, 
                 <div className="p-6 max-h-96 overflow-y-auto">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                            <Clock size={20} className="mr-2 text-blue-600" />
+                            <Clock size={20} className="mr-2 text-orange-600" />
                             Activity Timeline
                         </h3>
                         <div className="text-sm text-gray-500">
@@ -159,7 +159,7 @@ const TimelineLeadModal: React.FC<TimelineLeadModalProps> = ({ isOpen, onClose, 
                     </div>
 
                     <div className="relative">
-                        <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-blue-200 via-purple-200 to-blue-200"></div>
+                        <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-orange-200 via-purple-200 to-orange-200"></div>
 
                         {Array.isArray(lead.remarks) && lead.remarks.length > 0 ? (
                             <div className="space-y-6">
@@ -223,7 +223,7 @@ const TimelineLeadModal: React.FC<TimelineLeadModalProps> = ({ isOpen, onClose, 
                         <button className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200">
                             Export Timeline
                         </button>
-                        <button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg">
+                        <button className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg">
                             Show Filtered Records
                         </button>
                     </div>

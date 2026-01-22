@@ -420,7 +420,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     message: "Name can only contain letters and spaces",
                   },
                 })}
-                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
                 placeholder="Enter name"
                 disabled={leadDetailsLoading}
               />
@@ -447,7 +447,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                   setValueAs: (value) =>
                     value.replace(/^\+91[\s-]?/, "").trim(),
                 })}
-                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
                 placeholder="9876543210"
                 maxLength={13}
                 disabled={leadDetailsLoading}
@@ -563,7 +563,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 </p>
               )}
               {selectedProjectId && plotsLoading && (
-                <p className="text-blue-600 text-xs mt-0.5">
+                <p className="text-orange-600 text-xs mt-0.5">
                   Loading plots...
                 </p>
               )}
@@ -603,7 +603,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                   validate: (value) =>
                     !isNaN(Number(value)) || "Please enter a valid number",
                 })}
-                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="500000"
               />
               {errors.bookingAmount && (
@@ -643,7 +643,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     },
                   },
                 })}
-                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="2500000"
               />
               {errors.totalPlotAmount && (
@@ -666,7 +666,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-5 h-10 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               disabled={isLoading || submitLoading}
             >
               {submitLoading

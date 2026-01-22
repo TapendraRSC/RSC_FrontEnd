@@ -234,7 +234,7 @@ const SalesDashboard = () => {
 
     const getColorForKey = (key: string): string => {
         const lowerKey = key.toLowerCase();
-        if (lowerKey.includes("user")) return "blue";
+        if (lowerKey.includes("user")) return "orange";
         if (lowerKey.includes("project")) return "purple";
         if (lowerKey.includes("todayfollowup") || lowerKey.includes("today_followup")) return "emerald";
         if (lowerKey.includes("pendingfollowup") || lowerKey.includes("pending_followup")) return "orange";
@@ -246,7 +246,7 @@ const SalesDashboard = () => {
         if (lowerKey.includes("dump")) return "slate";
         if (lowerKey.includes("plot")) return "pink";
         if (lowerKey.includes("lead")) return "indigo";
-        return "blue";
+        return "orange";
     };
 
     const handleCardClick = (route?: string, tab?: string) => {
@@ -330,7 +330,7 @@ const SalesDashboard = () => {
             violet: "from-violet-500 to-violet-600",
             indigo: "from-indigo-500 to-indigo-600",
         };
-        return gradients[color] || gradients.blue;
+        return gradients[color] || gradients.orange;
     };
 
     const getColorClasses = (color: string, type = "bg") => {
@@ -345,7 +345,7 @@ const SalesDashboard = () => {
             green: type === "bg" ? "bg-green-500 text-white" : "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/40",
             yellow: type === "bg" ? "bg-yellow-500 text-white" : "text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/40",
         };
-        return colors[color] || colors.blue;
+        return colors[color] || colors.orange;
     };
 
     const getShadowClasses = (color: string) => {
@@ -365,7 +365,7 @@ const SalesDashboard = () => {
             violet: "shadow-violet-500/25",
             indigo: "shadow-indigo-500/25",
         };
-        return shadows[color] || shadows.blue;
+        return shadows[color] || shadows.orange;
     };
 
     // Skeleton - Responsive
@@ -402,7 +402,7 @@ const SalesDashboard = () => {
             {/* Decorative Background Elements - Hidden on very small screens */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none hidden sm:block">
                 <div className="absolute -top-40 -right-40 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-gradient-to-br from-violet-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 -left-40 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-gradient-to-br from-blue-400/20 to-cyan-600/20 rounded-full blur-3xl"></div>
+                <div className="absolute top-1/2 -left-40 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-gradient-to-br from-orange-400/20 to-cyan-600/20 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-40 right-1/3 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-gradient-to-br from-rose-400/20 to-orange-600/20 rounded-full blur-3xl"></div>
             </div>
 
@@ -507,7 +507,7 @@ const SalesDashboard = () => {
                     <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 md:p-6">
                         {/* Header */}
                         <h2 className="text-sm sm:text-base md:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                            <Globe className="text-blue-500 flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
+                            <Globe className="text-orange-500 flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
                             <span>Lead Sources</span>
                         </h2>
 

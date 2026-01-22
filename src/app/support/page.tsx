@@ -219,11 +219,11 @@ export default function SupportPage(): React.JSX.Element {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300">
 
             {/* Background decorative elements - responsive sizing */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-20 -right-20 w-40 h-40 sm:-top-40 sm:-right-40 sm:w-80 sm:h-80 bg-blue-400/10 dark:bg-blue-500/5 rounded-full blur-3xl"></div>
+                <div className="absolute -top-20 -right-20 w-40 h-40 sm:-top-40 sm:-right-40 sm:w-80 sm:h-80 bg-orange-400/10 dark:bg-orange-500/5 rounded-full blur-3xl"></div>
                 <div className="absolute top-1/2 -left-20 w-48 h-48 sm:-left-40 sm:w-96 sm:h-96 bg-indigo-400/10 dark:bg-indigo-500/5 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-20 right-1/4 w-40 h-40 sm:-bottom-40 sm:right-1/3 sm:w-80 sm:h-80 bg-purple-400/10 dark:bg-purple-500/5 rounded-full blur-3xl"></div>
             </div>
@@ -231,7 +231,7 @@ export default function SupportPage(): React.JSX.Element {
             <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-16">
                 {/* Header Section - Responsive text and spacing */}
                 <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-                    <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6 border border-transparent dark:border-blue-800/50">
+                    <div className="inline-flex items-center gap-2 bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6 border border-transparent dark:border-orange-800/50">
                         <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
@@ -250,8 +250,8 @@ export default function SupportPage(): React.JSX.Element {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-4xl mx-auto">
 
                     {/* Email Card */}
-                    <div className="group bg-white dark:bg-slate-800/50 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-200/30 dark:hover:shadow-blue-900/20 transition-all duration-500 hover:-translate-y-1 backdrop-blur-sm">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 shadow-lg shadow-blue-500/30 dark:shadow-blue-500/20 group-hover:scale-110 transition-transform duration-500">
+                    <div className="group bg-white dark:bg-slate-800/50 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-orange-200/30 dark:hover:shadow-orange-900/20 transition-all duration-500 hover:-translate-y-1 backdrop-blur-sm">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-orange-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 shadow-lg shadow-orange-500/30 dark:shadow-orange-500/20 group-hover:scale-110 transition-transform duration-500">
                             <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
@@ -262,7 +262,7 @@ export default function SupportPage(): React.JSX.Element {
                         </p>
                         <a
                             href="mailto:support@rscgroupdholera.in"
-                            className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 shadow-lg shadow-blue-500/25 dark:shadow-blue-500/15 hover:shadow-xl hover:shadow-blue-500/30"
+                            className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-orange-600 to-indigo-600 hover:from-orange-700 hover:to-indigo-700 text-white px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 shadow-lg shadow-orange-500/25 dark:shadow-orange-500/15 hover:shadow-xl hover:shadow-orange-500/30"
                         >
                             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

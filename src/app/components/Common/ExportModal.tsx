@@ -654,8 +654,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
         {
             type: 'word',
             label: 'Word',
-            color: 'text-blue-500 dark:text-blue-400',
-            bgColor: 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700',
+            color: 'text-orange-500 dark:text-orange-400',
+            bgColor: 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-700',
             icon: <FileText className="w-4 h-4 sm:w-5 sm:h-5" />,
         },
         {
@@ -682,7 +682,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-2">
-                        <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-1.5 rounded-lg">
+                        <div className="bg-gradient-to-br from-orange-500 to-purple-600 p-1.5 rounded-lg">
                             <Download className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                         <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100">Export Data</h2>
@@ -809,12 +809,12 @@ const ExportModal: React.FC<ExportModalProps> = ({
                     {/* Export Details */}
                     <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 sm:p-4 rounded-lg mb-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 dark:text-blue-400" />
+                            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 dark:text-orange-400" />
                             <h3 className="font-medium text-xs sm:text-sm text-gray-800 dark:text-gray-200">Export Summary</h3>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="text-center">
-                                <div className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">{recordsToExport.toLocaleString()}</div>
+                                <div className="text-sm sm:text-base font-bold text-orange-600 dark:text-orange-400">{recordsToExport.toLocaleString()}</div>
                                 <div className="text-xs text-gray-600 dark:text-gray-400">Records</div>
                             </div>
                             <div className="text-center">
@@ -842,7 +842,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                             disabled={isButtonDisabled}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${isButtonDisabled
                                 ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover:shadow-lg transform hover:scale-[1.02]'
+                                : 'bg-gradient-to-r from-orange-600 to-purple-600 hover:from-orange-700 hover:to-purple-700 text-white hover:shadow-lg transform hover:scale-[1.02]'
                                 }`}
                         >
                             {isExporting || isLoadingRange ? (

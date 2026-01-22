@@ -98,7 +98,7 @@ export default function RolesModal({
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-60"
+                            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-60"
                         >
                             {isLoading ? (
                                 <svg

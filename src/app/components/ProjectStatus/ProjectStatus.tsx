@@ -141,7 +141,7 @@ const ProjectStatusComponent: React.FC = () => {
                 ) : (
                     <Link
                         href={`/projectstatus/${row.id}`}
-                        className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline cursor-pointer text-sm sm:text-base"
+                        className="text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:underline cursor-pointer text-sm sm:text-base"
                     >
                         {row.title}
                     </Link>
@@ -179,7 +179,7 @@ const ProjectStatusComponent: React.FC = () => {
                             href={row.projectPdf}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-500 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                            className="text-orange-500 dark:text-orange-400 hover:underline text-sm sm:text-base"
                         >
                             View PDF
                         </a>
@@ -241,7 +241,7 @@ const ProjectStatusComponent: React.FC = () => {
                 <div className="flex-1">
                     <Link
                         href={`/projectstatus/${project.id}`}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium sm:font-semibold text-base sm:text-lg block hover:underline"
+                        className="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 font-medium sm:font-semibold text-base sm:text-lg block hover:underline"
                     >
                         {project.title}
                     </Link>
@@ -287,7 +287,7 @@ const ProjectStatusComponent: React.FC = () => {
                 {hasPermission(22, "edit") && (
                     <button
                         onClick={() => handleEdit(project)}
-                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 sm:gap-2 transition-colors bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800"
+                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 sm:gap-2 transition-colors bg-orange-50 dark:bg-orange-900 text-orange-600 dark:text-orange-200 hover:bg-orange-100 dark:hover:bg-orange-800"
                     >
                         <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="hidden sm:inline">Edit</span>
@@ -342,7 +342,7 @@ const ProjectStatusComponent: React.FC = () => {
                             onClick={handleAdd}
                             disabled={isSaving}
                             className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium
-                            ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+                            ${isSaving ? "bg-orange-400 text-white cursor-wait" : "bg-orange-500 hover:bg-orange-600 text-white"}`}
                         >
                             {isSaving ? (
                                 <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -385,7 +385,7 @@ const ProjectStatusComponent: React.FC = () => {
                                 onClick={handleAdd}
                                 disabled={isSaving}
                                 className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm
-                                ${isSaving ? "bg-blue-400 text-white cursor-wait" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+                                ${isSaving ? "bg-orange-400 text-white cursor-wait" : "bg-orange-500 hover:bg-orange-600 text-white"}`}
                             >
                                 {isSaving ? (
                                     <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -415,7 +415,7 @@ const ProjectStatusComponent: React.FC = () => {
                                     setSearchValue(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-xs sm:text-sm dark:text-white"
+                                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-xs sm:text-sm dark:text-white"
                             />
                             <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
                                 <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500" />
@@ -423,7 +423,7 @@ const ProjectStatusComponent: React.FC = () => {
                         </div>
                         {loading ? (
                             <div className="flex justify-center py-8 sm:py-12">
-                                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
+                                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-orange-500 dark:border-orange-400"></div>
                             </div>
                         ) : (
                             <>
@@ -478,8 +478,8 @@ const ProjectStatusComponent: React.FC = () => {
                                 </button>
                             </div>
                         )}
-                        <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-2 sm:p-3 text-center">
-                            <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-200">
+                        <div className="bg-orange-50 dark:bg-orange-900 rounded-lg p-2 sm:p-3 text-center">
+                            <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-200">
                                 Total: <span className="font-semibold">{totalRecords}</span> project statuses
                             </p>
                         </div>
@@ -524,7 +524,7 @@ const ProjectStatusComponent: React.FC = () => {
                                         <button
                                             onClick={() => handleEdit(row)}
                                             title="Edit"
-                                            className="p-1 rounded text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                            className="p-1 rounded text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
                                         >
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </button>

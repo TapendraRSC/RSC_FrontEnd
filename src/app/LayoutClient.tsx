@@ -160,7 +160,7 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
                     <p className="text-gray-600 dark:text-gray-400">Loading...</p>
                 </div>
             </div>
@@ -236,7 +236,7 @@ function NotFoundPage() {
                     </button> */}
                     <button
                         onClick={() => router.back()}
-                        className="btn btn-gradient mx-auto !mt-7 w-max border-0 uppercase shadow-none px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="btn btn-gradient mx-auto !mt-7 w-max border-0 uppercase shadow-none px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
                     >
                         Home
                     </button>

@@ -30,7 +30,7 @@ import 'react-perfect-scrollbar/dist/css/styles.css';
 import AnimateHeight from 'react-animate-height';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
-
+import Image from 'next/image';
 interface SidebarContextType {
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
@@ -303,7 +303,7 @@ const Sidebar = () => {
                         transition-all duration-300 ease-in-out
                         hover:pl-5 
                         ${isActive
-                            ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30 pl-5'
+                            ? 'bg-gradient-to-r from-orange-600 via-orange-500 to-indigo-500 text-white shadow-lg shadow-orange-500/30 pl-5'
                             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/80 hover:text-gray-900 dark:hover:text-white'
                         }
                     `}
@@ -312,7 +312,7 @@ const Sidebar = () => {
                         relative flex-shrink-0 transition-all duration-300
                         ${isActive
                             ? 'text-white scale-110'
-                            : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:scale-110'
+                            : 'text-gray-400 dark:text-gray-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 group-hover:scale-110'
                         }
                     `}>
                         {item.icon}
@@ -345,7 +345,7 @@ const Sidebar = () => {
                         transition-all duration-300 ease-in-out
                         hover:pl-5
                         ${hasActive
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 pl-5'
+                            ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 pl-5'
                             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/80 hover:text-gray-900 dark:hover:text-white'
                         }
                     `}
@@ -354,8 +354,8 @@ const Sidebar = () => {
                         <span className={`
                             flex-shrink-0 transition-all duration-300
                             ${hasActive
-                                ? 'text-blue-500 dark:text-blue-400 scale-110'
-                                : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:scale-110'
+                                ? 'text-orange-500 dark:text-orange-400 scale-110'
+                                : 'text-gray-400 dark:text-gray-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 group-hover:scale-110'
                             }
                         `}>
                             {item.icon}
@@ -370,7 +370,7 @@ const Sidebar = () => {
                     `}>
                         <ChevronDown className={`
                             w-4 h-4 transition-transform duration-300 ease-out
-                            ${hasActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}
+                            ${hasActive ? 'text-orange-500 dark:text-orange-400' : 'text-gray-400 dark:text-gray-500'}
                             ${isOpen ? 'rotate-180' : 'rotate-0'}
                         `} />
                     </div>
@@ -397,7 +397,7 @@ const Sidebar = () => {
                                             transition-all duration-300 ease-in-out
                                             hover:pl-5
                                             ${isChildActive
-                                                ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:to-indigo-500/20 text-blue-600 dark:text-blue-400 font-medium border-l-2 border-blue-500 -ml-[2px] pl-5'
+                                                ? 'bg-gradient-to-r from-orange-500/10 to-indigo-500/10 dark:from-orange-500/20 dark:to-indigo-500/20 text-orange-600 dark:text-orange-400 font-medium border-l-2 border-orange-500 -ml-[2px] pl-5'
                                                 : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-white'
                                             }
                                         `}
@@ -405,8 +405,8 @@ const Sidebar = () => {
                                         <span className={`
                                             flex-shrink-0 w-4 h-4 transition-all duration-200
                                             ${isChildActive
-                                                ? 'text-blue-500 dark:text-blue-400'
-                                                : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+                                                ? 'text-orange-500 dark:text-orange-400'
+                                                : 'text-gray-400 dark:text-gray-500 group-hover:text-orange-500 dark:group-hover:text-orange-400'
                                             }
                                         `}>
                                             {child.icon}
@@ -444,55 +444,53 @@ const Sidebar = () => {
                 `}
             >
                 <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between h-[72px] px-5 border-b border-gray-200/80 dark:border-gray-800/80">
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative">
-                                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 group-hover:scale-105 transition-all duration-300">
-                                    <Building2 className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-500 animate-ping opacity-20" />
-                            </div>
-                            <div className="relative">
-                                {/* <span
-                                    className="text-xl font-extrabold block leading-tight
-        bg-[length:300%_300%]
-        bg-gradient-to-r from-indigo-500 via-pink-500 to-orange-500
-        dark:from-cyan-400 dark:via-purple-400 dark:to-pink-400
-        bg-clip-text text-transparent animate-gradient
-        drop-shadow-[0_0_12px_rgba(236,72,153,0.35)]"
-                                >
-                                    RSC Group
-                                </span> */}
+                    <div className="flex items-center justify-between h-[100px] px-5 border-b border-gray-200/80 dark:border-gray-800/80">
 
-
-                                <span
+                        <Link href="/" className="group h-full">
+                            <div className="relative h-full w-full flex items-center">
+                                <div
                                     className="
-    text-2xl md:text-3xl font-extrabold block leading-tight
-    bg-[length:400%_400%]
-    bg-gradient-to-r 
-    from-indigo-500 via-fuchsia-500 via-pink-500 to-orange-400
-    dark:from-cyan-400 dark:via-purple-400 dark:to-pink-400
-    bg-clip-text text-transparent
-    animate-gradient-slow
-    drop-shadow-[0_0_18px_rgba(236,72,153,0.45)]
-    tracking-wide
-  "
+        relative
+        h-full
+        min-w-[280px] md:min-w-[360px]
+        px-6
+        flex items-center
+        justify-center
+      "
                                 >
-                                    RSC Group
-                                </span>
-
+                                    <Image
+                                        src="/RSC-GOLD-NEW-with-R.png"
+                                        alt="RSC Group Logo"
+                                        width={420}
+                                        height={140}
+                                        priority
+                                        className="
+          max-h-[80%]
+          w-auto
+          object-contain
+          translate-y-[1px] 
+          translate-x-[-50px]
+          rsc-logo-animate
+        "
+                                    />
+                                </div>
                             </div>
-
                         </Link>
-                        <button
+
+
+                        {/* Mobile close button */}
+                        {/* <button
                             type="button"
                             onClick={toggleSidebar}
                             className="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 hover:scale-105 active:scale-95"
                             aria-label="Close sidebar"
                         >
                             <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                        </button>
+                        </button> */}
+
                     </div>
+
+
 
                     <div className="flex-1 overflow-hidden">
                         <PerfectScrollbar
@@ -511,11 +509,11 @@ const Sidebar = () => {
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
                                         <Link
                                             href={filteredMenuItems.support.href}
-                                            className={`nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-all duration-300 ease-in-out hover:pl-5 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/60 dark:to-blue-900/40 border border-blue-200 dark:border-blue-700 shadow-sm hover:shadow-md ${pathname === '/support' ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-100 pl-5' : 'text-blue-700 dark:text-blue-200 hover:text-blue-800 dark:hover:text-blue-100'}`}
+                                            className={`nav-link group flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-all duration-300 ease-in-out hover:pl-5 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/60 dark:to-orange-900/40 border border-orange-200 dark:border-orange-700 shadow-sm hover:shadow-md ${pathname === '/support' ? 'ring-2 ring-orange-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 bg-orange-100 dark:bg-orange-900/60 text-orange-800 dark:text-orange-100 pl-5' : 'text-orange-700 dark:text-orange-200 hover:text-orange-800 dark:hover:text-orange-100'}`}
                                         >
-                                            <LifeBuoy className="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                                            <span className="font-semibold tracking-wide uppercase text-sm">{filteredMenuItems.support.title}</span>
-                                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-200/60 dark:bg-blue-500/30 text-blue-700 dark:text-blue-100 font-medium">Help</span>
+                                            <LifeBuoy className="w-5 h-5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+                                            <span className="font-semibold tracking-wide uppercase text-sm dark:text-orange-100">{filteredMenuItems.support.title}</span>
+                                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-orange-200/60 dark:bg-orange-500/30 text-orange-700 dark:text-orange-100 font-medium">Help</span>
                                         </Link>
                                     </li>
                                 )}

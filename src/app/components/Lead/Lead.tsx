@@ -716,7 +716,7 @@ const LeadComponent: React.FC = () => {
                     {hasPermission(21, 'add') && (
                         <button
                             onClick={handleAdd}
-                            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
+                            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-orange-500 to-indigo-600 text-white rounded-lg hover:from-orange-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
                         >
                             <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             <span>Add New</span>

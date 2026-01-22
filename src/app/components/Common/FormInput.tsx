@@ -98,7 +98,7 @@ const FormInput = <T extends Record<string, any>>({
             bg-white dark:bg-slate-800
             text-gray-900 dark:text-gray-100
             focus:outline-none focus:ring-2
-            focus:ring-blue-500 dark:focus:ring-blue-400
+            focus:ring-orange-500 dark:focus:ring-orange-400
             transition-all
             ${error ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' : ''}
             ${className}

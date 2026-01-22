@@ -117,10 +117,10 @@ const PermissionModalShow: React.FC<PermissionModalShowProps> = ({
                             type="submit"
                             disabled={isLoading}
                             className="flex items-center gap-2 px-4 py-2 
-                                       bg-blue-500 hover:bg-blue-600 
+                                       bg-orange-500 hover:bg-orange-600 
                                        text-white rounded-md 
                                        disabled:opacity-60 
-                                       transition-colors shadow-md dark:shadow-blue-800/30"
+                                       transition-colors shadow-md dark:shadow-orange-800/30"
                         >
                             {isLoading ? (
                                 <svg

@@ -133,7 +133,7 @@ const TableFilter = <T extends Record<string, any>>({
                             placeholder={filter.placeholder || `Search ${filter.label.toLowerCase()}...`}
                             value={value || ''}
                             onChange={(e) => updateTempFilter(key, e.target.value)}
-                            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                         />
                         {value && (
                             <button
@@ -187,7 +187,7 @@ const TableFilter = <T extends Record<string, any>>({
                             type="date"
                             value={value || ''}
                             onChange={(e) => updateTempFilter(key, e.target.value)}
-                            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                         />
                         {value && (
                             <button
@@ -213,7 +213,7 @@ const TableFilter = <T extends Record<string, any>>({
                                         onChange={(e) =>
                                             updateTempFilter(key, { ...dateRangeValue, [part]: e.target.value })
                                         }
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                                     />
                                     <label className="absolute -top-2 left-2 px-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
                                         {part === 'from' ? 'From' : 'To'}
@@ -228,7 +228,7 @@ const TableFilter = <T extends Record<string, any>>({
                                     const today = new Date().toISOString().split('T')[0];
                                     updateTempFilter(key, { from: today, to: today });
                                 }}
-                                className="px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                className="px-3 py-1 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
                             >
                                 Today
                             </button>
@@ -249,7 +249,7 @@ const TableFilter = <T extends Record<string, any>>({
                         placeholder={filter.placeholder || `Enter ${filter.label.toLowerCase()}...`}
                         value={value || ''}
                         onChange={(e) => updateTempFilter(key, e.target.value ? Number(e.target.value) : '')}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                     />
                 );
             default:
@@ -323,7 +323,7 @@ const TableFilter = <T extends Record<string, any>>({
                         </button>
                         <button
                             onClick={handleApply}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors duration-200"
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 rounded-lg transition-colors duration-200"
                         >
                             <Check className="w-4 h-4" />
                             Apply Filters
@@ -355,7 +355,7 @@ const TableFilter = <T extends Record<string, any>>({
                                         type="date"
                                         value={tempDateRange.from}
                                         onChange={(e) => handleDateInputClick('from', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400"
                                     />
                                 </div>
                                 <div className="relative">
@@ -364,7 +364,7 @@ const TableFilter = <T extends Record<string, any>>({
                                         type="date"
                                         value={tempDateRange.to}
                                         onChange={(e) => handleDateInputClick('to', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400"
                                     />
                                 </div>
                             </div>
@@ -375,7 +375,7 @@ const TableFilter = <T extends Record<string, any>>({
                                         const today = new Date().toISOString().split('T')[0];
                                         setTempDateRange({ from: today, to: today });
                                     }}
-                                    className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
                                 >
                                     Today
                                 </button>
@@ -389,7 +389,7 @@ const TableFilter = <T extends Record<string, any>>({
                                 <button
                                     type="button"
                                     onClick={handleAddDateFilter}
-                                    className="px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors"
+                                    className="px-4 py-2 text-sm font-medium bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 rounded-lg transition-colors"
                                 >
                                     Add
                                 </button>
@@ -412,16 +412,16 @@ const TableFilter = <T extends Record<string, any>>({
                         return (
                             <div
                                 key={String(columnKey)}
-                                className={`bg-white dark:bg-gray-800 border rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${hasValue ? 'border-blue-200 dark:border-blue-800 ring-1 ring-blue-100 dark:ring-blue-900' : 'border-gray-200 dark:border-gray-700'
+                                className={`bg-white dark:bg-gray-800 border rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${hasValue ? 'border-orange-200 dark:border-orange-800 ring-1 ring-orange-100 dark:ring-orange-900' : 'border-gray-200 dark:border-gray-700'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                        <div className={`p-1.5 rounded-lg ${hasValue ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                                            <Filter className={`w-4 h-4 ${hasValue ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                                        <div className={`p-1.5 rounded-lg ${hasValue ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                                            <Filter className={`w-4 h-4 ${hasValue ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'}`} />
                                         </div>
                                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{column.label}</h3>
-                                        {hasValue && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
+                                        {hasValue && <div className="w-2 h-2 bg-orange-500 rounded-full"></div>}
                                     </div>
                                     <button
                                         onClick={() => removeColumn(columnKey)}
@@ -439,14 +439,14 @@ const TableFilter = <T extends Record<string, any>>({
 
             {tempValues.dateRange && (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 ring-1 ring-blue-100 dark:ring-blue-900 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+                    <div className="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800 ring-1 ring-orange-100 dark:ring-orange-900 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                                    <Calendar className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                                 </div>
                                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Date Range</h3>
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                             </div>
                             <button
                                 onClick={() => removeTempFilter('dateRange')}
@@ -467,7 +467,7 @@ const TableFilter = <T extends Record<string, any>>({
                                         onChange={(e) =>
                                             updateTempFilter('dateRange', { ...tempValues.dateRange, from: e.target.value })
                                         }
-                                        className="w-full pl-3 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                                        className="w-full pl-3 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                                     />
                                 </div>
                                 <div className="relative">
@@ -480,7 +480,7 @@ const TableFilter = <T extends Record<string, any>>({
                                         onChange={(e) =>
                                             updateTempFilter('dateRange', { ...tempValues.dateRange, to: e.target.value })
                                         }
-                                        className="w-full pl-3 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                                        className="w-full pl-3 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                                     />
                                 </div>
                             </div>
@@ -491,7 +491,7 @@ const TableFilter = <T extends Record<string, any>>({
                                         const today = new Date().toISOString().split('T')[0];
                                         updateTempFilter('dateRange', { from: today, to: today });
                                     }}
-                                    className="px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                    className="px-3 py-1 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
                                 >
                                     Today
                                 </button>
@@ -509,10 +509,10 @@ const TableFilter = <T extends Record<string, any>>({
             )}
 
             {activeFiltersCount > 0 && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-6">
                     <div className="flex items-center gap-2 mb-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Pending Filters ({activeFiltersCount})</span>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-orange-900 dark:text-orange-100">Pending Filters ({activeFiltersCount})</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {Object.entries(tempValues).map(([key, value]) => {
@@ -527,13 +527,13 @@ const TableFilter = <T extends Record<string, any>>({
                             return (
                                 <span
                                     key={key}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100 rounded-lg text-sm font-medium shadow-sm"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-700 text-orange-900 dark:text-orange-100 rounded-lg text-sm font-medium shadow-sm"
                                 >
                                     <span className="font-semibold">{column?.label || 'Date Range'}:</span>
                                     <span className="truncate max-w-[120px]">{displayValue}</span>
                                     <button
                                         onClick={() => removeTempFilter(key)}
-                                        className="ml-1 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 flex-shrink-0"
+                                        className="ml-1 hover:text-orange-700 dark:hover:text-orange-300 transition-colors duration-200 flex-shrink-0"
                                     >
                                         <X className="w-3 h-3" />
                                     </button>

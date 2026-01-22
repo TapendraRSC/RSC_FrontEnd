@@ -317,7 +317,7 @@ export default function CommonDropdown({
                             {selected === null && (
                                 <Check
                                     size={16}
-                                    className="text-blue-500 dark:text-blue-400"
+                                    className="text-orange-500 dark:text-orange-400"
                                 />
                             )}
                         </div>
@@ -351,7 +351,7 @@ export default function CommonDropdown({
                                 {isSelected(option) && (
                                     <Check
                                         size={16}
-                                        className="text-blue-500 dark:text-blue-400"
+                                        className="text-orange-500 dark:text-orange-400"
                                     />
                                 )}
                             </div>

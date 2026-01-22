@@ -99,7 +99,7 @@ const PagePermissionModal: React.FC<PagePermissionModalProps> = ({
                         </button>
                         <button
                             type="submit"
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             {currentPermission ? 'Update Page Permission' : 'Add Page Permission'}

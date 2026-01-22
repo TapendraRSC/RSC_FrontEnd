@@ -186,7 +186,7 @@ const PaginationButtons = ({
           item.type === "ellipsis" ? (
             <span key={item.key} className="px-1.5 sm:px-2 text-gray-400 text-xs sm:text-sm">...</span>
           ) : (
-            <button key={item.key} onClick={() => onPageChange(item.value as number)} className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${currentPage === item.value ? "bg-blue-500 text-white shadow-md transform scale-105" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}>{item.value}</button>
+            <button key={item.key} onClick={() => onPageChange(item.value as number)} className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${currentPage === item.value ? "bg-orange-500 text-white shadow-md transform scale-105" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}>{item.value}</button>
           )
         )}
       </div>
@@ -238,7 +238,7 @@ const getStatusColor = (status: string | null | undefined) => {
   const s = status?.toLowerCase() || "";
   if (s === "active" || s === "completed" || s === "done") return "bg-green-100 text-green-800 border-green-200";
   if (s === "cancelled" || s === "rejected") return "bg-red-100 text-red-800 border-red-200";
-  return "bg-blue-100 text-blue-800 border-blue-200";
+  return "bg-orange-100 text-orange-800 border-orange-200";
 };
 
 const getStatusIcon = (status: string | null | undefined) => {
@@ -298,7 +298,7 @@ const MultiSelectDropdown: React.FC<{
   return (
     <div className="relative" ref={dropdownRef}>
       <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{label}</label>
-      <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled} className={`w-full text-xs p-2 rounded-lg border text-left flex items-center justify-between ${disabled ? "bg-gray-200 cursor-not-allowed opacity-60" : "bg-gray-50 dark:bg-gray-700 hover:border-blue-400"}`}>
+      <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled} className={`w-full text-xs p-2 rounded-lg border text-left flex items-center justify-between ${disabled ? "bg-gray-200 cursor-not-allowed opacity-60" : "bg-gray-50 dark:bg-gray-700 hover:border-orange-400"}`}>
         <span className={`truncate ${selectedValues.length === 0 ? "text-gray-400" : ""}`}>{getDisplayText()}</span>
         <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
@@ -306,14 +306,14 @@ const MultiSelectDropdown: React.FC<{
       {isOpen && !disabled && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
           <div onClick={() => handleToggleOption("All")} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600">
-            <div className={`w-4 h-4 rounded border flex items-center justify-center ${isAllSelected ? "bg-blue-500 border-blue-500" : "border-gray-300"}`}>
+            <div className={`w-4 h-4 rounded border flex items-center justify-center ${isAllSelected ? "bg-orange-500 border-orange-500" : "border-gray-300"}`}>
               {isAllSelected && <Check className="w-3 h-3 text-white" />}
             </div>
             <span className="text-xs font-medium">Select All</span>
           </div>
           {options.filter(o => o !== "All").map((option) => (
             <div key={option} onClick={() => handleToggleOption(option)} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-              <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedValues.includes(option) ? "bg-blue-500 border-blue-500" : "border-gray-300"}`}>
+              <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedValues.includes(option) ? "bg-orange-500 border-orange-500" : "border-gray-300"}`}>
                 {selectedValues.includes(option) && <Check className="w-3 h-3 text-white" />}
               </div>
               <span className="text-xs truncate">{option}</span>
@@ -340,9 +340,9 @@ const CalculationModal: React.FC<{
     { label: "Total Plot Value", value: data.totalPlotValue, icon: Building2, color: "from-purple-500 to-indigo-500", bgColor: "bg-purple-50 dark:bg-purple-900/20" },
     { label: "Total Stamp Duty", value: data.totalStampDuty, icon: FileCheck, color: "from-amber-500 to-orange-500", bgColor: "bg-amber-50 dark:bg-amber-900/20" },
     { label: "Total Legal Fees", value: data.totalLegalFees, icon: Gavel, color: "from-slate-500 to-gray-500", bgColor: "bg-slate-50 dark:bg-slate-900/20" },
-    { label: "Total Maintenance", value: data.totalMaintenance, icon: Calculator, color: "from-blue-500 to-cyan-500", bgColor: "bg-blue-50 dark:bg-blue-900/20" },
-    { label: "Plot Total Online Amount", value: data.totalOnlineAmount, icon: Wifi, color: "from-sky-500 to-blue-500", bgColor: "bg-sky-50 dark:bg-sky-900/20" },
-    { label: "Total Received Online Amount", value: data.totalReceivedOnlineAmount, icon: Wifi, color: "from-blue-500 to-indigo-500", bgColor: "bg-blue-50 dark:bg-blue-900/20" },
+    { label: "Total Maintenance", value: data.totalMaintenance, icon: Calculator, color: "from-orange-500 to-cyan-500", bgColor: "bg-orange-50 dark:bg-orange-900/20" },
+    { label: "Plot Total Online Amount", value: data.totalOnlineAmount, icon: Wifi, color: "from-sky-500 to-orange-500", bgColor: "bg-sky-50 dark:bg-sky-900/20" },
+    { label: "Total Received Online Amount", value: data.totalReceivedOnlineAmount, icon: Wifi, color: "from-orange-500 to-indigo-500", bgColor: "bg-orange-50 dark:bg-orange-900/20" },
     { label: "Total Pending Online Amount", value: data.totalPendingOnlineAmount, icon: Wifi, color: "from-orange-500 to-red-500", bgColor: "bg-orange-50 dark:bg-orange-900/20" },
     { label: "Total CP Commission", value: data.totalCpCommission, icon: Briefcase, color: "from-violet-500 to-purple-500", bgColor: "bg-violet-50 dark:bg-violet-900/20" },
     { label: "Plot Total Credit Points", value: data.totalCreditPoints, icon: Banknote, color: "from-teal-500 to-emerald-500", bgColor: "bg-teal-50 dark:bg-teal-900/20" },
@@ -700,11 +700,11 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
     <div className="space-y-4 p-2 sm:p-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-          Showing <span className="font-bold text-blue-600">{(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalRecords)}</span> of <span className="font-bold text-green-700">{totalRecords.toLocaleString()}</span>
+          Showing <span className="font-bold text-orange-600">{(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalRecords)}</span> of <span className="font-bold text-green-700">{totalRecords.toLocaleString()}</span>
         </div>
         <div className="flex items-center gap-2">
           {totalPages > 1 && <PaginationButtons currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
-          {/* <button onClick={handleCalculate} className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md hover:shadow-lg">Calculate</button> */}
+          {/* <button onClick={handleCalculate} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-indigo-500 text-white rounded-lg text-sm font-medium hover:from-orange-600 hover:to-indigo-600 transition-all shadow-md hover:shadow-lg">Calculate</button> */}
 
 
           <button onClick={handleCalculate} className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md">
@@ -718,7 +718,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input type="text" placeholder="Search client, employee, plot, mobile, CP..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-lg border dark:bg-gray-800 border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" />
+          <input type="text" placeholder="Search client, employee, plot, mobile, CP..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-lg border dark:bg-gray-800 border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none" />
         </div>
         <div className="flex items-center gap-2">
           <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="text-sm border rounded-lg p-1.5 bg-white dark:bg-gray-800">
@@ -728,8 +728,8 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
             <option value={100}>100 entries</option>
           </select>
           <div className="flex rounded-lg border overflow-hidden">
-            <button onClick={() => setViewMode("card")} className={`p-1.5 hover:bg-black hover:text-white ${viewMode === "card" ? "bg-blue-500 text-white" : "bg-black text-white"}`}><LayoutGrid className="w-5 h-5" /></button>
-            <button onClick={() => setViewMode("table")} className={`p-1.5 hover:bg-black hover:text-white ${viewMode === "table" ? "bg-blue-500 text-white" : "bg-black text-white"}`}><Table2 className="w-5 h-5" /></button>
+            <button onClick={() => setViewMode("card")} className={`p-1.5 hover:bg-black hover:text-white ${viewMode === "card" ? "bg-orange-500 text-white" : "bg-black text-white"}`}><LayoutGrid className="w-5 h-5" /></button>
+            <button onClick={() => setViewMode("table")} className={`p-1.5 hover:bg-black hover:text-white ${viewMode === "table" ? "bg-orange-500 text-white" : "bg-black text-white"}`}><Table2 className="w-5 h-5" /></button>
           </div>
         </div>
       </div>
@@ -756,7 +756,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
       </div>
 
       {loading ? (
-        <div className="p-8 sm:p-12 text-center bg-transparent rounded-lg border"><div className="animate-spin h-8 w-8 sm:h-10 sm:w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div></div>
+        <div className="p-8 sm:p-12 text-center bg-transparent rounded-lg border"><div className="animate-spin h-8 w-8 sm:h-10 sm:w-10 border-4 border-orange-500 border-t-transparent rounded-full mx-auto"></div></div>
       ) : viewMode === "table" ? (
         <div className="rounded-lg shadow-sm border overflow-x-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
@@ -772,7 +772,7 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
                     if (currencyFields.includes(c.accessor)) return <td key={c.accessor} className="px-2 sm:px-4 py-2 sm:py-4 text-[10px] sm:text-xs whitespace-nowrap">{formatCurrency((item as any)[c.accessor])}</td>;
                     return <td key={c.accessor} className="px-2 sm:px-4 py-2 sm:py-4 text-[10px] sm:text-xs whitespace-nowrap">{(item as any)[c.accessor] || "N/A"}</td>;
                   })}
-                  {hasEditPermission && (<td className="px-2 sm:px-4 py-2 sm:py-4"><button onClick={() => onEditColletion && onEditColletion(item)} className="text-blue-500"><Edit size={14} className="sm:w-4 sm:h-4" /></button></td>)}
+                  {hasEditPermission && (<td className="px-2 sm:px-4 py-2 sm:py-4"><button onClick={() => onEditColletion && onEditColletion(item)} className="text-orange-500"><Edit size={14} className="sm:w-4 sm:h-4" /></button></td>)}
                 </tr>
               ))}
             </tbody>
@@ -802,12 +802,12 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
                   </div>
                   <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                     <div className="flex items-center gap-1.5 sm:gap-2"><Phone size={12} className="sm:w-3.5 sm:h-3.5 text-indigo-500 flex-shrink-0" /><span className="truncate">{collection.mobileNumber || "N/A"}</span></div>
-                    <div className="flex items-center gap-1.5 sm:gap-2"><Mail size={12} className="sm:w-3.5 sm:h-3.5 text-blue-500 flex-shrink-0" /><span className="truncate">{collection.emailId || "N/A"}</span></div>
+                    <div className="flex items-center gap-1.5 sm:gap-2"><Mail size={12} className="sm:w-3.5 sm:h-3.5 text-orange-500 flex-shrink-0" /><span className="truncate">{collection.emailId || "N/A"}</span></div>
                     <div className="flex items-center gap-1.5 sm:gap-2"><User size={12} className="sm:w-3.5 sm:h-3.5 text-green-500 flex-shrink-0" /><span className="truncate">{collection.employeeName || "N/A"}</span></div>
                     <div className="flex items-center gap-1.5 sm:gap-2"><Hash size={12} className="sm:w-3.5 sm:h-3.5 text-purple-500 flex-shrink-0" /><span>Plot: {collection.plotNumber || "N/A"}</span></div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-                    <div><p className="text-[10px] sm:text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1 mb-0.5 sm:mb-1"><Ruler className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Plot Size</p><p className="text-xs sm:text-sm font-bold">{collection.plotSize || "N/A"}</p></div>
+                    <div><p className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1 mb-0.5 sm:mb-1"><Ruler className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Plot Size</p><p className="text-xs sm:text-sm font-bold">{collection.plotSize || "N/A"}</p></div>
                     <div><p className="text-[10px] sm:text-xs font-semibold text-green-600 dark:text-green-400 flex items-center gap-1 mb-0.5 sm:mb-1"><IndianRupee className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Price</p><p className="text-xs sm:text-sm font-bold">{formatted.formattedPrice}</p></div>
                     <div><p className="text-[10px] sm:text-xs font-semibold text-green-600 dark:text-green-400 flex items-center gap-1 mb-0.5 sm:mb-1"><IndianRupee className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Online Price</p><p className="text-xs sm:text-sm font-bold">{formatted.formattedPlotOnlinePrice}</p></div>
                     <div><p className="text-[10px] sm:text-xs font-semibold text-green-600 dark:text-green-400 flex items-center gap-1 mb-0.5 sm:mb-1"><IndianRupee className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Credit Price</p><p className="text-xs sm:text-sm font-bold">{formatted.formattedPlotCreditPrice}</p></div>
@@ -817,9 +817,9 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
                     <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><AlertCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-red-500" /> Pending Amount</p><p className="text-sm sm:text-lg font-bold text-red-600 dark:text-red-400">{formatted.formattedPendingAmount}</p></div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 border-green-200 dark:border-green-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-blue-500" /> Plot Online Amt</p><p className="text-sm sm:text-lg font-bold text-blue-600 dark:text-blue-400">{formatted.formattedOnlineAmount}</p></div>
-                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-blue-500" />Received Online</p><p className="text-sm sm:text-lg font-bold text-blue-600 dark:text-blue-400">{formatted.formattedReceivedOnlineAmount}</p></div>
-                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-blue-500" />Pending Online</p><p className="text-sm sm:text-lg font-bold text-blue-600 dark:text-blue-400">{formatted.formattedPendingOnlineAmount}</p></div>
+                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-orange-500" /> Plot Online Amt</p><p className="text-sm sm:text-lg font-bold text-orange-600 dark:text-orange-400">{formatted.formattedOnlineAmount}</p></div>
+                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-orange-500" />Received Online</p><p className="text-sm sm:text-lg font-bold text-orange-600 dark:text-orange-400">{formatted.formattedReceivedOnlineAmount}</p></div>
+                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-orange-500" />Pending Online</p><p className="text-sm sm:text-lg font-bold text-orange-600 dark:text-orange-400">{formatted.formattedPendingOnlineAmount}</p></div>
                     <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Banknote className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-emerald-500" /> Plot Credit Pts</p><p className="text-sm sm:text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatted.formattedCashAmount}</p></div>
                     <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Banknote className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-emerald-500" />Received Credit</p><p className="text-sm sm:text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatted.formattedReceivedCreditAmount}</p></div>
                     <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Banknote className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-emerald-500" />Pending Credit</p><p className="text-sm sm:text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatted.formattedPendingCreditAmount}</p></div>
@@ -831,8 +831,8 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
                     <div><p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Briefcase className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" /> Cp Commission</p><p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{formatted.formattedCommission}</p></div>
                     <div><p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" /> User Incentive</p><p className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400">{formatted.formattedIncentive}</p></div>
                   </div>
-                  <div className={`grid grid-cols-1 ${showCPName ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/10 border-blue-200 dark:border-blue-700`}>
-                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wallet className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" /> Total Amount</p><p className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-400">{formatted.formattedTotalAmount}</p></div>
+                  <div className={`grid grid-cols-1 ${showCPName ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border bg-gradient-to-br from-orange-50 to-indigo-50 dark:from-orange-900/20 dark:to-indigo-900/10 border-orange-200 dark:border-orange-700`}>
+                    <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Wallet className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" /> Total Amount</p><p className="text-base sm:text-xl font-bold text-orange-600 dark:text-orange-400">{formatted.formattedTotalAmount}</p></div>
                     <div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><Scale className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" /> Difference</p><p className={`text-base sm:text-xl font-bold ${parseFloat(String(collection.difference || 0)) < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>{formatted.formattedDifference}</p></div>
                     {showCPName && (<div><p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 flex items-center mb-0.5 sm:mb-1"><UserCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" /> CP Name</p><p className="text-base sm:text-xl font-bold text-purple-600 dark:text-purple-400">{collection.CPName}</p></div>)}
                   </div>

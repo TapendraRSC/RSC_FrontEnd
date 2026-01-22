@@ -391,7 +391,7 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
                             </button>
                             <button
                                 onClick={handleUploadClick}
-                                className="flex items-center gap-2 px-4 py-2 text-sm sm:text-base bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-blue-200 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-600 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 text-sm sm:text-base bg-orange-100 dark:bg-orange-700 text-orange-700 dark:text-orange-200 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-600 transition-colors"
                             >
                                 <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                                 Upload From Your System
@@ -480,13 +480,13 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
                         <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 w-full">
                             <div className="relative">
                                 <div
-                                    className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-4 border-dashed border-blue-200 dark:border-blue-700 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
+                                    className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center border-4 border-dashed border-orange-200 dark:border-orange-700 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800 transition-colors"
                                     onClick={handleUploadClick}
                                 >
-                                    <CloudUpload className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 text-blue-500 dark:text-blue-400" />
+                                    <CloudUpload className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 text-orange-500 dark:text-orange-400" />
                                 </div>
                                 <div
-                                    className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-full bg-blue-500 dark:bg-blue-400 flex items-center justify-center animate-pulse cursor-pointer"
+                                    className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-full bg-orange-500 dark:bg-orange-400 flex items-center justify-center animate-pulse cursor-pointer"
                                     onClick={handleUploadClick}
                                 >
                                     <Upload className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-4 lg:h-4 text-white" />
@@ -525,7 +525,7 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
                         <button
                             onClick={onConfirmUpload}
                             disabled={isLoading || localPreviewData.length === 0 || !isValidHeaders}
-                            className="flex items-center justify-center gap-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium"
+                            className="flex items-center justify-center gap-2 px-6 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium"
                         >
                             {isLoading ? (
                                 <>

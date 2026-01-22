@@ -290,7 +290,7 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                                 key={option.id}
                                 onClick={() => handleOptionSelect(option.id)}
                                 className={`w-full text-left px-2 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${selectedOption === option.id
-                                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+                                    ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300'
                                     : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                                     }`}
                             >
@@ -322,7 +322,7 @@ const DateFilterDropdown = ({ fromDate, toDate, onDateChange }: any) => {
                                         onDateChange(customFromDate, customToDate);
                                         setIsOpen(false);
                                     }}
-                                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-1.5 px-3 rounded-lg text-xs sm:text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all"
+                                    className="w-full bg-gradient-to-r from-orange-500 to-indigo-600 text-white py-1.5 px-3 rounded-lg text-xs sm:text-sm font-medium hover:from-orange-600 hover:to-indigo-700 transition-all"
                                 >
                                     Apply Custom Range
                                 </button>
@@ -402,7 +402,7 @@ const PaginationButtons = ({
                             key={item.key}
                             onClick={() => onPageChange(item?.value)}
                             className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${currentPage === item.value
-                                ? 'bg-blue-500 dark:bg-blue-600 text-white shadow-md transform scale-105'
+                                ? 'bg-orange-500 dark:bg-orange-600 text-white shadow-md transform scale-105'
                                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                                 }`}
                         >
@@ -462,7 +462,7 @@ const getStatusColor = (status: string) => {
     switch (statusLower) {
         case 'in followup':
         case 'followup':
-            return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
+            return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700';
         case 'converted':
         case 'closed':
             return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
@@ -514,7 +514,7 @@ const getStatusIcon = (status: string) => {
 const getSourceColor = (source: string) => {
     switch (source?.toUpperCase()) {
         case 'WEBSITE':
-            return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
+            return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700';
         case 'REFERRAL':
             return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
         case 'SOCIAL MEDIA':
@@ -718,10 +718,10 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     const formatLeadData = (lead: Lead) => ({
         ...lead,
         formattedPhone: lead.phone ? (
-            <a className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{lead.phone}</a>
+            <a className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors">{lead.phone}</a>
         ) : 'N/A',
         formattedEmail: lead.email ? (
-            <a className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{lead.email}</a>
+            <a className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors">{lead.email}</a>
         ) : 'N/A',
         formattedStatus: (
             <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(lead.status)}`}>
@@ -735,7 +735,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
             </span>
         ),
         formattedStage: (
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700">
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
                 {lead.stage}
             </span>
         ),
@@ -752,7 +752,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             <div className="flex items-center space-x-2">
                                 <span className="font-medium">Showing :</span>
-                                <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded-md font-semibold">
+                                <span className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-200 rounded-md font-semibold">
                                     {leads.length > 0 ? `${(externalCurrentPage - 1) * externalPageSize + 1} - ${Math.min(externalCurrentPage * externalPageSize, totalRecords)}` : '0'}
                                 </span>
                                 <span>of</span>
@@ -779,7 +779,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 key={`tab-${tab.id}`}
                                 onClick={() => onTabChange && onTabChange(tab.id)}
                                 className={`px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium flex items-center space-x-1 sm:space-x-2 whitespace-nowrap transition-all ${externalActiveTab === tab.id
-                                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg transform scale-[1.02]'
+                                    ? 'bg-gradient-to-r from-orange-500 to-indigo-600 text-white shadow-lg transform scale-[1.02]'
                                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
                                     }`}
                             >
@@ -802,7 +802,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         placeholder="Search leads..."
                                         value={externalSearchTerm}
                                         onChange={e => onSearch && onSearch(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     />
                                     <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
                                 </div>
@@ -812,7 +812,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     <select
                                         value={externalPageSize}
                                         onChange={e => onPageSizeChange && onPageSizeChange(Number(e.target.value))}
-                                        className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     >
                                         {[5, 15, 50, 100].map(size => (
                                             <option key={`page-size-${size}`} value={size} className="bg-white dark:bg-gray-800 text-black dark:text-white">
@@ -826,7 +826,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 <select
                                     value={externalSelectedPlatform}
                                     onChange={e => onPlatformChange && onPlatformChange(e.target.value)}
-                                    className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer min-w-[120px]"
+                                    className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent cursor-pointer min-w-[120px]"
                                 >
                                     <option value="" className="bg-white dark:bg-gray-800 text-black dark:text-white">All Platforms</option>
                                     {leadPlatforms?.map((platform: any) => (
@@ -840,7 +840,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     <select
                                         value={externalSelectedAssignedTo}
                                         onChange={e => onAssignedToChange && onAssignedToChange(e.target.value)}
-                                        className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer min-w-[120px]"
+                                        className="px-2 py-1.5 text-xs rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent cursor-pointer min-w-[120px]"
                                     >
                                         <option value="" className="bg-white dark:bg-gray-800 text-black dark:text-white">All Assignees</option>
                                         {actualUsersData?.map((user: any) => (
@@ -857,7 +857,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     <button
                                         onClick={() => setViewMode('card')}
                                         className={`p-1.5 rounded-lg transition-all ${viewMode === 'card'
-                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white transform scale-105 shadow-md'
+                                            ? 'bg-gradient-to-r from-orange-500 to-indigo-600 text-white transform scale-105 shadow-md'
                                             : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
                                             }`}
                                         title="Card View"
@@ -867,7 +867,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     <button
                                         onClick={() => setViewMode('table')}
                                         className={`p-1.5 rounded-lg transition-all ${viewMode === 'table'
-                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white transform scale-105 shadow-md'
+                                            ? 'bg-gradient-to-r from-orange-500 to-indigo-600 text-white transform scale-105 shadow-md'
                                             : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
                                             }`}
                                         title="Table View"
@@ -884,20 +884,20 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         id="selectAll"
                                         checked={leads.length > 0 && selectedLeads.length === leads.length}
                                         onChange={handleSelectAll}
-                                        className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 rounded"
+                                        className="h-3.5 w-3.5 text-orange-600 focus:ring-orange-500 rounded"
                                     />
                                     <label htmlFor="selectAll" className="text-xs font-medium text-gray-700 dark:text-gray-300">
                                         Select All ({leads.length})
                                     </label>
                                     {selectedLeads.length > 0 && (
-                                        <span className="text-xs text-blue-500 dark:text-blue-400 font-semibold">
+                                        <span className="text-xs text-orange-500 dark:text-orange-400 font-semibold">
                                             {selectedLeads.length} selected
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex gap-3 text-xs text-gray-600 dark:text-gray-300">
                                     <span>Filtered</span>
-                                    <span className="font-semibold text-blue-600 dark:text-blue-400">{leads.length}</span>
+                                    <span className="font-semibold text-orange-600 dark:text-orange-400">{leads.length}</span>
                                     <span>Page {externalCurrentPage} of {totalPages}</span>
                                 </div>
                             </div>
@@ -945,7 +945,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
 
             {loading ? (
                 <div className="rounded-lg p-8 sm:p-12 text-center bg-white dark:bg-gray-800">
-                    <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4 sm:mb-6" />
+                    <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-4 sm:mb-6" />
                     <p className="font-medium text-gray-600 dark:text-gray-300">Loading leads...</p>
                 </div>
             ) : viewMode === 'table' ? (
@@ -958,7 +958,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         type="checkbox"
                                         checked={leads.length > 0 && selectedLeads.length === leads.length}
                                         onChange={handleSelectAll}
-                                        className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
+                                        className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-600 focus:ring-orange-500 rounded"
                                     />
                                 </th>
                                 {columns.map((column: any) => (
@@ -988,14 +988,14 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                     return (
                                         <tr
                                             key={`lead-${lead.id}`}
-                                            className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedLeads.includes(lead.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                                            className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedLeads.includes(lead.id) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}
                                         >
                                             <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedLeads.includes(lead.id)}
                                                     onChange={() => handleSelectLead(lead.id)}
-                                                    className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded"
+                                                    className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-600 focus:ring-orange-500 rounded"
                                                 />
                                             </td>
                                             {columns.map((column: any) => {
@@ -1049,7 +1049,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     </button>
                                                 )}
                                                 {hasEditPermission && onEditLead && (
-                                                    <button onClick={() => onEditLead(lead)} className="p-1.5 rounded-full text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors" title="Edit">
+                                                    <button onClick={() => onEditLead(lead)} className="p-1.5 rounded-full text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors" title="Edit">
                                                         <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                     </button>
                                                 )}
@@ -1071,7 +1071,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                 {externalSearchTerm ? `No leads match your search "${externalSearchTerm}"` : 'No leads found'}
                                             </h3>
                                             {onAddLead && (
-                                                <button onClick={onAddLead} className="mt-2 sm:mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md">
+                                                <button onClick={onAddLead} className="mt-2 sm:mt-4 bg-gradient-to-r from-orange-500 to-indigo-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg hover:from-orange-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md">
                                                     Add Your First Lead
                                                 </button>
                                             )}
@@ -1092,7 +1092,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                 <div
                                     key={`card-${lead.id}`}
                                     className={`rounded-lg shadow-sm border transition-all duration-200 ${selectedLeads.includes(lead.id)
-                                        ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50 dark:bg-blue-900/20'
+                                        ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50 dark:bg-orange-900/20'
                                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                                         }`}
                                 >
@@ -1103,7 +1103,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                     type="checkbox"
                                                     checked={selectedLeads.includes(lead.id)}
                                                     onChange={() => handleSelectLead(lead.id)}
-                                                    className="h-4 w-4 text-blue-400 focus:ring-blue-300 rounded bg-white/20 border-white/30"
+                                                    className="h-4 w-4 text-orange-400 focus:ring-orange-300 rounded bg-white/20 border-white/30"
                                                 />
                                                 <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full">
                                                     <div className={`${followUpStatus.bgColor} ${followUpStatus.border} flex items-center space-x-2 px-3 py-1.5 rounded-full ${followUpStatus.isDueSoon && followUpStatus.pulse ? 'animate-blink' : ''}`}>
@@ -1119,7 +1119,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                 <LeadIdBadge id={lead.id} />
                                                 <div className="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-full">
                                                     <span className="text-xs font-medium text-white/80">Stage</span>
-                                                    <span className="text-xs font-semibold text-blue-200">{lead.stage || 'N/A'}</span>
+                                                    <span className="text-xs font-semibold text-orange-200">{lead.stage || 'N/A'}</span>
                                                 </div>
                                                 <div className="flex items-center space-x-1 bg-white/10 px-3 py-1.5 rounded-full">
                                                     <span className="text-xs font-medium text-white/80">Status</span>
@@ -1133,14 +1133,14 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                         <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-6">
                                             <div className="flex-1">
                                                 <h3
-                                                    className="text-lg sm:text-xl font-bold mb-1.5 text-gray-900 dark:text-gray-50 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                                                    className="text-lg sm:text-xl font-bold mb-1.5 text-gray-900 dark:text-gray-50 hover:text-orange-600 dark:hover:text-orange-400 cursor-pointer transition-colors"
                                                 // onClick={() => onLeadClick && onLeadClick(lead)}
                                                 >
                                                     {lead.name || 'Unnamed Lead'}
                                                 </h3>
                                                 <div className="space-y-1.5 mb-3">
                                                     <div className="flex items-center space-x-2">
-                                                        <Phone className="h-3.5 w-3.5 text-blue-500" />
+                                                        <Phone className="h-3.5 w-3.5 text-orange-500" />
                                                         <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">{formattedLead.formattedPhone}</span>
                                                     </div>
                                                     {lead.email && (
@@ -1186,7 +1186,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                                         <div>
                                                             <p className="text-xs font-medium text-gray-500 dark:text-gray-400">State</p>
                                                             <p className="flex items-center space-x-1 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                                                <Building2 className="h-3 w-3 text-blue-500" />
+                                                                <Building2 className="h-3 w-3 text-orange-500" />
                                                                 <span>{lead.state}</span>
                                                             </p>
                                                         </div>
@@ -1195,7 +1195,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                             </div>
                                         </div>
 
-                                        <div className="rounded-lg mt-4 p-3 sm:p-4 border bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-700">
+                                        <div className="rounded-lg mt-4 p-3 sm:p-4 border bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-700">
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                                                 <div>
                                                     <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Next Follow-up</p>
@@ -1244,7 +1244,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                                             {hasEditPermission && onEditLead && (
                                                 <button
                                                     onClick={() => onEditLead(lead)}
-                                                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md"
+                                                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-orange-500 to-indigo-600 text-white hover:from-orange-600 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md"
                                                 >
                                                     <Edit className="h-3.5 w-3.5" />
                                                     <span>Edit</span>
@@ -1278,7 +1278,7 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
                             {onAddLead && (
                                 <button
                                     onClick={onAddLead}
-                                    className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
+                                    className="bg-gradient-to-r from-orange-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:from-orange-600 hover:to-indigo-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
                                 >
                                     Add Your First Lead
                                 </button>

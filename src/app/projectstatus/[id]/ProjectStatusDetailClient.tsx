@@ -354,7 +354,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                     <button
                         onClick={() => handleOpenEdit(plot)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
-                                   bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 cursor-pointer"
+                                   bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50 cursor-pointer"
                         title="Edit"
                     >
                         <Pencil className="w-4 h-4" />
@@ -426,7 +426,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                         <button
                             onClick={handleOpenAdd}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                                       bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white cursor-pointer"
+                                       bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white cursor-pointer"
                             title="Add New"
                         >
                             <Plus className="w-4 h-4" />
@@ -482,7 +482,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                             <button
                                 onClick={handleOpenAdd}
                                 className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
-                                           bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white cursor-pointer"
+                                           bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white cursor-pointer"
                                 title="Add New"
                             >
                                 <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -516,7 +516,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                                 }}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                                            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                           focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent
+                                           focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent
                                            placeholder:text-gray-500 dark:placeholder:text-gray-400"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -527,7 +527,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                         </div>
                         {loading ? (
                             <div className="flex justify-center py-8">
-                                <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
+                                <Loader2 className="w-6 h-6 animate-spin text-orange-500 dark:text-orange-400" />
                             </div>
                         ) : (
                             <>
@@ -609,7 +609,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                                     {hasPermission(22, "edit") && (
                                         <button
                                             onClick={() => handleOpenEdit(row)}
-                                            className="p-1 transition-colors text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+                                            className="p-1 transition-colors text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 cursor-pointer"
                                             title="Edit"
                                         >
                                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />

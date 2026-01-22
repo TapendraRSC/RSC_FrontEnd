@@ -163,7 +163,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                     })}
                                     type="text"
                                     placeholder="Enter full name"
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                                 />
                                 {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>}
                             </div>
@@ -181,7 +181,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                     })}
                                     type="email"
                                     placeholder="Enter email address"
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                                 />
                                 {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>}
                             </div>
@@ -207,7 +207,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                     })}
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Enter password"
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                                 />
                                 <button
                                     type="button"
@@ -240,7 +240,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                     })}
                                     type="number"
                                     placeholder="Enter 10-digit number"
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                                 />
                                 {errors.phoneNumber && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phoneNumber.message}</p>}
                             </div>
@@ -253,7 +253,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                 </label>
                                 <select
                                     {...register('roleId', { required: 'Role is required' })}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                                 >
                                     <option value="">Select a role</option>
                                     {roleOptions.map((role) => (
@@ -268,7 +268,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                                 <select
                                     {...register('status', { required: 'Status is required' })}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                                 >
                                     <option value="">Select status</option>
                                     {statusOptions.map((status) => (
@@ -291,7 +291,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageChange}
-                                        className="file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 dark:file:bg-slate-700 dark:file:text-blue-300 w-full"
+                                        className="file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 dark:file:bg-slate-700 dark:file:text-orange-300 w-full"
                                     />
                                     {/* {showImagePreview && !selectedFile && (
                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -323,7 +323,7 @@ const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose, onSubmit, user
                             </button>
                             <button
                                 type="submit"
-                                className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                                className="w-full sm:w-auto px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-sm"
                             >
                                 {user ? 'Update User' : 'Add User'}
                             </button>

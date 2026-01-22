@@ -202,7 +202,7 @@ const Director = () => {
     if (loading || roleLoading) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
             </div>
         );
     }
@@ -262,7 +262,7 @@ const Director = () => {
                                         <td className="px-4 py-4">{item.phone}</td>
                                         <td className="px-4 py-4">{new Date(item.createdAt).toLocaleDateString()}</td>
                                         <td className="px-4 py-4 text-center">
-                                            <button onClick={() => setOpenMessage(item.message)} className="text-blue-600 hover:text-blue-800"><Eye size={18} /></button>
+                                            <button onClick={() => setOpenMessage(item.message)} className="text-orange-600 hover:text-orange-800"><Eye size={18} /></button>
                                         </td>
                                         {permissions.delete && (
                                             <td className="px-4 py-4 text-center">

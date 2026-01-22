@@ -35,7 +35,7 @@ const LeadStageCard = ({ stage, onEdit, onDelete }: { stage: LeadStage; onEdit: 
         <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
             <button
                 onClick={onEdit}
-                className="flex-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-3 py-2 rounded-md text-sm font-medium hover:bg-orange-100 dark:hover:bg-orange-800/50 transition-colors flex items-center justify-center gap-2"
             >
                 <Pencil className="w-4 h-4" />
                 Edit
@@ -187,7 +187,7 @@ const LeadStageMasterPage: React.FC = () => {
                     </div>
                     <button
                         onClick={handleAdd}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                        className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
                     >
                         <Plus className="w-4 h-4" />
                         Add Lead Stage
@@ -225,7 +225,7 @@ const LeadStageMasterPage: React.FC = () => {
             <div className="sticky top-16 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 py-3 lg:hidden">
                 <button
                     onClick={handleAdd}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+                    className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
                 >
                     <Plus className="w-5 h-5" />
                     Add New Lead Stage
@@ -243,7 +243,7 @@ const LeadStageMasterPage: React.FC = () => {
                                 placeholder="Search lead stages..."
                                 value={searchValue}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Search className="h-5 w-5 text-gray-400" />
@@ -251,7 +251,7 @@ const LeadStageMasterPage: React.FC = () => {
                         </div>
                         {loading ? (
                             <div className="flex justify-center py-12">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                             </div>
                         ) : (
                             <>
@@ -346,7 +346,7 @@ const LeadStageMasterPage: React.FC = () => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => handleEdit(row)}
-                                        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition-colors"
+                                        className="text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded transition-colors"
                                         title="Edit"
                                     >
                                         <Pencil className="w-4 h-4" />

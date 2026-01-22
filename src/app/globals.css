@@ -610,3 +610,92 @@
 .animate-gradient-slow {
     animation: gradient 6s ease infinite;
 }
+
+
+/* RSC Logo Animation (Position Safe) */
+@keyframes rscLogoPulse {
+
+    0%,
+    100% {
+        transform: translateX(-50px) translateY(1px) scale(1);
+    }
+
+    50% {
+        transform: translateX(-50px) translateY(1px) scale(1.2);
+    }
+}
+
+.rsc-logo-animate {
+    animation: rscLogoPulse 4s ease-in-out infinite;
+    will-change: transform;
+}
+
+
+
+
+/* border */
+
+/* ================================
+   FULLY ANIMATED PREMIUM BORDER
+================================ */
+
+.animated-border-full::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    /* border thickness */
+    border-radius: inherit;
+    background: linear-gradient(120deg,
+            #c9a227,
+            #f5e38c,
+            #c9a227,
+            #9f7c19);
+    background-size: 400% 400%;
+    animation: borderFlow 6s linear infinite;
+    pointer-events: none;
+
+    /* border-only mask */
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+.animated-border-full::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    filter: blur(14px);
+    background: radial-gradient(circle,
+            rgba(201, 162, 39, 0.35),
+            transparent 60%);
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* Flowing gradient around border */
+@keyframes borderFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 400% 50%;
+    }
+}
+
+/* Soft pulsing glow */
+@keyframes borderGlow {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.9;
+    }
+}

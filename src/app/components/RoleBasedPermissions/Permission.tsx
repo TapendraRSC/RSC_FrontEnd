@@ -169,10 +169,10 @@ const UserPermissions: React.FC = () => {
                 </div>
 
                 {rolePermissionsLoading && (
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                    <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded-lg">
                         <div className="flex items-center">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                            <span className="text-blue-700 dark:text-blue-300 text-sm">Loading permissions for {selectedRole.roleType}...</span>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600 mr-2"></div>
+                            <span className="text-orange-700 dark:text-orange-300 text-sm">Loading permissions for {selectedRole.roleType}...</span>
                         </div>
                     </div>
                 )}
