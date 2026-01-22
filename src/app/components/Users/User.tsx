@@ -239,12 +239,11 @@ const Users: React.FC = () => {
             minWidth: 200,
             maxWidth: 500,
             showTooltip: true,
-            render: (row: User) =>
-                row.status === 'inactive' ? (
-                    <span className="text-gray-400 cursor-not-allowed">{row.name}</span>
-                ) : (
-                    <span className="text-gray-900 dark:text-gray-100">{row.name}</span>
-                ),
+            render: (row: User) => (
+                <span className={row.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
+                    {row.name}
+                </span>
+            ),
         },
         {
             label: 'Profile Image',
@@ -254,11 +253,10 @@ const Users: React.FC = () => {
                     <img
                         src={row.profileImage}
                         alt="Profile"
-                        className={`w-20 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-lg ${row.status === 'inactive' ? 'opacity-50 cursor-not-allowed ' : ''
-                            }`}
+                        className={`w-20 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-lg ${row.status === 'inactive' ? 'opacity-50' : ''}`}
                     />
                 ) : (
-                    '-'
+                    <span className={row.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>-</span>
                 ),
             showTooltip: true,
         },
@@ -270,11 +268,8 @@ const Users: React.FC = () => {
             mobile: true,
             render: (row: User) => (
                 <div
-                    className={`truncate max-w-[150px] md:max-w-[200px] ${row.status === 'inactive'
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-900 dark:text-gray-100'
-                        }`}
-                    title={row.status === 'inactive' ? 'Inactive user' : row.email}
+                    className={`truncate max-w-[150px] md:max-w-[200px] ${row.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
+                    title={row.email}
                 >
                     {row.email}
                 </div>
@@ -290,13 +285,7 @@ const Users: React.FC = () => {
             minWidth: 200,
             maxWidth: 500,
             render: (row: User) => (
-                <span
-                    className={
-                        row.status === 'inactive'
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-900 dark:text-gray-100'
-                    }
-                >
+                <span className={row.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
                     {row.phoneNumber}
                 </span>
             ),
@@ -312,10 +301,7 @@ const Users: React.FC = () => {
                 const roleType = getRoleType(row.roleId);
                 return (
                     <div
-                        className={`truncate max-w-[100px] md:max-w-[120px] ${row.status === 'inactive'
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-900 dark:text-gray-100'
-                            }`}
+                        className={`truncate max-w-[100px] md:max-w-[120px] ${row.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
                         title={roleType}
                     >
                         {roleType}
@@ -333,7 +319,7 @@ const Users: React.FC = () => {
                 <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'active'
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 cursor-not-allowed'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                         }`}
                 >
                     {row.status || 'Active'}
@@ -378,32 +364,32 @@ const Users: React.FC = () => {
                         <img
                             src={user.profileImage}
                             alt="Profile"
-                            className="w-12 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-full"
+                            className={`w-12 h-12 object-cover border border-gray-300 dark:border-gray-600 rounded-full ${user.status === 'inactive' ? 'opacity-50' : ''}`}
                         />
                     ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-purple-500 rounded-full flex items-center justify-center">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${user.status === 'inactive' ? 'bg-gradient-to-br from-red-400 to-red-500' : 'bg-gradient-to-br from-green-400 to-green-500'}`}>
                             <span className="text-white font-bold text-lg">
                                 {user.name.charAt(0).toUpperCase()}
                             </span>
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 truncate">{user.name}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{getRoleType(user.roleId)}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 truncate mt-1">{user.email}</p>
+                        <h3 className={`font-semibold text-lg truncate ${user.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>{user.name}</h3>
+                        <p className={`text-sm mt-1 ${user.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>{getRoleType(user.roleId)}</p>
+                        <p className={`text-sm truncate mt-1 ${user.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>{user.email}</p>
                     </div>
                 </div>
                 {user.status && (
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.status === 'active'
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                         }`}>
                         {user.status}
                     </span>
                 )}
             </div>
             {user.phoneNumber && (
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className={`text-sm ${user.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                     <span className="font-medium">Phone:</span> {user.phoneNumber}
                 </div>
             )}

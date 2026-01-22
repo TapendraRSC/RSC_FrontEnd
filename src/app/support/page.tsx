@@ -1,6 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+    Facebook,
+    Instagram,
+    Linkedin,
+    Youtube,
+    Twitter,
+    Globe,
+    ExternalLink,
+    Pin
+} from 'lucide-react';
 
 interface OfficeHour {
     day: string;
@@ -25,6 +36,34 @@ export default function SupportPage(): React.JSX.Element {
         { day: 'Friday', time: '10:00 AM - 7:00 PM', isOpen: true },
         { day: 'Saturday', time: 'Closed', isOpen: false },
         { day: 'Sunday', time: 'Closed', isOpen: false },
+    ];
+
+
+    const socialLinks = [
+        { url: "https://rscgroupdholera.in/", icon: <Globe className="w-4 h-4" />, color: "bg-blue-500" },
+        { url: "https://www.facebook.com/people/RSC-Group-Dholera/61571785018455/", icon: <Facebook className="w-4 h-4" />, color: "bg-blue-600" },
+        { url: "https://www.instagram.com/rsc_group_dholera/", icon: <Instagram className="w-4 h-4" />, color: "bg-pink-600" },
+        { url: "https://www.linkedin.com/company/rsc-group-dholera-sir/", icon: <Linkedin className="w-4 h-4" />, color: "bg-blue-700" },
+        { url: "https://x.com/dholerarscgroup", icon: <Twitter className="w-4 h-4" />, color: "bg-black" },
+        {
+            url: "https://in.pinterest.com/rsc_group_dholera/",
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
+                </svg>
+            ),
+            color: "bg-red-600"
+        },
+        { url: "https://www.youtube.com/@rscgroupdholeraindia", icon: <Youtube className="w-4 h-4" />, color: "bg-red-700" },
+        {
+            url: "https://share.google/tS3BcpnRNX0WRVmtZ",
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                </svg>
+            ),
+            color: "bg-green-600"
+        },
     ];
 
 
@@ -315,6 +354,47 @@ export default function SupportPage(): React.JSX.Element {
                                 </div>
                             ))}
                         </div>
+                    </div>
+                </div>
+
+
+
+                <div className="mt-12 max-w-4xl mx-auto px-4">
+                    <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold text-slate-800 dark:text-white mb-8 tracking-tight text-center">
+                        Social Media Presence
+                    </h2>
+
+                    <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
+                        {socialLinks.map((social, idx) => (
+                            <motion.a
+                                key={idx}
+                                href={social.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`p-3.5 rounded-full text-white ${social.color} shadow-lg transition-all`}
+
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{
+                                    delay: idx * 0.1, 
+                                    type: "spring",
+                                    stiffness: 260,
+                                    damping: 20
+                                }}
+
+                                whileHover={{
+                                    scale: 1.15,
+                                    rotate: 5,
+                                    boxShadow: "0px 10px 20px rgba(0,0,0,0.2)"
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <div className="w-4 h-4 sm:w-7 sm:h-7 flex items-center justify-center">
+                                    {social.icon}
+                                </div>
+                            </motion.a>
+                        ))}
                     </div>
                 </div>
 

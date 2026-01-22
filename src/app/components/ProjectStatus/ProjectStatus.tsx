@@ -135,13 +135,13 @@ const ProjectStatusComponent: React.FC = () => {
             showTooltip: true,
             render: (row: ProjectStatus) =>
                 row.status === 'inactive' ? (
-                    <span className="text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm sm:text-base">
+                    <span className="text-red-600 dark:text-red-400 text-sm sm:text-base">
                         {row.title}
                     </span>
                 ) : (
                     <Link
                         href={`/projectstatus/${row.id}`}
-                        className="text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:underline cursor-pointer text-sm sm:text-base"
+                        className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:underline cursor-pointer text-sm sm:text-base"
                     >
                         {row.title}
                     </Link>
@@ -156,11 +156,11 @@ const ProjectStatusComponent: React.FC = () => {
                     <img
                         src={row.projectImage}
                         alt="projectImage"
-                        className={`object-cover border border-gray-300 dark:border-gray-600 rounded-lg w-16 h-10 sm:w-20 sm:h-12 ${row.status === 'inactive' ? 'opacity-50 cursor-not-allowed' : ''
+                        className={`object-cover border border-gray-300 dark:border-gray-600 rounded-lg w-16 h-10 sm:w-20 sm:h-12 ${row.status === 'inactive' ? 'opacity-50' : ''
                             }`}
                     />
                 ) : (
-                    '-'
+                    <span className={row.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>-</span>
                 ),
             showTooltip: true,
         },
@@ -171,7 +171,7 @@ const ProjectStatusComponent: React.FC = () => {
             render: (row: ProjectStatus) =>
                 row.projectPdf ? (
                     row.status === 'inactive' ? (
-                        <span className="text-gray-400 cursor-not-allowed text-sm sm:text-base">
+                        <span className="text-red-600 dark:text-red-400 text-sm sm:text-base">
                             View PDF
                         </span>
                     ) : (
@@ -179,13 +179,13 @@ const ProjectStatusComponent: React.FC = () => {
                             href={row.projectPdf}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-orange-500 dark:text-orange-400 hover:underline text-sm sm:text-base"
+                            className="text-green-600 dark:text-green-400 hover:underline text-sm sm:text-base"
                         >
                             View PDF
                         </a>
                     )
                 ) : (
-                    '-'
+                    <span className={row.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>-</span>
                 ),
             showTooltip: true,
         },
@@ -198,7 +198,7 @@ const ProjectStatusComponent: React.FC = () => {
                 <span
                     className={`text-xs sm:text-sm ${row.status === 'active'
                         ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400 cursor-not-allowed'
+                        : 'text-red-600 dark:text-red-400'
                         }`}
                 >
                     {row.status}
@@ -241,11 +241,11 @@ const ProjectStatusComponent: React.FC = () => {
                 <div className="flex-1">
                     <Link
                         href={`/projectstatus/${project.id}`}
-                        className="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 font-medium sm:font-semibold text-base sm:text-lg block hover:underline"
+                        className={`${project.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'} hover:underline font-medium sm:font-semibold text-base sm:text-lg block`}
                     >
                         {project.title}
                     </Link>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">ID: {project.id}</p>
+                    <p className={`text-xs sm:text-sm mt-1 ${project.status === 'inactive' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>ID: {project.id}</p>
                 </div>
                 <span
                     className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${project.status === 'active'
@@ -261,7 +261,7 @@ const ProjectStatusComponent: React.FC = () => {
                     <img
                         src={project.projectImage}
                         alt={project.title}
-                        className="w-full h-32 sm:h-40 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                        className={`w-full h-32 sm:h-40 object-cover rounded-lg border border-gray-200 dark:border-gray-700 ${project.status === 'inactive' ? 'opacity-50' : ''}`}
                     />
                 </div>
             )}
