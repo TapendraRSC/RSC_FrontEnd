@@ -422,6 +422,14 @@ const Sidebar = () => {
         );
     };
 
+
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        const theme = localStorage.getItem("theme");
+        setIsDark(theme === "dark");
+    }, []);
+
     return (
         <>
             {sidebarOpen && (
@@ -519,6 +527,43 @@ const Sidebar = () => {
                                 )}
                             </ul>
                         </PerfectScrollbar>
+                    </div>
+                    <div
+                        className={`
+                mt-auto border-t p-4 transition-all duration-300
+                ${isDark
+                                ? "bg-white border-gray-200"
+                                : "bg-white/50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-800"}
+            `}
+                    >
+                        <Link
+                            href="https://www.digitechnohub.in/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`
+                    group flex flex-col items-center justify-center gap-1
+                    transition-all duration-300
+                    ${isDark ? "opacity-100" : "opacity-70 hover:opacity-100"}
+                `}
+                        >
+                            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-[2px]">
+                                Powered & Designed By
+                            </span>
+
+                            <div
+                                className={`
+                        relative w-32 h-8 transition-all duration-500
+                        ${isDark ? "" : "grayscale group-hover:grayscale-0"}
+                    `}
+                            >
+                                <Image
+                                    src="/Digitechnohub.webp"
+                                    alt="Digitechnohub"
+                                    fill
+                                    className="object-contain"
+                                />
+                            </div>
+                        </Link>
                     </div>
                 </div>
             </nav>
