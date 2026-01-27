@@ -557,7 +557,7 @@ const Sidebar = () => {
                     `}
                             >
                                 <Image
-                                    src="/Digitechnohub.webp"
+                                    src="./Digitechnohub.png"
                                     alt="Digitechnohub"
                                     fill
                                     className="object-contain"

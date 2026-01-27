@@ -115,47 +115,43 @@ const ComponentsAuthLoginForm = () => {
     };
 
 
-    const verifyOtp = async () => {
-        if (!isOtpComplete) {
-            toast.error('Enter valid 4 digit OTP');
-            return;
-        }
+   const verifyOtp = async () => {
+    if (!isOtpComplete) {
+        toast.error('Enter valid 4 digit OTP');
+        return;
+    }
 
-        const otp = getFullOtp();
-        console.log('Verify', userIdForOtp, 'otp:', otp);
+    const otp = getFullOtp();
+    console.log('Verify', userIdForOtp, 'otp:', otp);
 
-        const toastId = toast.loading('Verifying OTP...');
-        try {
+    const toastId = toast.loading('Verifying OTP...');
+    
+    const result = await dispatch(completeLogin({
+        userId: userIdForOtp,
+        otp: otp
+    }));
 
-            const result = await dispatch(completeLogin({
-                userId: userIdForOtp,
-                otp: otp
-            }));
-
-            if (completeLogin.fulfilled.match(result)) {
-                console.log('OTPSUCCESS', result.payload);
-                toast.update(toastId, {
-                    render: 'Login successful!',
-                    type: 'success',
-                    isLoading: false,
-                    autoClose: 2000,
-                });
-                router.push('/');
-            } else {
-                throw new Error(result.payload as string || 'OTP verification failed');
-            }
-        } catch (err: any) {
-            console.error(' OTP ERROR:', err);
-            toast.update(toastId, {
-                render: err.message || 'Invalid OTP',
-                type: 'error',
-                isLoading: false,
-                autoClose: 4000,
-            });
-            setOtpDigits(['', '', '', '']);
-            inputRefs.current[0]?.focus();
-        }
-    };
+    if (completeLogin.fulfilled.match(result)) {
+        console.log('OTP SUCCESS', result.payload);
+        toast.update(toastId, {
+            render: 'Login successful!',
+            type: 'success',
+            isLoading: false,
+            autoClose: 2000,
+        });
+        router.push('/');
+    } else {
+        console.error('OTP ERROR:', result.payload);
+        toast.update(toastId, {
+            render: (result.payload as string) || 'Invalid OTP',
+            type: 'error',
+            isLoading: false,
+            autoClose: 4000,
+        });
+        setOtpDigits(['', '', '', '']);
+        inputRefs.current[0]?.focus();
+    }
+};
 
     const resendOtp = async () => {
         if (resendTimer > 0) {
