@@ -38,7 +38,9 @@ export default function RolesPage() {
 
     // Refs to prevent duplicate API calls
     const initialFetchRef = useRef(false);
-    const searchTimeoutRef = useRef<NodeJS.Timeout>();
+    // const searchTimeoutRef = useRef<NodeJS.Timeout>();
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
 
     useEffect(() => {
         if (initialFetchRef.current) return;
