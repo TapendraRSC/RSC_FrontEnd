@@ -250,7 +250,7 @@ const Director = () => {
                                     <th onClick={() => handleSort("email")} className="px-4 py-3 text-left text-xs font-semibold cursor-pointer uppercase">Email</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Phone</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Date</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-center">View</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase">View</th>
                                     {permissions.delete && <th className="px-4 py-3 text-center text-xs font-semibold uppercase">Delete</th>}
                                 </tr>
                             </thead>

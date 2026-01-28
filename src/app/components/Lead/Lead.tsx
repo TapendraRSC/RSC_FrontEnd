@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Pencil, Trash2, Plus, Upload, Loader2, Download, UserPlus } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -310,9 +310,15 @@ const LeadComponent: React.FC = () => {
         });
     }, [leadList]);
 
+    // Ref to prevent duplicate permission fetch
+    const permissionsFetchedRef = useRef(false);
+
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
+    // Only fetch what this component specifically needs (once on mount)
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
         dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: '' }));
         dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
     }, [dispatch]);

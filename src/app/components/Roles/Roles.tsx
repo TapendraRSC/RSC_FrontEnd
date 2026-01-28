@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store/store';
@@ -9,7 +9,6 @@ import { getRoles, addRole, updateRole, deleteRole } from '../../../../store/rol
 import { toast } from 'react-toastify';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 type Role = {
     id: number;
@@ -37,15 +36,25 @@ export default function RolesPage() {
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // Refs to prevent duplicate API calls
+    const initialFetchRef = useRef(false);
+    const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
     useEffect(() => {
+        if (initialFetchRef.current) return;
+        initialFetchRef.current = true;
         dispatch(getRoles({ page: 1, limit: pageSize }));
     }, [dispatch, pageSize]);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        if (!initialFetchRef.current) return; // Skip if initial fetch hasn't happened
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(() => {
             dispatch(getRoles({ page: 1, limit: pageSize, searchValue }));
         }, 500);
-        return () => clearTimeout(timer);
+        return () => {
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        };
     }, [searchValue, dispatch, pageSize]);
 
     const handlePageChange = (newPage: number) => {
@@ -166,9 +175,14 @@ export default function RolesPage() {
         (state: RootState) => state.permissions
     );
 
+    // Ref to prevent duplicate permission fetch
+    const permissionsFetchedRef = useRef(false);
+
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     const getLeadPermissions = () => {

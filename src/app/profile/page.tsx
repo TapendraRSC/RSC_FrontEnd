@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     Camera, Mail, Phone, MapPin, Calendar, User,
     CreditCard, MessageCircle, Edit3, Copy, Check, Eye, EyeOff
@@ -30,6 +30,9 @@ const Profile = () => {
     const [copiedField, setCopiedField] = useState<string | null>(null);
     const [hiddenFields, setHiddenFields] = useState(new Set(['aadhar', 'pan']));
 
+    // Ref to prevent duplicate API calls
+    const profileFetchedRef = useRef(false);
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -44,6 +47,9 @@ const Profile = () => {
 
 
     useEffect(() => {
+        if (profileFetchedRef.current) return;
+        profileFetchedRef.current = true;
+        
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('accessToken');

@@ -1,16 +1,13 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Search, ChevronLeft, ChevronRight, ChevronUp, Phone, User, FileText,
     Calendar, Edit, Trash2, X, LayoutGrid, Table2, Clock, CheckCircle,
     XCircle, RefreshCw, Building2, Calendar as CalendarIcon, IndianRupee,
     Hash
 } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
-import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
-import { exportUsers } from '../../../../store/userSlice';
 import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
 import axiosInstance from "@/libs/axios";
 
@@ -460,7 +457,6 @@ const BookingTable: React.FC<BookingTableProps> = ({
     onselectedActivity,
     disableInternalFetch = false
 }) => {
-    const dispatch = useDispatch<any>();
     const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: 'asc' | 'desc' } | null>(null);
     const [selectedBookings, setSelectedBookings] = useState<number[]>([]);
     const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
@@ -468,7 +464,9 @@ const BookingTable: React.FC<BookingTableProps> = ({
     const [projectList, setProjectList] = useState<Project[]>([]);
     const [projectsLoading, setProjectsLoading] = useState(false);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
-
+    
+    // Track if projects have been fetched to prevent duplicate calls
+    const projectsFetchedRef = useRef(false);
 
     const { data: users = [] } = useSelector((state: RootState) => state.users);
     const { permissions: rolePermissions } = useSelector((state: RootState) => state.sidebarPermissions);
@@ -477,17 +475,16 @@ const BookingTable: React.FC<BookingTableProps> = ({
 
     const isAdmin = role === 'Admin' || "accountant";
 
-    // Fetch projects using axiosInstance (same as BookingModal)
+    // Fetch projects ONLY ONCE using ref to prevent duplicate calls
     useEffect(() => {
+        if (projectsFetchedRef.current) return;
+        projectsFetchedRef.current = true;
+        
         const fetchProjects = async () => {
             setProjectsLoading(true);
             try {
                 const response = await axiosInstance.get('/projects/getAllProjects?page=1&limit=100');
-                // console.log('Projects API Response:', response.data);
-
-                // Handle response structure like BookingModal does
                 const projectData = response.data?.data?.projects || response.data?.projects || response.data?.data || [];
-
                 setProjectList(Array.isArray(projectData) ? projectData : []);
             } catch (error: any) {
                 console.error("Error fetching projects:", error);
@@ -509,18 +506,8 @@ const BookingTable: React.FC<BookingTableProps> = ({
         return [];
     }, [users]);
 
-    useEffect(() => {
-        if (!disableInternalFetch) {
-            dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
-        }
-    }, [dispatch, disableInternalFetch]);
-
-    useEffect(() => {
-        if (!disableInternalFetch) {
-            dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-            dispatch(fetchRolePermissionsSidebar());
-        }
-    }, [dispatch, disableInternalFetch]);
+    // REMOVED: All Redux dispatch calls - these are already called globally by LayoutClient.tsx
+    // No need for fetchPermissions, fetchRolePermissionsSidebar, exportUsers here
 
     const handleBulkDelete = async () => {
         if (selectedBookings.length > 0 && onBulkDelete) {

@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Search,
   ChevronLeft,
@@ -33,10 +33,6 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { fetchPermissions } from "../../../../store/permissionSlice";
-import { fetchRolePermissionsSidebar } from "../../../../store/sidebarPermissionSlice";
-import { exportUsers } from "../../../../store/userSlice";
 
 interface CollectionTableProps {
   colletion?: Collection[];
@@ -448,7 +444,6 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
   disableInternalFetch = false,
   hasEditPermission = false,
 }) => {
-  const dispatch = useDispatch();
   const [sortConfig, setSortConfig] = useState<{ key: keyof Collection; direction: "asc" | "desc"; } | null>(null);
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -470,13 +465,8 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
     totalUserIncentive: 0, recordCount: 0,
   });
 
-  useEffect(() => {
-    if (!disableInternalFetch) {
-      dispatch(exportUsers({ page: 1, limit: 100, searchValue: "" }) as any);
-      dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: "" }) as any);
-      dispatch(fetchRolePermissionsSidebar() as any);
-    }
-  }, [dispatch, disableInternalFetch]);
+  // REMOVED: All Redux dispatch calls - these are already called globally by LayoutClient.tsx
+  // and by the parent Collection.tsx component
 
   useEffect(() => { setSelectedUsers([]); setSelectedPlots([]); setSelectedCPNames([]); }, [selectedProjects]);
   useEffect(() => { setSelectedPlots([]); setSelectedCPNames([]); }, [selectedUsers]);

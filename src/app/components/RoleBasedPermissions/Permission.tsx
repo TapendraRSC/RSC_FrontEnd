@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store/store';
@@ -29,7 +29,12 @@ const UserPermissions: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [permissions, setPermissions] = useState<Permission[]>([]);
 
+    // Ref to prevent duplicate initial fetch
+    const initialFetchRef = useRef(false);
+
     useEffect(() => {
+        if (initialFetchRef.current) return;
+        initialFetchRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: "" }));
         dispatch(fetchPages({ page: 1, limit: 100, searchValue: "" }));
         dispatch(getRoles({ page: 1, limit: 100, searchValue: "" }));

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, Shield } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
@@ -66,7 +66,13 @@ const LeadStageMasterPage: React.FC = () => {
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // Ref to prevent duplicate API calls
+    const lastFetchRef = useRef<string>('');
+
     useEffect(() => {
+        const fetchKey = `${currentPage}-${pageSize}-${searchValue}`;
+        if (lastFetchRef.current === fetchKey) return;
+        lastFetchRef.current = fetchKey;
         dispatch(fetchLeadStages({
             page: currentPage,
             limit: pageSize,

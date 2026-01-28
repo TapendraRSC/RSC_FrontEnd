@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Search, Eye, EyeOff, ChevronLeft, ChevronRight, ChevronUp, Phone, Home,
     Briefcase, DollarSign, User, FileText, Calendar, Tag, ListFilter, Plus, Edit,
@@ -7,12 +7,8 @@ import {
     CheckCircle, XCircle, RefreshCw, Bell, ShieldAlert, MapPin, Building2,
     IndianRupee, Calendar as CalendarIcon, Filter, Users, Hash
 } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
-import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
-import { fetchLeadPlatforms } from '../../../../store/leadPlateformSlice';
-import { exportUsers } from '../../../../store/userSlice';
 import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
 
 interface LeadPanelProps {
@@ -589,7 +585,6 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
     onAssignedToChange,
     disableInternalFetch = false
 }) => {
-    const dispatch = useDispatch<any>();
     const [sortConfig, setSortConfig] = useState<{ key: keyof Lead; direction: 'asc' | 'desc' } | null>(null);
     const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
     const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
@@ -612,19 +607,9 @@ const LeadPanel: React.FC<LeadPanelProps> = ({
         return [];
     }, [users]);
 
-    useEffect(() => {
-        if (!disableInternalFetch) {
-            dispatch(fetchLeadPlatforms({ page: 1, limit: 100, search: '' }));
-            dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }));
-        }
-    }, [dispatch, disableInternalFetch]);
-
-    useEffect(() => {
-        if (!disableInternalFetch) {
-            dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-            dispatch(fetchRolePermissionsSidebar());
-        }
-    }, [dispatch, disableInternalFetch]);
+    // REMOVED: All Redux dispatch calls for fetchLeadPlatforms, exportUsers, 
+    // fetchPermissions, fetchRolePermissionsSidebar
+    // These are already called by the parent Lead.tsx component and LayoutClient.tsx globally
 
     const handleFollowUp = async (lead: Lead) => {
         if (!onFollowUp) return;

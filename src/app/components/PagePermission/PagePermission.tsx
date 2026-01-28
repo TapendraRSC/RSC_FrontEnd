@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, Shield } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import PagePermissionModal from './PagePermissionModal';
@@ -9,7 +9,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store/store';
 import { toast } from 'react-toastify';
 import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 interface PagePermission {
     id: number;
@@ -81,8 +80,14 @@ const PagePermission: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { list, loading, error } = useSelector((state: RootState) => state.pages);
 
+    // Ref to prevent duplicate API calls
+    const lastFetchRef = useRef<string>('');
+
     // Fetch data on mount and when dependencies change
     useEffect(() => {
+        const fetchKey = `${currentPage}-${pageSize}-${searchValue}`;
+        if (lastFetchRef.current === fetchKey) return;
+        lastFetchRef.current = fetchKey;
         dispatch(fetchPages({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
 
@@ -202,9 +207,14 @@ const PagePermission: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
+    // Ref to prevent duplicate permission fetch
+    const permissionsFetchedRef = useRef(false);
+
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     const getLeadPermissions = () => {

@@ -12,7 +12,7 @@ try {
 }
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   images: {
     domains: ["res.cloudinary.com"],
     formats: ["image/avif", "image/webp"],

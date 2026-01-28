@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Plus, Pencil, Trash2, Grid3X3, List, Menu, Search } from "lucide-react";
 import LandModal from "./LandModal";
 import CustomTable from "../Common/CustomTable";
@@ -13,7 +13,6 @@ import {
     deleteLand,
 } from "../../../../store/landSlice";
 import { fetchPermissions } from "../../../../store/permissionSlice";
-import { fetchRolePermissionsSidebar } from "../../../../store/sidebarPermissionSlice";
 
 type Land = {
     id: number;
@@ -42,8 +41,15 @@ const Land: React.FC = () => {
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // Refs to prevent duplicate API calls
+    const lastFetchRef = useRef<string>('');
+    const permissionsFetchedRef = useRef(false);
+
     // Fetch lands on mount
     useEffect(() => {
+        const fetchKey = `${currentPage}-${pageSize}`;
+        if (lastFetchRef.current === fetchKey) return;
+        lastFetchRef.current = fetchKey;
         dispatch(fetchLands({ page: currentPage, limit: pageSize }));
     }, [dispatch, currentPage, pageSize]);
 
@@ -63,9 +69,11 @@ const Land: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     const getLeadPermissions = () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     Plus, X, ArrowLeft, TrendingUp, Loader2, RefreshCw,
     AlertCircle, CheckCircle, XCircle, Activity, LayoutGrid,
@@ -294,7 +294,14 @@ const CampaignSource = () => {
         }
     };
 
-    useEffect(() => { fetchCampaigns(); }, []);
+    // Ref to prevent duplicate fetch
+    const campaignsFetchedRef = useRef(false);
+
+    useEffect(() => {
+        if (campaignsFetchedRef.current) return;
+        campaignsFetchedRef.current = true;
+        fetchCampaigns();
+    }, []);
     useEffect(() => { if (selectedCampaign) fetchAnalytics(selectedCampaign.id); }, [selectedCampaign]);
 
     const resetAnalyticsState = () => {

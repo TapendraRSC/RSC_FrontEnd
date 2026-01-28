@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTable from '../Common/CustomTable';
 import { Plus, Pencil, Trash2, Grid3X3, List, Menu, Search, Download } from 'lucide-react';
@@ -11,7 +11,6 @@ import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
 import { toast } from 'react-toastify';
 import ExportModal from '../Common/ExportModal';
 import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 interface User {
     id: number;
@@ -60,15 +59,24 @@ const Users: React.FC = () => {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+    // Refs to prevent duplicate API calls
+    const rolesFetchedRef = useRef(false);
+    const lastUsersFetchRef = useRef<string>('');
+
     // API se total aur totalPages lein
     const totalRecords = users?.data?.total || 0;
     const totalPages = users?.data?.totalPages || 1;
 
     useEffect(() => {
+        if (rolesFetchedRef.current) return;
+        rolesFetchedRef.current = true;
         dispatch(getRoles({ page: 1, limit: 100, searchValue: '' }));
     }, [dispatch]);
 
     useEffect(() => {
+        const fetchKey = `${currentPage}-${pageSize}`;
+        if (lastUsersFetchRef.current === fetchKey) return;
+        lastUsersFetchRef.current = fetchKey;
         dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: '' }));
     }, [dispatch, currentPage, pageSize]);
 
@@ -82,7 +90,7 @@ const Users: React.FC = () => {
     useEffect(() => {
         if (searchValue.length >= 3) {
             debouncedSearch(searchValue);
-        } else if (searchValue.length === 0) {
+        } else if (searchValue.length === 0 && lastUsersFetchRef.current !== `${currentPage}-${pageSize}`) {
             dispatch(exportUsers({ page: currentPage, limit: pageSize, searchValue: '' }));
         }
     }, [searchValue, debouncedSearch, currentPage, pageSize, dispatch]);
@@ -335,9 +343,14 @@ const Users: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
+    // Ref to prevent duplicate permission fetch
+    const permissionsFetchedRef = useRef(false);
+
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     const getLeadPermissions = () => {

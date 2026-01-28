@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Upload } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { exportUsers } from '../../../../store/userSlice';
 import { RootState } from '../../../../store/store';
 import CollectionTable from '../Common/CollectionTable';
@@ -211,6 +210,9 @@ const CollectionComponent: React.FC = () => {
     const [selectedActivity, setSelectedActivity] = useState('');
     const [lastFetchParams, setLastFetchParams] = useState<any>({});
 
+    // Ref to prevent duplicate API calls
+    const permissionsFetchedRef = useRef(false);
+
     useEffect(() => {
         const tabFromUrl = searchParams.get('tab');
         if (tabFromUrl && VALID_TABS.includes(tabFromUrl)) {
@@ -219,9 +221,12 @@ const CollectionComponent: React.FC = () => {
         }
     }, [searchParams]);
 
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
+    // Only fetch what this component specifically needs
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }) as any);
-        dispatch(fetchRolePermissionsSidebar() as any);
         dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }) as any);
     }, [dispatch]);
 

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, Shield } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
@@ -14,7 +14,6 @@ import {
     updateLeadPlatform,
 } from '../../../../store/leadPlateformSlice';
 import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 
 interface LeadPlatform {
     id: number;
@@ -94,7 +93,14 @@ const LeadPlateform: React.FC = () => {
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // Refs to prevent duplicate API calls
+    const lastFetchRef = useRef<string>('');
+    const permissionsFetchedRef = useRef(false);
+
     useEffect(() => {
+        const fetchKey = `${currentPage}-${pageSize}-${searchValue}`;
+        if (lastFetchRef.current === fetchKey) return;
+        lastFetchRef.current = fetchKey;
         dispatch(
             fetchLeadPlatforms({ page: currentPage, limit: pageSize, search: searchValue })
         );
@@ -107,9 +113,11 @@ const LeadPlateform: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     // Sorting logic

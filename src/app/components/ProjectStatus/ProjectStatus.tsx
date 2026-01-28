@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Pencil, Trash2, Plus, Grid3X3, List, Menu, Search, FileText, Eye, Download } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import DeleteConfirmationModal from '../Common/DeleteConfirmationModal';
@@ -40,12 +40,18 @@ const ProjectStatusComponent: React.FC = () => {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+    // Ref to track initial fetch and prevent duplicates
+    const lastFetchRef = useRef<string>('');
+
     const { list, loading, error } = useSelector((state: RootState) => state.projectStatus);
     const projectStatusList: ProjectStatus[] = list?.projects || [];
     const totalRecords = list?.total || 0;
     const totalPages = list?.totalPages || 1;
 
     useEffect(() => {
+        const fetchKey = `${currentPage}-${pageSize}-${searchValue}`;
+        if (lastFetchRef.current === fetchKey) return;
+        lastFetchRef.current = fetchKey;
         dispatch(fetchProjectStatuses({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
 
@@ -214,9 +220,15 @@ const ProjectStatusComponent: React.FC = () => {
         (state: RootState) => state.permissions
     );
 
+    // Ref to prevent duplicate permission fetch
+    const permissionsFetchedRef = useRef(false);
+
+    // NOTE: fetchRolePermissionsSidebar is already called globally by LayoutClient.tsx
+    // Only fetch permissions specific to this component
     useEffect(() => {
+        if (permissionsFetchedRef.current) return;
+        permissionsFetchedRef.current = true;
         dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }));
-        dispatch(fetchRolePermissionsSidebar());
     }, [dispatch]);
 
     const getLeadPermissions = () => {

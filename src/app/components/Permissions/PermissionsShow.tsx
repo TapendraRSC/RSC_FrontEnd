@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import PermissionModalShow from './PermissionModalShow';
@@ -36,8 +36,14 @@ const PermissionsShow: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { list, loading, error } = useSelector((state: RootState) => state.permissions);
 
-    // ✅ Fetch permissions
+    // Ref to track last fetch params and prevent duplicates
+    const lastFetchRef = useRef<string>('');
+
+    // ✅ Fetch permissions - with duplicate prevention
     useEffect(() => {
+        const fetchKey = `${currentPage}-${pageSize}-${searchValue}`;
+        if (lastFetchRef.current === fetchKey) return;
+        lastFetchRef.current = fetchKey;
         dispatch(fetchPermissions({ page: currentPage, limit: pageSize, searchValue }));
     }, [dispatch, currentPage, pageSize, searchValue]);
 

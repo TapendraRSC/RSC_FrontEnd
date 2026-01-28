@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
     User,
@@ -182,7 +182,12 @@ const SalesDashboard = () => {
         { title: "99acres.com", value: 0, icon: <Globe size={18} />, color: "orange" },
     ];
 
+    // Ref to prevent duplicate API calls (StrictMode double-mount)
+    const hasFetchedRef = useRef(false);
+
     useEffect(() => {
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
         fetchStats();
     }, []);
 

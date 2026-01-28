@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchPermissions } from '../../../../store/permissionSlice';
-import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
-import { exportUsers } from '../../../../store/userSlice';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import ComprehensiveLeadModal from './BookingModal';
 import BookingTable from '../Common/BookingTable';
@@ -39,20 +36,12 @@ interface BookingApiResponse {
     };
 }
 
-// Project type
-interface Project {
-    id: number | string;
-    title: string;
-    name?: string;
-}
-
 // Helper function to get token from multiple possible storage locations
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
 
     const possibleKeys = ['token', 'accessToken', 'access_token', 'authToken', 'auth_token'];
 
-    // Check localStorage first
     for (const key of possibleKeys) {
         const token = localStorage.getItem(key);
         if (token && token !== 'undefined' && token !== 'null') {
@@ -60,7 +49,6 @@ const getAuthToken = (): string | null => {
         }
     }
 
-    // Check for user object in localStorage
     const userStr = localStorage.getItem('user');
     if (userStr) {
         try {
@@ -73,7 +61,6 @@ const getAuthToken = (): string | null => {
         }
     }
 
-    // Check sessionStorage as fallback
     for (const key of possibleKeys) {
         const token = sessionStorage.getItem(key);
         if (token && token !== 'undefined' && token !== 'null') {
@@ -84,7 +71,6 @@ const getAuthToken = (): string | null => {
     return null;
 };
 
-// Helper function to build headers with optional auth token
 const buildHeaders = (includeAuth: boolean = true): HeadersInit => {
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -130,7 +116,6 @@ const formatDate = (dateString: string | Date | null) => {
 const VALID_TABS = ['list', 'active', 'inactive', 'pending', 'cancelled'];
 
 const BookingComponent: React.FC = () => {
-    const dispatch = useDispatch();
     const searchParams = useSearchParams();
 
     const [bookingList, setBookingList] = useState<BookingData[]>([]);
@@ -138,12 +123,10 @@ const BookingComponent: React.FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
 
-    const [projectList, setProjectList] = useState<Project[]>([]);
-
+    // Permissions from Redux (already loaded by LayoutClient.tsx globally)
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
-
     const { list: allPermissions } = useSelector(
         (state: RootState) => state.permissions
     );
@@ -163,23 +146,16 @@ const BookingComponent: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [currentBooking, setCurrentBooking] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
     const [currentTimelineBooking, setCurrentTimelineBooking] = useState<any>(null);
-    const [isUploadPreviewOpen, setIsUploadPreviewOpen] = useState(false);
-    const [previewData, setPreviewData] = useState<any[]>([]);
-    const [fileName, setFileName] = useState('');
-    const [uploadLoading, setUploadLoading] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedBookingId, setSelectedBookingId] = useState<any>(null);
     const [deleteMode, setDeleteMode] = useState<'single' | 'bulk'>('single');
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
-    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     // Filter states
     const [selectedProject, setSelectedProject] = useState("");
@@ -188,8 +164,6 @@ const BookingComponent: React.FC = () => {
     const [selectedCreatedBy, setSelectedCreatedBy] = useState("");
     const [selectedActivity, setSelectedActivity] = useState('');
 
-    const [lastFetchParams, setLastFetchParams] = useState<any>({});
-
     useEffect(() => {
         const tabFromUrl = searchParams.get('tab');
         if (tabFromUrl && VALID_TABS.includes(tabFromUrl)) {
@@ -197,11 +171,6 @@ const BookingComponent: React.FC = () => {
             setCurrentPage(1);
         }
     }, [searchParams]);
-
-    useEffect(() => {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(prefersDark ? 'dark' : 'light');
-    }, []);
 
     const getStatusFromTab = (tabId: string) => {
         const tabToStatus: Record<string, string> = {
@@ -214,48 +183,10 @@ const BookingComponent: React.FC = () => {
         return tabToStatus[tabId] || '';
     };
 
-    // Fetch Projects for filter dropdown
-    const fetchProjectsData = useCallback(async () => {
-        try {
-            const token = getAuthToken();
-
-            // Don't make the API call if there's no token
-            if (!token) {
-                console.warn('No auth token available for fetching projects');
-                return;
-            }
-
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/projects/getAllProjects?page=1&limit=100`;
-
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: buildHeaders(true),
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success && result.data) {
-                    setProjectList(result.data);
-                } else if (Array.isArray(result)) {
-                    setProjectList(result);
-                } else if (result.data && Array.isArray(result.data)) {
-                    setProjectList(result.data);
-                }
-            } else if (response.status === 401) {
-                console.warn('Unauthorized: Token may be invalid or expired');
-                toast.error('Session expired. Please login again.');
-            }
-        } catch (error) {
-            console.error("Error fetching projects:", error);
-        }
-    }, []);
-
-    // Main API call to fetch bookings
-    const fetchBookingsData = useCallback(async (overrideTab?: string) => {
+    // Main API call to fetch bookings - ONLY ONE PLACE
+    const fetchBookingsData = useCallback(async () => {
         const token = getAuthToken();
 
-        // Don't make the API call if there's no token
         if (!token) {
             console.warn('No auth token available for fetching bookings');
             setBookingList([]);
@@ -267,68 +198,26 @@ const BookingComponent: React.FC = () => {
         setLoading(true);
 
         try {
-            const tabToUse = overrideTab || activeTab;
-            const statusFilter = getStatusFromTab(tabToUse);
-
+            const statusFilter = getStatusFromTab(activeTab);
             const queryParams = new URLSearchParams();
 
-            // Search filter
-            if (searchTerm) {
-                queryParams.append('search', searchTerm);
-            }
-
-            // Project filter
-            if (selectedProject) {
-                queryParams.append('projectId', selectedProject);
-            }
-
-            // Status filter from tab or dropdown
+            if (searchTerm) queryParams.append('search', searchTerm);
+            if (selectedProject) queryParams.append('projectId', selectedProject);
             if (selectedStatus) {
                 queryParams.append('status', selectedStatus);
             } else if (statusFilter) {
                 queryParams.append('status', statusFilter);
             }
+            if (selectedActivity) queryParams.append('status', selectedActivity.toLowerCase());
+            if (selectedCreatedBy) queryParams.append('createdBy', selectedCreatedBy);
+            if (fromDate) queryParams.append('fromDate', fromDate);
+            if (toDate) queryParams.append('toDate', toDate);
+            if (selectedAssignedTo) queryParams.append('createdBy', selectedAssignedTo);
 
-            // Activity filter (same as status in your case)
-            if (selectedActivity) {
-                queryParams.append('status', selectedActivity.toLowerCase());
-            }
-
-            // Created By filter
-            if (selectedCreatedBy) {
-                queryParams.append('createdBy', selectedCreatedBy);
-            }
-
-            // Date range filters
-            if (fromDate) {
-                queryParams.append('fromDate', fromDate);
-            }
-            if (toDate) {
-                queryParams.append('toDate', toDate);
-            }
-
-            // Assigned To filter
-            if (selectedAssignedTo) {
-                queryParams.append('createdBy', selectedAssignedTo);
-            }
-
-            // Pagination
             queryParams.append('page', currentPage.toString());
             queryParams.append('limit', pageSize.toString());
 
             const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/bookings/getAllBookings?${queryParams.toString()}`;
-
-            setLastFetchParams({
-                search: searchTerm,
-                projectId: selectedProject,
-                status: selectedStatus || statusFilter,
-                createdBy: selectedCreatedBy,
-                fromDate,
-                toDate,
-                assignedTo: selectedAssignedTo,
-                page: currentPage,
-                limit: pageSize
-            });
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -370,45 +259,22 @@ const BookingComponent: React.FC = () => {
             setLoading(false);
         }
     }, [
-        activeTab,
-        currentPage,
-        pageSize,
-        searchTerm,
-        fromDate,
-        toDate,
-        selectedProject,
-        selectedStatus,
-        selectedCreatedBy,
-        selectedAssignedTo,
-        selectedActivity
+        activeTab, currentPage, pageSize, searchTerm, fromDate, toDate,
+        selectedProject, selectedStatus, selectedCreatedBy, selectedAssignedTo, selectedActivity
     ]);
 
+    // Single useEffect to fetch bookings when dependencies change
     useEffect(() => {
         fetchBookingsData();
     }, [fetchBookingsData]);
 
-    useEffect(() => {
-        fetchProjectsData();
-    }, [fetchProjectsData]);
-
-    const handleRefetch = useCallback((force: boolean = false) => {
-        if (!force && Object.keys(lastFetchParams).length === 0) {
-            return;
-        }
+    const handleRefetch = useCallback(() => {
         fetchBookingsData();
-    }, [fetchBookingsData, lastFetchParams]);
+    }, [fetchBookingsData]);
 
     const handleActivityChange = (activityStatus: string) => {
         setSelectedActivity(activityStatus);
         setCurrentPage(1);
-    };
-
-    const handleTabChange = (tab: string) => {
-        setActiveTab(tab);
-        setCurrentPage(1);
-        const url = new URL(window.location.href);
-        url.searchParams.set('tab', tab);
-        window.history.replaceState({}, '', url.toString());
     };
 
     const handleSearch = (term: string) => {
@@ -448,43 +314,26 @@ const BookingComponent: React.FC = () => {
 
             return {
                 id: booking.id,
-                leadId: booking.leadId,
-                bookingNumber: booking.bookingNumber || `#${booking.id}`,
-                leadNo: booking.bookingNumber || `#${booking.id}`,
-
+                bookingNumber: booking.bookingNumber || `BK-${booking.id}`,
+                leadNo: `#${booking.leadId || booking.id}`,
                 name: booking.name || 'N/A',
                 phone: booking.phone || 'N/A',
                 email: '',
-
                 projectName: booking.projectName || 'N/A',
                 projectTitle: booking.projectName || 'N/A',
-                plotProjectTitle: booking.projectName || 'N/A',
                 plotNumber: booking.plotNumber || 'N/A',
-
                 bookingAmount: booking.bookingAmount || '0',
                 totalPlotAmount: booking.totalPlotAmount || '0',
                 budget: booking.totalPlotAmount || 'N/A',
-
-                status: booking.status || 'N/A',
-                leadStatus: booking.status || 'N/A',
-                stage: booking.status || 'Booking',
-
-                assignedTo: booking.createdByName || 'Not Assigned',
-                assignedUserName: booking.createdByName || 'Not Assigned',
-                createdBy: booking.createdByName || 'System',
-                sharedBy: booking.createdByName || 'N/A',
-
+                status: booking.status || 'pending',
+                stage: 'Booking',
+                createdBy: booking.createdByName || 'N/A',
+                assignedUserName: booking.createdByName || 'N/A',
                 createdDate: bookingDate,
                 createdAt: booking.bookingDate || null,
                 updatedAt: booking.bookingDate || null,
                 bookingDate: booking.bookingDate || null,
-
-                nextFollowUp: 'Not Scheduled',
-                latestFollowUpDate: null,
-                lastFollowUpDate: 'N/A',
-                lastFollowUp: 'N/A',
-
-                // Other fields for compatibility
+                leadId: booking.leadId,
                 profession: 'Not Provided',
                 address: 'Not Provided',
                 city: 'Not Provided',
@@ -500,12 +349,7 @@ const BookingComponent: React.FC = () => {
         });
     }, [bookingList]);
 
-    useEffect(() => {
-        dispatch(fetchPermissions({ page: 1, limit: 100, searchValue: '' }) as any);
-        dispatch(fetchRolePermissionsSidebar() as any);
-        dispatch(exportUsers({ page: 1, limit: 100, searchValue: '' }) as any);
-    }, [dispatch]);
-
+    // Permission check functions using data from Redux store (already loaded globally)
     const getBookingPermissionIds = useCallback((): number[] => {
         const bookingPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Booking' || p.pageName === 'booking'
@@ -521,7 +365,6 @@ const BookingComponent: React.FC = () => {
     }, [rolePermissions]);
 
     const getAllPermissionsList = useCallback(() => {
-        // Handle different response structures
         const permissionsList =
             allPermissions?.data?.permissions ||
             allPermissions?.data ||
@@ -538,10 +381,7 @@ const BookingComponent: React.FC = () => {
         }
 
         const permissionsList = getAllPermissionsList();
-
-        const matchedPermission = permissionsList.find(
-            (p: any) => p.id === permId
-        );
+        const matchedPermission = permissionsList.find((p: any) => p.id === permId);
 
         if (!matchedPermission) {
             return permissionsList.length === 0;
@@ -614,7 +454,7 @@ const BookingComponent: React.FC = () => {
                 setSelectedIds([]);
                 toast.success(`${ids.length} booking(s) deleted successfully`);
             }
-            handleRefetch(true);
+            handleRefetch();
         } catch (error: any) {
             toast.error(error?.message || 'Failed to delete');
         } finally {
@@ -627,7 +467,7 @@ const BookingComponent: React.FC = () => {
         toast.success(currentBooking ? 'Booking updated successfully' : 'Booking added successfully');
         setIsModalOpen(false);
         setCurrentBooking(null);
-        handleRefetch(true);
+        handleRefetch();
     };
 
     const handleBulkDelete = (ids: number[]) => {
@@ -648,14 +488,6 @@ const BookingComponent: React.FC = () => {
 
     const handleAssignBookings = (bookingIds: number[]) => {
         setSelectedIds(bookingIds);
-        setIsAssignModalOpen(true);
-    };
-
-    const resetUploadStates = () => {
-        setIsUploadPreviewOpen(false);
-        setPreviewData([]);
-        setFileName('');
-        setSelectedFile(null);
     };
 
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
@@ -673,7 +505,6 @@ const BookingComponent: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {/* Permission ID 21 = add */}
                     {hasPermission(21, 'add') && (
                         <button
                             onClick={handleAdd}
@@ -705,7 +536,7 @@ const BookingComponent: React.FC = () => {
                     setSelectedBookingId(booking);
                     setIsFollowUpModalOpen(true);
                 }}
-                onRefetch={() => handleRefetch(true)}
+                onRefetch={handleRefetch}
                 selectedPlatform={selectedProject}
                 onPlatformChange={handleProjectChange}
                 selectedAssignedTo={selectedAssignedTo}
@@ -719,9 +550,7 @@ const BookingComponent: React.FC = () => {
                 onSearch={handleSearch}
                 hasEditPermission={hasPermission(22, "edit")}
                 hasDeletePermission={hasPermission(4, "delete")}
-                hasBulkPermission={
-                    hasPermission(25, "bulk assign") || hasPermission(4, "delete")
-                }
+                hasBulkPermission={hasPermission(25, "bulk assign") || hasPermission(4, "delete")}
                 currentUser={currentUser}
                 disableInternalFetch={true}
             />
