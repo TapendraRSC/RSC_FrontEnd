@@ -1090,10 +1090,11 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                 <p className="text-sm font-bold text-orange-700 dark:text-orange-300">{booking.plotNumber ?? 'N/A'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center mb-1">
+                                                <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1 mb-1">
+
                                                     <Calendar className="h-3 w-3 mr-1" /> Booking Date
                                                 </p>
-                                                <p className="text-sm text-gray-700 dark:text-gray-300">{formattedBooking.formattedCreatedAt}</p>
+                                                <p className="text-sm font-bold text-orange-700 dark:text-orange-300">{formattedBooking.formattedCreatedAt}</p>
                                             </div>
                                         </div>
 

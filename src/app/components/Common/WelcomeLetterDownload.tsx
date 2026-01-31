@@ -104,7 +104,8 @@ const WelcomeLetterDownload: React.FC<WelcomeLetterProps> = ({ data, onClose }) 
                         {/* Header Image */}
                         <div className="w-full">
                             <Image
-                                src="/images/wheader.png"
+                                // src="/images/wheader.png"
+                                src="/images/nheader1.jpg"
                                 alt="RSC Group Header"
                                 width={2555}
                                 height={450}
@@ -194,7 +195,8 @@ const WelcomeLetterDownload: React.FC<WelcomeLetterProps> = ({ data, onClose }) 
 
                         <div className="w-full mt-auto">
                             <Image
-                                src="/images/wfooter.png"
+                                // src="/images/wfooter.png"
+                                src="/images/nfooter1.jpg"
                                 alt="RSC Group Footer"
                                 width={2555}
                                 height={570}
