@@ -29,6 +29,10 @@ interface LeadFormValues {
   plotId: number | null;
   bookingAmount: number | string;
   totalPlotAmount: number | string;
+  payment_reference: string;
+  payment_platform_id: number | string;
+  cpName: string;
+  remark: string;
   status: string;
 }
 
@@ -44,13 +48,19 @@ interface Project {
   name?: string;
 }
 
-const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
+interface PaymentPlatform {
+  id: number;
+  platform_name: string;
+}
+
+const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
   isOpen,
   onClose,
   onSave,
   initialData,
   isLoading = false,
 }) => {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   const dispatch = useDispatch<AppDispatch>();
   const { plots, loading: plotsLoading } = useSelector(
     (state: RootState) => state.plotSlice
@@ -58,9 +68,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [paymentPlatforms, setPaymentPlatforms] = useState<PaymentPlatform[]>([]);
 
   const [leadsLoading, setLeadsLoading] = useState(false);
   const [projectsLoading, setProjectsLoading] = useState(false);
+  const [paymentPlatformsLoading, setPaymentPlatformsLoading] = useState(false);
   const [leadDetailsLoading, setLeadDetailsLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
@@ -83,12 +95,17 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       plotId: null,
       bookingAmount: "",
       totalPlotAmount: "",
-      status: "active",
+      payment_reference: "",
+      payment_platform_id: "",
+      cpName: "",
+      remark: "",
+      status: "pending",
     },
   });
 
   const selectedLeadId = watch("leadId");
   const selectedProjectId = watch("projectId");
+  const cpNameValue = watch("cpName");
 
   // --- API Calls ---
   const fetchLeadsForSelect = async () => {
@@ -139,6 +156,20 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     }
   };
 
+  const fetchPaymentPlatforms = async () => {
+    setPaymentPlatformsLoading(true);
+    try {
+      const response = await axiosInstance.get('/payment/get-payment-Platforms');
+      const data = response.data?.data?.platforms || [];
+      setPaymentPlatforms(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      console.error("Error fetching payment platforms:", error);
+      setPaymentPlatforms([]);
+    } finally {
+      setPaymentPlatformsLoading(false);
+    }
+  };
+
   // --- Options ---
   const leadOptions: DropdownOption[] = useMemo(
     () =>
@@ -162,18 +193,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     [projects]
   );
 
-  // const plotOptions: DropdownOption[] = useMemo(() => {
-  //   if (!plots || !Array.isArray(plots) || plots.length === 0) {
-  //     return [];
-  //   }
-  //   return plots.map((p: any) => ({
-  //     label: `Plot ${p.plotNumber} - ${p.sqYard} Sq.Yd (${p.status || "Available"
-  //       })`,
-  //     value: p.id,
-  //   }));
-  // }, [plots]);
-
-
   const plotOptions = useMemo(() => {
     if (!plots || !Array.isArray(plots) || plots.length === 0) {
       return [];
@@ -181,7 +200,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     return plots.map((p: any) => ({
       label: `Plot ${p.plotNumber} - ${p.sqYard} Sq.Yd (${p.status || "Available"})`,
       value: p.id,
-      disabled: p.status?.toLowerCase() === "booked" || p.status?.toLowerCase() === "sold",
+      disabled: p.status?.toLowerCase() === "booked" || p.status?.toLowerCase() === "Hold" || p.status?.toLowerCase() === "hold" || p.status?.toLowerCase() === "sold",
     }));
   }, [plots]);
 
@@ -193,11 +212,17 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     ).length;
   }, [plots]);
 
+  const platformOptions = useMemo(() =>
+    paymentPlatforms.map(p => ({ label: p.platform_name, value: p.id })),
+    [paymentPlatforms]);
+
+
   const statusOptions: DropdownOption[] = [
+    { label: "Pending", value: "pending" },
     { label: "Active", value: "active" },
     { label: "Inactive", value: "inactive" },
-    { label: "Pending", value: "pending" },
   ];
+
 
   // --- Effects ---
   useEffect(() => {
@@ -205,6 +230,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       setApiError(null);
       fetchLeadsForSelect();
       fetchActiveProjects();
+      fetchPaymentPlatforms();
     }
   }, [isOpen]);
 
@@ -272,7 +298,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
         plotId: initialData.plotId || null,
         bookingAmount: initialData.bookingAmount || "",
         totalPlotAmount: initialData.totalPlotAmount || "",
-        status: initialData.status || "active",
+        status: initialData.status || "pending",
+        payment_reference: initialData.payment_reference || "",
+        payment_platform_id: initialData.payment_platform_id || "",
+        cpName: initialData.cpName || "",
+        remark: initialData.remark || "",
       });
 
       if (initialData.projectId) {
@@ -293,7 +323,11 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
         plotId: null,
         bookingAmount: "",
         totalPlotAmount: "",
-        status: "active",
+        status: "pending",
+        payment_reference: "",
+        payment_platform_id: "",
+        cpName: "",
+        remark: "",
       });
     }
   }, [isOpen, initialData, reset, dispatch]);
@@ -304,15 +338,22 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     onClose();
   };
 
+
   const onSubmit = async (data: LeadFormValues) => {
+    const bookingId = initialData?.id || initialData?._id;
+
     const payload = {
       leadId: Number(data.leadId),
       projectId: Number(data.projectId),
       plotId: Number(data.plotId),
-      bookingAmount: Number(data.bookingAmount),
-      totalPlotAmount: Number(data.totalPlotAmount),
+      bookingAmount: String(data.bookingAmount),
+      totalPlotAmount: String(data.totalPlotAmount),
       name: data.name.trim(),
       phone: data.phone.trim(),
+      cpName: data.cpName,
+      remark: data.remark,
+      payment_platform_id: Number(data.payment_platform_id),
+      payment_reference: data.payment_reference,
       status: data.status,
     };
 
@@ -321,25 +362,26 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
 
     try {
       let response;
-      if (initialData) {
-        response = await axiosInstance.put(`/bookings/updateBooking/${initialData.id}`, payload);
-
+      if (bookingId) {
+        // UPDATE PATH
+        console.log("Updating Booking ID:", bookingId);
+        response = await axiosInstance.put(`${API_BASE_URL}/bookings/updateBooking/${bookingId}`, payload);
       } else {
-        response = await axiosInstance.post('/bookings/addBooking', payload);
+        // ADD PATH
+        response = await axiosInstance.post(`${API_BASE_URL}/bookings/addBooking`, payload);
       }
+
       onSave(response.data);
       handleClose();
     } catch (error: any) {
-      console.error("Error submitting booking:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to save booking";
-      setApiError(errorMessage);
+      console.error("Submission Error:", error.response?.data || error.message);
+      setApiError(error.response?.data?.message || "Failed to save booking");
     } finally {
       setSubmitLoading(false);
     }
   };
+
+
 
   if (!isOpen) return null;
 
@@ -415,10 +457,10 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                     value: 100,
                     message: "Name cannot exceed 100 characters",
                   },
-                  pattern: {
-                    value: /^[a-zA-Z\s]+$/,
-                    message: "Name can only contain letters and spaces",
-                  },
+                  // pattern: {
+                  //   value: /^[a-zA-Z\s]+$/,
+                  //   message: "Name can only contain letters and spaces",
+                  // },
                 })}
                 className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
                 placeholder="Enter name"
@@ -460,29 +502,39 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             </div>
 
             {/* Status (disabled) */}
+
+
+
+
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Status
               </label>
+
               <Controller
                 name="status"
                 control={control}
-                render={({ field }) => (
-                  <CommonDropdown
-                    options={statusOptions}
-                    selected={
-                      statusOptions.find((opt) => opt.value === field.value) ||
-                      statusOptions[0]
-                    }
-                    onChange={(val: any) =>
-                      field.onChange(val?.value || "active")
-                    }
-                    placeholder="Select Status"
-                    disabled={true}
-                  />
-                )}
+                render={({ field }) => {
+                  const selected =
+                    statusOptions.find(opt => opt.value === field.value) ||
+                    statusOptions.find(opt => opt.value === "pending");
+
+                  return (
+                    <CommonDropdown
+                      options={statusOptions}
+                      selected={
+                        statusOptions.find((opt) => opt.value === field.value) ||
+                        statusOptions[0]
+                      }
+                      onChange={(val: any) => field.onChange(val?.value)}
+                      placeholder="Select Status"
+                      disabled={true}
+                    />
+                  );
+                }}
               />
             </div>
+
 
             {/* Project */}
             <div className="space-y-1.5">
@@ -652,6 +704,106 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
                 </p>
               )}
             </div>
+
+            {/* Transaction ID */}
+            <div className="space-y-1.2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Transaction ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                {...register("payment_reference", {
+                  required: "Transaction ID is required",
+                  minLength: {
+                    value: 3,
+                    message: "Transaction ID too short",
+                  },
+                })}
+                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500"
+                placeholder="TXN123456"
+              />
+              {errors.payment_reference && (
+                <p className="text-red-500 text-xs mt-0.5">
+                  {errors.payment_reference.message}
+                </p>
+              )}
+            </div>
+
+            {/* Transaction Platform */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium dark:text-gray-300">Payment Platform *</label>
+
+              <Controller
+                name="payment_platform_id"
+                control={control}
+                rules={{ required: "Platform required" }}
+                render={({ field }) => {
+                  // Platform options mein se matching object dhoondhna
+                  const selectedPlatform = platformOptions.find(
+                    (opt: any) => Number(opt.value) === Number(field.value)
+                  );
+
+                  return (
+                    <CommonDropdown
+                      options={platformOptions}
+                      selected={selectedPlatform || null} // Ab yahan correct name dikhayega
+                      onChange={(v: any) => field.onChange(v?.value || "")}
+                      placeholder="Select Platform"
+                    />
+                  );
+                }}
+              />
+            </div>
+
+            {/* CP Name */}
+            <div className="space-y-1.2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                CP Name
+              </label>
+              <input
+                type="text"
+                {...register("cpName", {
+                  required: "CP Name is required",
+                  minLength: {
+                    value: 3,
+                    message: "CP Name too short",
+                  },
+                })}
+                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500"
+                placeholder="Mitesh Patel"
+              />
+              {errors.cpName && (
+                <p className="text-red-500 text-xs mt-0.5">
+                  {errors.cpName.message}
+                </p>
+              )}
+            </div>
+
+            {/* Remarks */}
+            {cpNameValue && cpNameValue.length >= 1 && (
+              <div className="space-y-1.2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Remark <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  {...register("remark", {
+                    required: "Remark is required",
+                    minLength: {
+                      value: 3,
+                      message: "Remark too short",
+                    },
+                  })}
+                  className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter Remarks"
+                />
+                {errors.remark && (
+                  <p className="text-red-500 text-xs mt-0.5">
+                    {errors.remark.message}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Buttons */}
@@ -659,15 +811,18 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="px-5 h-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading || submitLoading}
+              className="px-5 h-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              disabled={submitLoading}
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              className="px-5 h-10 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              disabled={isLoading || submitLoading}
+              // 'isLoading' ko yahan se hatao agar wo parent se false nahi aa raha toh
+              className={`px-5 h-10 text-white rounded-lg text-sm font-medium shadow-sm transition-colors ${submitLoading ? "bg-gray-400" : "bg-orange-600 hover:bg-orange-700"
+                }`}
+              disabled={submitLoading}
             >
               {submitLoading
                 ? "Saving..."
@@ -682,4 +837,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   );
 };
 
-export default ComprehensiveLeadModal;
+export default BookingModal;
+
+

@@ -3,6 +3,7 @@ import authReducer from './authSlice';
 import userReducer from './userSlice';
 import roleReducer from './roleSlice';
 import permissionReducer from "./permissionSlice"
+import paymentPlatforms from "./paymentPlatforms"
 import pagePermissionReducer from './pagePermissionSlice';
 import rolePermissionSlice from "./rolePermissionSlice"
 import sidebarPermissionSlice from './sidebarPermissionSlice';
@@ -20,6 +21,7 @@ const store = configureStore({
         auth: authReducer,
         users: userReducer,
         roles: roleReducer,
+        paymentPlatforms: paymentPlatforms,
         permissions: permissionReducer,
         pages: pagePermissionReducer,
         rolePermissions: rolePermissionSlice,

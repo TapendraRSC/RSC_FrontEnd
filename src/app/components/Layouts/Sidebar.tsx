@@ -22,7 +22,6 @@ import {
     Target,
     CalendarCheck,
     Wallet,
-    Building2,
     Sparkles
 } from 'lucide-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
@@ -78,6 +77,7 @@ const iconMap: Record<string, React.ReactNode> = {
     'Land': <Map className="w-5 h-5" />,
     'Lead Platform': <Share2 className="w-5 h-5" />,
     'Google Analytics': <BarChart3 className="w-5 h-5" />,
+    'Payment Platforms': <Wallet className="w-5 h-5" />,
     'Assistant Director': <UserCheck className="w-5 h-5" />,
     'Project Status': <FolderKanban className="w-5 h-5" />,
     'Lead': <Target className="w-5 h-5" />,
@@ -134,6 +134,14 @@ const Sidebar = () => {
                 { pageName: 'Land', title: 'Land', href: '/land', icon: iconMap['Land'] },
                 { pageName: 'Lead Platform', title: 'Lead Platform', href: '/leadplatform', icon: iconMap['Lead Platform'] },
                 { pageName: 'Google Analytics', title: 'Google Analytics', href: '/googleanalytics', icon: iconMap['Google Analytics'] },
+                {
+                    pageName: 'Payment Platforms',
+                    title: 'Payment Platforms',
+                    href: '/paymentplatforms',
+                    icon: iconMap['Payment Platforms']
+                }
+
+
             ]
         },
         assistantdirector: {
@@ -264,6 +272,7 @@ const Sidebar = () => {
         if (sidebarOpen) document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [sidebarOpen, setSidebarOpen]);
+
 
     // FIX: Only show loading on FIRST load, not on every navigation
     const isInitialLoading = rolePermissionsLoading && !rolePermissions?.permissions;
@@ -422,14 +431,6 @@ const Sidebar = () => {
         );
     };
 
-
-    const [isDark, setIsDark] = useState(false);
-
-    useEffect(() => {
-        const theme = localStorage.getItem("theme");
-        setIsDark(theme === "dark");
-    }, []);
-
     return (
         <>
             {sidebarOpen && (
@@ -528,36 +529,20 @@ const Sidebar = () => {
                             </ul>
                         </PerfectScrollbar>
                     </div>
-                    <div
-                        className={`
-                mt-auto border-t p-4 transition-all duration-300
-                ${isDark
-                                ? "bg-white border-gray-200"
-                                : "bg-white/50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-800"}
-            `}
-                    >
+                    <div className="mt-auto border-t p-4 bg-white border-gray-200 transition-all duration-300">
                         <Link
                             href="https://www.digitechnohub.in/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`
-                    group flex flex-col items-center justify-center gap-1
-                    transition-all duration-300
-                    ${isDark ? "opacity-100" : "opacity-70 hover:opacity-100"}
-                `}
+                            className="group flex flex-col items-center justify-center gap-1 opacity-100 transition-all duration-300"
                         >
                             <span className="text-[10px] font-medium text-gray-400 uppercase tracking-[2px]">
                                 Powered & Designed By
                             </span>
 
-                            <div
-                                className={`
-                        relative w-32 h-8 transition-all duration-500
-                        ${isDark ? "" : "grayscale group-hover:grayscale-0"}
-                    `}
-                            >
+                            <div className="relative w-32 h-8  transition-all duration-500">
                                 <Image
-                                    src="./Digitechnohub.png"
+                                    src="/Digitechnohub.png"
                                     alt="Digitechnohub"
                                     fill
                                     className="object-contain"
@@ -565,6 +550,8 @@ const Sidebar = () => {
                             </div>
                         </Link>
                     </div>
+
+
                 </div>
             </nav>
         </>

@@ -2,11 +2,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Menu, User, LogOut, Moon, Sun } from 'lucide-react';
+import { Menu, User, LogOut, Moon, Sun, Bell } from 'lucide-react';
 import { useSidebar } from './Sidebar';
 import Dropdown from '../dropdown';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 
 const Header = () => {
     const router = useRouter();
@@ -20,6 +22,10 @@ const Header = () => {
     }, []);
 
 
+
+    const role = useSelector((state: RootState) => state.auth.role);
+
+    const isAdmin = role === 'Admin';
 
 
 
@@ -96,6 +102,24 @@ const Header = () => {
                                 <Moon className="w-5 h-5 text-gray-700" />
                             )}
                         </button>
+
+
+
+                        {isAdmin && (
+
+                            <button
+                                onClick={() => router.push('/notifications')}
+                                className="relative flex items-center justify-center h-10 w-10
+               rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                                aria-label="Notifications"
+                            >
+                                <Bell className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+
+
+                                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500"></span>
+                            </button>
+                        )}
+
 
                         {/* User Profile Dropdown */}
                         <div className="dropdown flex shrink-0">

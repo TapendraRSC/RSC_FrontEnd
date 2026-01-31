@@ -6,10 +6,9 @@ import { Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
-import ComprehensiveLeadModal from './BookingModal';
+import BookingModal from './BookingModal';
 import BookingTable from '../Common/BookingTable';
 
-// Booking API response type
 interface BookingData {
     id: number;
     bookingNumber: string;
@@ -17,12 +16,22 @@ interface BookingData {
     phone: string;
     leadId: number;
     bookingAmount: string;
+    paymentPlatformName?: string;
     totalPlotAmount: string;
     bookingDate: string;
     status: string;
     projectName: string;
+    createdByName?: string;
     plotNumber: string;
-    createdByName: string;
+    payment_reference: string;
+    payment_platform_id: number | string;
+    cpName: string;
+    remark: string;
+    approvedByName?: string;
+    approvedAt?: string;
+    address?: string;
+    city?: string;
+    state?: string;
 }
 
 interface BookingApiResponse {
@@ -36,7 +45,6 @@ interface BookingApiResponse {
     };
 }
 
-// Helper function to get token from multiple possible storage locations
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
 
@@ -119,11 +127,46 @@ const BookingComponent: React.FC = () => {
     const searchParams = useSearchParams();
 
     const [bookingList, setBookingList] = useState<BookingData[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+
+    const fetchUsers = useCallback(async () => {
+        try {
+            const token = getAuthToken();
+
+            const res = await fetch(
+                `${API_BASE_URL}/users/getAllUser?page=1&limit=10000`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const json = await res.json();
+
+            if (json?.data?.data) {
+                setUsers(json.data.data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch users', err);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
+
+    const createdByOptions = useMemo(() => {
+        return users.map(u => ({
+            id: u.id,
+            name: `${u.name} (${u.roleType})`,
+        }));
+    }, [users]);
+
     const [loading, setLoading] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
 
-    // Permissions from Redux (already loaded by LayoutClient.tsx globally)
     const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
@@ -157,12 +200,13 @@ const BookingComponent: React.FC = () => {
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-    // Filter states
     const [selectedProject, setSelectedProject] = useState("");
     const [selectedAssignedTo, setSelectedAssignedTo] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("");
     const [selectedCreatedBy, setSelectedCreatedBy] = useState("");
     const [selectedActivity, setSelectedActivity] = useState('');
+
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
     useEffect(() => {
         const tabFromUrl = searchParams.get('tab');
@@ -183,7 +227,6 @@ const BookingComponent: React.FC = () => {
         return tabToStatus[tabId] || '';
     };
 
-    // Main API call to fetch bookings - ONLY ONE PLACE
     const fetchBookingsData = useCallback(async () => {
         const token = getAuthToken();
 
@@ -209,7 +252,6 @@ const BookingComponent: React.FC = () => {
                 queryParams.append('status', statusFilter);
             }
             if (selectedActivity) queryParams.append('status', selectedActivity.toLowerCase());
-            if (selectedCreatedBy) queryParams.append('createdBy', selectedCreatedBy);
             if (fromDate) queryParams.append('fromDate', fromDate);
             if (toDate) queryParams.append('toDate', toDate);
             if (selectedAssignedTo) queryParams.append('createdBy', selectedAssignedTo);
@@ -263,7 +305,6 @@ const BookingComponent: React.FC = () => {
         selectedProject, selectedStatus, selectedCreatedBy, selectedAssignedTo, selectedActivity
     ]);
 
-    // Single useEffect to fetch bookings when dependencies change
     useEffect(() => {
         fetchBookingsData();
     }, [fetchBookingsData]);
@@ -307,7 +348,6 @@ const BookingComponent: React.FC = () => {
         setCurrentPage(1);
     };
 
-    // Transform booking data for BookingTable component
     const transformBookingsForTable = useMemo((): any[] => {
         return (bookingList || []).map((booking: BookingData) => {
             const bookingDate = booking.bookingDate ? formatDate(booking.bookingDate) : 'N/A';
@@ -318,6 +358,11 @@ const BookingComponent: React.FC = () => {
                 leadNo: `#${booking.leadId || booking.id}`,
                 name: booking.name || 'N/A',
                 phone: booking.phone || 'N/A',
+                payment_reference: booking.payment_reference || '',
+                payment_platform_id: booking.payment_platform_id || '',
+                paymentPlatformName: booking.paymentPlatformName || 'N/A',
+                cpName: booking.cpName || 'N/A',
+                remark: booking.remark || 'N/A',
                 email: '',
                 projectName: booking.projectName || 'N/A',
                 projectTitle: booking.projectName || 'N/A',
@@ -334,14 +379,16 @@ const BookingComponent: React.FC = () => {
                 updatedAt: booking.bookingDate || null,
                 bookingDate: booking.bookingDate || null,
                 leadId: booking.leadId,
+                approvedByName: booking.approvedByName || null,
+                createdByName: booking.createdByName || 'N/A',
+                approvedAt: booking.approvedAt ? formatDate(booking.approvedAt) : null,
                 profession: 'Not Provided',
-                address: 'Not Provided',
-                city: 'Not Provided',
-                state: 'Not Provided',
+                address: booking.address || booking.city || booking.state || 'Not Provided',
+                city: booking.city || 'Not Provided',
+                state: booking.state || 'Not Provided',
                 interestedIn: 'not provided',
                 source: 'Booking',
                 platformType: 'Booking',
-                remark: 'N/A',
                 interestStatus: 'N/A',
                 plotPrice: booking.totalPlotAmount || 'N/A',
                 plotProjectId: null,
@@ -349,7 +396,6 @@ const BookingComponent: React.FC = () => {
         });
     }, [bookingList]);
 
-    // Permission check functions using data from Redux store (already loaded globally)
     const getBookingPermissionIds = useCallback((): number[] => {
         const bookingPerm = rolePermissions?.permissions?.find(
             (p: any) => p.pageName === 'Booking' || p.pageName === 'booking'
@@ -404,6 +450,10 @@ const BookingComponent: React.FC = () => {
             leadId: booking.leadId,
             name: booking.name,
             phone: booking.phone,
+            payment_reference: booking.payment_reference || '',
+            payment_platform_id: booking.paymentPlatformName || '',
+            cpName: booking.cpName || 'N/A',
+            remark: booking.remark || 'N/A',
             projectTitle: booking.projectTitle || booking.projectName,
             plotNumber: booking.plotNumber,
             bookingAmount: booking.bookingAmount,
@@ -520,6 +570,7 @@ const BookingComponent: React.FC = () => {
             <BookingTable
                 leads={transformBookingsForTable}
                 loading={loading}
+                createdByOption={createdByOptions}
                 totalPages={totalPages}
                 totalRecords={total}
                 currentPage={currentPage}
@@ -555,7 +606,7 @@ const BookingComponent: React.FC = () => {
                 disableInternalFetch={true}
             />
 
-            <ComprehensiveLeadModal
+            <BookingModal
                 isOpen={isModalOpen}
                 onClose={() => {
                     setIsModalOpen(false);
