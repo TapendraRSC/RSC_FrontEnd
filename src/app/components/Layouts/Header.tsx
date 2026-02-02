@@ -9,6 +9,7 @@ import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
+import { useNotifications } from '../.././components/NotificationProvider';
 
 const Header = () => {
     const router = useRouter();
@@ -16,6 +17,7 @@ const Header = () => {
     const [user, setUser] = useState<any>(null);
     const { theme, setTheme } = useTheme();
 
+    const { unreadCount } = useNotifications();
     useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) setUser(JSON.parse(userData));
@@ -109,14 +111,15 @@ const Header = () => {
 
                             <button
                                 onClick={() => router.push('/notifications')}
-                                className="relative flex items-center justify-center h-10 w-10
-               rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                                className="relative p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
                                 aria-label="Notifications"
                             >
-                                <Bell className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-
-
-                                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500"></span>
+                                <Bell size={24} className="text-gray-600 dark:text-gray-400" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-black rounded-full min-w-[20px] h-5 flex items-center justify-center animate-pulse border-2 border-white dark:border-slate-900 px-1">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
                             </button>
                         )}
 

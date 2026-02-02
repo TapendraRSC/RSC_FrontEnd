@@ -934,6 +934,24 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                         )}
                                                     </>
                                                 )}
+                                                {isAdmin && booking.status?.toLowerCase() === 'pending' && (
+                                                    <div className="flex items-center gap-2 animate-in fade-in duration-200">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleBookingAction(booking.id, 'approve'); }}
+                                                            className="px-4 py-1.5 text-xs font-bold uppercase text-white bg-green-600 hover:bg-green-700 rounded-lg transition-all flex items-center gap-1.5"
+                                                        >
+                                                            <CheckCircle className="h-3.5 w-3.5" /> Approve
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleBookingAction(booking.id, 'reject'); }}
+                                                            className="px-4 py-1.5 text-xs font-bold uppercase text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all flex items-center gap-1.5"
+                                                        >
+                                                            <XCircle className="h-3.5 w-3.5" /> Reject
+                                                        </button>
+                                                    </div>
+                                                )}
+
+
 
                                                 {booking.status?.toLowerCase() === "confirmed" && (
                                                     <div className="flex items-center gap-2">
@@ -1034,9 +1052,24 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                             {!isPending && booking.approvedByName && booking.bookingDate && (
                                                 <div className="flex items-center gap-3 opacity-75 text-sm">
                                                     <div className="flex items-center gap-1">
-                                                        <User className="h-4 w-4 text-green-500" />
-                                                        <span className="font-medium text-green-700 dark:text-green-300">
-                                                            By {booking.approvedByName}
+                                                        <User
+                                                            className={`h-4 w-4 ${booking.status?.toLowerCase() === "confirmed"
+                                                                ? "text-green-500"
+                                                                : "text-red-500"
+                                                                }`}
+                                                        />
+
+                                                        <span
+                                                            className={`font-medium ${booking.status?.toLowerCase() === "confirmed"
+                                                                ? "text-green-700 dark:text-green-300"
+                                                                : "text-red-700 dark:text-red-300"
+                                                                }`}
+                                                        >
+                                                            {booking.status?.toLowerCase() === "confirmed"
+                                                                ? `Approved By ${booking.approvedByName}`
+                                                                : booking.status?.toLowerCase() === "rejected"
+                                                                    ? `Rejected By ${booking.approvedByName}`
+                                                                    : ""}
                                                         </span>
                                                     </div>
 
