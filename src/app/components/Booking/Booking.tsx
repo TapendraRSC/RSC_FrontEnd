@@ -452,6 +452,7 @@ const BookingComponent: React.FC = () => {
             phone: booking.phone,
             payment_reference: booking.payment_reference || '',
             payment_platform_id: booking.paymentPlatformName || '',
+            //    payment_platform_id : booking.payment_platform_id || ''
             cpName: booking.cpName || 'N/A',
             remark: booking.remark || 'N/A',
             projectTitle: booking.projectTitle || booking.projectName,

@@ -22,7 +22,10 @@ import {
     Target,
     CalendarCheck,
     Wallet,
-    Sparkles
+    Sparkles,
+    Layers,
+    Globe,
+    CreditCard
 } from 'lucide-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import 'react-perfect-scrollbar/dist/css/styles.css';
@@ -85,6 +88,10 @@ const iconMap: Record<string, React.ReactNode> = {
     'Collection': <Wallet className="w-5 h-5" />,
     'Support': <LifeBuoy className="w-5 h-5" />,
     'All Masters': <Sparkles className="w-5 h-5" />,
+
+    'Bulk Land': <Layers className="w-5 h-5" />,
+    'Online Collection': <Globe className="w-5 h-5" />,
+    'Credit Collection': <CreditCard className="w-5 h-5" />,
 };
 
 
@@ -151,6 +158,13 @@ const Sidebar = () => {
             type: 'single',
             icon: iconMap['Assistant Director']
         },
+        bulkland: {
+            pageName: 'Bulk Land',
+            title: 'Bulk Land',
+            href: '/bulkland',
+            type: 'single',
+            icon: iconMap['Bulk Land']
+        },
         projectstatus: {
             pageName: 'Project Status',
             title: 'Project Status',
@@ -179,6 +193,22 @@ const Sidebar = () => {
             type: 'single',
             icon: iconMap['Collection']
         },
+
+        onlinecollection: {
+            pageName: 'Online Collection',
+            title: 'Online Collection',
+            href: '/onlinecollection',
+            type: 'single',
+            icon: iconMap['Online Collection']
+        },
+        creditcollection: {
+            pageName: 'Credit Collection',
+            title: 'Credit Collection',
+            href: '/creditcollection',
+            type: 'single',
+            icon: iconMap['Credit Collection']
+        },
+
         support: {
             pageName: 'Support',
             title: 'Support',
@@ -509,11 +539,21 @@ const Sidebar = () => {
                             <ul className="space-y-1.5">
                                 {filteredMenuItems.dashboard && renderMenuItem('dashboard', filteredMenuItems.dashboard)}
                                 {filteredMenuItems.allMasters && renderDropdownMenu('allMasters', filteredMenuItems.allMasters)}
+
                                 {filteredMenuItems.assistantdirector && renderMenuItem('assistantdirector', filteredMenuItems.assistantdirector)}
+                                {filteredMenuItems.bulkland && renderMenuItem('bulkland', filteredMenuItems.bulkland)}
+
+
                                 {filteredMenuItems.projectstatus && renderMenuItem('projectstatus', filteredMenuItems.projectstatus)}
                                 {filteredMenuItems.lead && renderMenuItem('lead', filteredMenuItems.lead)}
                                 {filteredMenuItems.booking && renderMenuItem('booking', filteredMenuItems.booking)}
                                 {filteredMenuItems.collection && renderMenuItem('collection', filteredMenuItems.collection)}
+                                {filteredMenuItems.creditcollection && renderMenuItem('creditcollection', filteredMenuItems.creditcollection)}
+                                {filteredMenuItems.onlinecollection && renderMenuItem('onlinecollection', filteredMenuItems.onlinecollection)}
+
+
+
+
                                 {filteredMenuItems.support && (
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
                                         <Link

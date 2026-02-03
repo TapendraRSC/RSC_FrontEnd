@@ -527,7 +527,8 @@ const routeToPageNameMap: { [key: string]: string } = {
     '/booking': 'Booking',
     '/collection': 'Collection',
     '/creditcollection': 'Credit Collection',
-    '/onlinecollection': 'Online Collection'
+    '/onlinecollection': 'Online Collection',
+    '/bulkland': 'Bulk Land'
 
 };
 
