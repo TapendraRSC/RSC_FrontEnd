@@ -122,7 +122,6 @@ const BulkLand = () => {
                 if (response.ok) {
                     setData(Array.isArray(json.data) ? json.data : []);
                 } else if (json.message === "Invalid token") {
-                    // Logic to handle invalid token
                     localStorage.removeItem("accessToken");
                     window.location.href = "/login";
                 }

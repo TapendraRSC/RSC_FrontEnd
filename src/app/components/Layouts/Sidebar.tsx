@@ -219,21 +219,29 @@ const Sidebar = () => {
         },
     };
 
-    const isViewPermissionValid = (ids: number[]) => ids?.includes(17) ?? false;
+    // ✅ Check if user has ANY permission for this page (view permission means permissionIds.length > 0)
+    const hasViewPermission = (permissionIds: number[]) => {
+        return permissionIds && permissionIds.length > 0;
+    };
 
     const getFilteredMenu = () => {
         if (!rolePermissions?.permissions) return {};
         const filtered: any = {};
+
         Object.entries(menuStructure).forEach(([key, item]: any) => {
+            // Always show items marked as alwaysShow (like Support)
             if (item.alwaysShow) {
                 filtered[key] = item;
                 return;
             }
+
             if (item.type === 'single') {
+                // Find permission by EXACT pageName match
                 const permission = rolePermissions.permissions.find(
                     (perm: any) => perm.pageName === item.pageName
                 );
-                if (permission && isViewPermissionValid(permission.permissionIds)) {
+
+                if (permission && hasViewPermission(permission.permissionIds)) {
                     filtered[key] = item;
                 }
             }
@@ -242,7 +250,7 @@ const Sidebar = () => {
                     const permission = rolePermissions.permissions.find(
                         (perm: any) => perm.pageName === child.pageName
                     );
-                    return permission && isViewPermissionValid(permission.permissionIds);
+                    return permission && hasViewPermission(permission.permissionIds);
                 });
                 if (children.length > 0) {
                     filtered[key] = { ...item, children };

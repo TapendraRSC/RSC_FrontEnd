@@ -508,7 +508,7 @@ import ReduxProvider from "./ReduxProvider";
 import { AppDispatch, RootState } from "../../store/store";
 import { fetchRolePermissionsSidebar } from "../../store/sidebarPermissionSlice";
 
-// URL to pageName mapping
+// URL to pageName mapping - MUST MATCH EXACTLY with backend pageName
 const routeToPageNameMap: { [key: string]: string } = {
     '/': 'Dashboard',
     '/users': 'User Management',
@@ -528,11 +528,43 @@ const routeToPageNameMap: { [key: string]: string } = {
     '/collection': 'Collection',
     '/creditcollection': 'Credit Collection',
     '/onlinecollection': 'Online Collection',
-    '/bulkland': 'Bulk Land'
-
+    '/bulkland': 'Bulk Land',
+    '/paymentplatforms': 'Payment Platforms',
 };
 
-// Public routes - no permission check needed
+// All available routes in PRIORITY order for redirect check
+const availableRoutes = [
+    { href: '/', pageName: 'Dashboard' },
+    { href: '/users', pageName: 'User Management' },
+    { href: '/roles', pageName: 'Roles' },
+    { href: '/permissions', pageName: 'Permissions' },
+    { href: '/pagepermissions', pageName: 'Page Permissions' },
+    { href: '/rolebasedpermissions', pageName: 'User Permissions' },
+    { href: '/leadstagemasterpage', pageName: 'Lead Stage Master View' },
+    { href: '/statusmasterview', pageName: 'Status Master View' },
+    { href: '/land', pageName: 'Land' },
+    { href: '/leadplatform', pageName: 'Lead Platform' },
+    { href: '/googleanalytics', pageName: 'Google Analytics' },
+    { href: '/projectstatus', pageName: 'Project Status' },
+    { href: '/lead', pageName: 'Lead' },
+    { href: '/Assistantdirector', pageName: 'Assistantdirector' },
+    { href: '/booking', pageName: 'Booking' },
+    { href: '/collection', pageName: 'Collection' },
+    { href: '/creditcollection', pageName: 'Credit Collection' },
+    { href: '/onlinecollection', pageName: 'Online Collection' },
+    { href: '/bulkland', pageName: 'Bulk Land' },
+    { href: '/paymentplatforms', pageName: 'Payment Platforms' },
+];
+
+// Role-based default routes mapping
+const roleDefaultRoutes: { [key: string]: string } = {
+    'admin': '/',
+    'bulk land role': '/bulkland',
+    'bulk land': '/bulkland',
+    'assistant director': '/Assistantdirector',
+    'assistantdirector': '/Assistantdirector',
+};
+
 const publicRoutes = ['/login', '/register', '/forgot-password', '/support'];
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
@@ -544,12 +576,6 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                     position="top-right"
                     autoClose={3000}
                     hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
                     theme="dark"
                 />
             </ReduxProvider>
@@ -562,167 +588,186 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const dispatch = useDispatch<AppDispatch>();
 
-    // ✅ ALL HOOKS FIRST
     const [mounted, setMounted] = useState(false);
     const [permissionChecked, setPermissionChecked] = useState(false);
     const [isUnauthorized, setIsUnauthorized] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     const { permissions: rolePermissions, loading: permissionsLoading, error: permissionsError } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
 
     const permissionFetchedRef = useRef(false);
+    const redirectAttemptedRef = useRef(false);
     const isAuthRoute = pathname === "/login";
     const isPublicRoute = publicRoutes.includes(pathname);
 
-    // Helper function to check if token is valid
+    const getUserRole = (): string | null => {
+        if (typeof window === 'undefined') return null;
+        try {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                return user.role || user.roleName || user.role_name || null;
+            }
+        } catch (e) {
+            console.error('Error parsing user:', e);
+        }
+        return null;
+    };
+
     const isTokenValid = () => {
         if (typeof window === 'undefined') return false;
-
         const token = localStorage.getItem("accessToken");
         if (!token) return false;
-
         try {
-            // Check if token is expired by parsing JWT
             const payload = JSON.parse(atob(token.split('.')[1]));
-            const expiry = payload.exp * 1000; // Convert to milliseconds
-            return Date.now() < expiry;
+            return Date.now() < payload.exp * 1000;
         } catch (error) {
-            console.error("Token validation error:", error);
             return false;
         }
     };
 
-    // Set mounted to true after hydration
+    const hasViewPermission = (pageName: string, permissions: any[]): boolean => {
+        if (!permissions || !pageName) return false;
+        const pagePermission = permissions.find((p: any) => p.pageName === pageName);
+        return !!(pagePermission && pagePermission.permissionIds && pagePermission.permissionIds.length > 0);
+    };
+
+    const getRoleDefaultRoute = (roleName: string | null): string | null => {
+        if (!roleName) return null;
+        const normalizedRole = roleName.toLowerCase().trim();
+        return roleDefaultRoutes[normalizedRole] || null;
+    };
+
+    // LOGIC UPDATED: Checks one by one based on your priority list
+    const getFirstAvailableRoute = (permissions: any[]): string | null => {
+        if (!permissions || permissions.length === 0) return null;
+
+        // 1. Check Role Default first
+        const userRole = getUserRole();
+        const roleDefault = getRoleDefaultRoute(userRole);
+        if (roleDefault) {
+            const defaultPageName = routeToPageNameMap[roleDefault];
+            if (defaultPageName && hasViewPermission(defaultPageName, permissions)) {
+                return roleDefault;
+            }
+        }
+
+        // 2. Fallback: Loop through availableRoutes in the specific order you requested
+        // This will check '/', then '/users', then '/roles', and so on...
+        for (const route of availableRoutes) {
+            if (hasViewPermission(route.pageName, permissions)) {
+                console.log(`[Auth] Redirecting to first allowed priority route: ${route.href}`);
+                return route.href;
+            }
+        }
+
+        return null;
+    };
+
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Authentication check
+    useEffect(() => {
+        redirectAttemptedRef.current = false;
+    }, [pathname]);
+
     useEffect(() => {
         if (!mounted) return;
-
         setIsCheckingAuth(true);
 
-        // If on login page, allow access
         if (isAuthRoute) {
             setIsCheckingAuth(false);
             setPermissionChecked(true);
             return;
         }
 
-        // Check token validity
-        const tokenValid = isTokenValid();
-
-        if (!tokenValid) {
-            // Clear invalid token
+        if (!isTokenValid()) {
             localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-
-            // Redirect to login
             router.replace("/login");
             return;
         }
 
         setIsCheckingAuth(false);
-
-        // Fetch permissions if not already fetched
         if (!permissionFetchedRef.current) {
             permissionFetchedRef.current = true;
             dispatch(fetchRolePermissionsSidebar());
         }
     }, [mounted, isAuthRoute, router, dispatch]);
 
-    // Permission check
     useEffect(() => {
         if (!mounted || isCheckingAuth) return;
-
-        // Auth route - skip permission check
-        if (isAuthRoute) {
+        if (isAuthRoute || isPublicRoute) {
             setPermissionChecked(true);
             setIsUnauthorized(false);
             return;
         }
 
-        // Public routes - always accessible
-        if (isPublicRoute) {
-            setPermissionChecked(true);
-            setIsUnauthorized(false);
-            return;
-        }
+        if (permissionsLoading) return;
 
-        // Still loading permissions
-        if (permissionsLoading) {
-            return;
-        }
-
-        // If permission fetch failed, redirect to login
         if (permissionsError) {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
             router.replace("/login");
             return;
         }
 
-        // Permissions loaded - check access
         if (rolePermissions?.permissions) {
             const pageName = routeToPageNameMap[pathname];
 
-            // Route not in protected list - allow access
+            // If it's a route we don't track permissions for, let them in
             if (!pageName) {
                 setPermissionChecked(true);
                 setIsUnauthorized(false);
                 return;
             }
 
-            // Check if user has view permission (17) for this page
-            const pagePermission = rolePermissions.permissions.find(
-                (p: any) => p.pageName === pageName
-            );
-            const hasViewPermission = pagePermission && pagePermission.permissionIds.includes(17);
+            const hasAccess = hasViewPermission(pageName, rolePermissions.permissions);
 
-            if (!hasViewPermission) {
-                // No permission - show 404
-                setIsUnauthorized(true);
-                setPermissionChecked(true);
+            if (!hasAccess) {
+                if (!redirectAttemptedRef.current) {
+                    redirectAttemptedRef.current = true;
+                    setIsRedirecting(true);
+
+                    const firstAvailableRoute = getFirstAvailableRoute(rolePermissions.permissions);
+
+                    if (firstAvailableRoute && firstAvailableRoute !== pathname) {
+                        router.replace(firstAvailableRoute);
+                        return;
+                    } else {
+                        setIsUnauthorized(true);
+                        setPermissionChecked(true);
+                        setIsRedirecting(false);
+                    }
+                }
                 return;
             }
 
-            // Has permission - allow access
             setIsUnauthorized(false);
             setPermissionChecked(true);
+            setIsRedirecting(false);
         }
-
     }, [mounted, pathname, rolePermissions, permissionsLoading, permissionsError, isAuthRoute, isPublicRoute, isCheckingAuth, router]);
 
-    // Not mounted yet - return null to prevent hydration mismatch
-    if (!mounted) {
-        return null;
-    }
+    if (!mounted) return null;
 
-    // Loading state
-    if (isCheckingAuth || (!permissionChecked && !isAuthRoute)) {
+    if (isCheckingAuth || isRedirecting || (!permissionChecked && !isAuthRoute)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
                 <div className="flex flex-col items-center gap-4">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                        {isRedirecting ? 'Redirecting...' : 'Verifying Permissions...'}
+                    </p>
                 </div>
             </div>
         );
     }
 
-    if (isUnauthorized) {
-        return <NotFoundPage />;
-    }
+    if (isUnauthorized) return <NotFoundPage />;
+    if (isAuthRoute) return <main className="flex-1">{children}</main>;
 
-    // Auth route (login page)
-    if (isAuthRoute) {
-        return <main className="flex-1">{children}</main>;
-    }
-
-    // Authorized - Show main layout
     return (
         <SidebarProvider>
             <div className="min-h-screen bg-gray-50 dark:bg-black">
@@ -733,35 +778,24 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
     );
 }
 
-// 404 Not Found Page Component
 function NotFoundPage() {
+    const router = useRouter();
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
-            <div className="px-6 py-16 text-center font-semibold before:container before:absolute before:left-1/2 before:aspect-square before:-translate-x-1/2 before:rounded-full before:bg-[linear-gradient(180deg,#4361EE_0%,rgba(67,97,238,0)_50.73%)] before:opacity-10 md:py-20">
-                <div className="relative">
-                    <img
-                        src="/assets/images/error/404-light.svg"
-                        alt="404"
-                        className="mx-auto -mt-10 w-full max-w-xs object-cover md:-mt-14 md:max-w-xl"
-                    />
-                    <p className="mt-5 text-base dark:text-white">
-                        You Don't Have Access To This Page. Please Contact Admin.
-                    </p>
-                    <a
-                        href="/"
-                        className="btn btn-gradient mx-auto !mt-7 w-max border-0 uppercase shadow-none px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors inline-block"
-                    >
-                        Go Back
-                    </a>
-                </div>
+        <div className="relative flex min-h-screen items-center justify-center bg-gray-900">
+            <div className="text-center">
+                <p className="mt-5 text-base text-white">You Don't Have Access To This Page.</p>
+                <button
+                    onClick={() => router.back()}
+                    className="mt-7 px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold"
+                >
+                    Go Back
+                </button>
             </div>
-        </div >
+        </div>
     );
 }
 
 function MainContent({ children }: { children: React.ReactNode }) {
-    const { sidebarOpen } = useSidebar();
-
     return (
         <main className="lg:ml-[260px]">
             <Header />
@@ -769,4 +803,3 @@ function MainContent({ children }: { children: React.ReactNode }) {
         </main>
     );
 }
-

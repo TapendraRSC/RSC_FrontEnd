@@ -513,6 +513,53 @@ const LeadComponent: React.FC = () => {
 
     const handleClosePreview = () => resetUploadStates();
 
+    // const handleConfirmUpload = async () => {
+    //     if (!selectedFile) {
+    //         toast.error('No file selected');
+    //         return;
+    //     }
+    //     setUploadLoading(true);
+    //     setFailedLeadsFileUrl(undefined);
+    //     try {
+    //         const response = await dispatch(uploadLeads(selectedFile)).unwrap();
+    //         if (response?.success) {
+    //             toast.success('Leads uploaded successfully');
+    //             resetUploadStates();
+    //             handleRefetch(true);
+    //         } else {
+    //             const results = response?.results || response?.data?.results;
+    //             if (results?.failedLeadsFileUrl) {
+    //                 setFailedLeadsFileUrl(results.failedLeadsFileUrl);
+    //             }
+    //             if (results?.successful > 0 && results?.failed > 0) {
+    //                 toast.warning(`Partial success: ${results.successful} uploaded, ${results.failed} failed`);
+    //                 handleRefetch(true);
+    //             } else if (results?.failed > 0) {
+    //                 toast.error(response?.message || `All ${results.failed} leads failed to upload`);
+    //             } else {
+    //                 toast.error(response?.message || 'Failed to upload leads');
+    //             }
+    //         }
+    //     } catch (error: any) {
+    //         console.error('Upload error:', error);
+
+    //         if (error?.results?.failedLeadsFileUrl) {
+    //             setFailedLeadsFileUrl(error.results.failedLeadsFileUrl);
+    //         } else if (error?.data?.results?.failedLeadsFileUrl) {
+    //             setFailedLeadsFileUrl(error.data.results.failedLeadsFileUrl);
+    //         }
+
+    //         const errorMsg = getErrorMessage(error);
+    //         toast.error(errorMsg);
+    //     } finally {
+    //         setUploadLoading(false);
+    //     }
+    // };
+
+
+
+    // LeadComponent.tsx mein yeh function replace karo:
+
     const handleConfirmUpload = async () => {
         if (!selectedFile) {
             toast.error('No file selected');
@@ -522,15 +569,25 @@ const LeadComponent: React.FC = () => {
         setFailedLeadsFileUrl(undefined);
         try {
             const response = await dispatch(uploadLeads(selectedFile)).unwrap();
+            const results = response?.results || response?.data?.results;
+
+            // Always check for failedLeadsFileUrl first (for duplicates)
+            if (results?.failedLeadsFileUrl) {
+                setFailedLeadsFileUrl(results.failedLeadsFileUrl);
+            }
+
             if (response?.success) {
-                toast.success('Leads uploaded successfully');
-                resetUploadStates();
-                handleRefetch(true);
-            } else {
-                const results = response?.results || response?.data?.results;
-                if (results?.failedLeadsFileUrl) {
-                    setFailedLeadsFileUrl(results.failedLeadsFileUrl);
+                // Check if there are duplicates
+                if (results?.duplicates > 0) {
+                    toast.warning(response?.message || `${results.success || results.successful} leads uploaded, ${results.duplicates} duplicates found`);
+                    handleRefetch(true);
+                    // Don't reset states so user can see the failed leads download option
+                } else {
+                    toast.success(response?.message || 'Leads uploaded successfully');
+                    resetUploadStates();
+                    handleRefetch(true);
                 }
+            } else {
                 if (results?.successful > 0 && results?.failed > 0) {
                     toast.warning(`Partial success: ${results.successful} uploaded, ${results.failed} failed`);
                     handleRefetch(true);
