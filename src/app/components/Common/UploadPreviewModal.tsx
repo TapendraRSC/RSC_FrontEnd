@@ -242,7 +242,7 @@ const UploadPreviewModal: React.FC<UploadPreviewModalProps> = ({
     const handleDownloadSample = () => {
         const headers = ["name", "email", "phone", "city", "state", "platform"];
         const rows = [
-            ["John Doe", "john@example.com", "9876543210", "Ahmedabad", "Gujarat", "Website"],
+            ["John Doe", "john@example.com", "9876543210", "Ahmedabad", "Gujarat", "whatsapp"],
             ["Jane Smith", "jane@example.com", "9876543211", "Surat", "Gujarat", "Facebook"],
             ["Rahul Patel", "rahul@example.com", "9876543212", "Mumbai", "Maharashtra", "Instagram"],
         ];

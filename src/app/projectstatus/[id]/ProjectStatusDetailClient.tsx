@@ -407,7 +407,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             {/* Mobile Action Buttons */}
             <div className="sticky top-16 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-3 lg:hidden">
                 <div className="flex gap-2">
-                    {hasPermission(20, "upload") && (
+                    {hasPermission(26, "upload") && (
                         <button
                             onClick={handleUploadClick}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
@@ -463,7 +463,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                             <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                             Export
                         </button>
-                        {hasPermission(20, "upload") && (
+                        {hasPermission(26, "upload") && (
                             <button
                                 onClick={handleUploadClick}
                                 className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base

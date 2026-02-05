@@ -20,7 +20,7 @@ interface SortConfig {
     direction: 'asc' | 'desc';
 }
 
-// PageCard component with dark theme support
+
 const PageCard = ({ page, onEdit, onDelete, hasPermission }: {
     page: PaymentPlatforms;
     onEdit: () => void;

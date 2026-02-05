@@ -310,15 +310,23 @@ const CreditCollectionPage: React.FC = () => {
                     onPageSizeChange={handleLimitChange}
                     actions={(row: any) => (
                         <div className="flex gap-2">
-                            {(permissions.edit || isAdmin) && (
+                            {(permissions.edit && isAdmin) && (
                                 <button
-                                    onClick={() => { setCurrentRecord(row); setIsModalOpen(true); }}
-                                    className="p-1.5 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded transition-colors"
-                                    title="Edit Record"
+                                    onClick={() => {
+                                        setCurrentRecord(row);
+                                        setIsModalOpen(true);
+                                    }}
+                                    className="text-blue-500 hover:text-blue-600"
                                 >
                                     <Pencil className="w-4 h-4" />
                                 </button>
                             )}
+
+                            {/* {permissions.delete && (
+                                                 <button className="text-red-500 hover:text-red-600">
+                                                     <Trash2 className="w-4 h-4" />
+                                                 </button>
+                                             )} */}
                         </div>
                     )}
                 />
