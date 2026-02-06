@@ -18,6 +18,8 @@ const Header = () => {
     const { theme, setTheme } = useTheme();
 
     const { unreadCount } = useNotifications();
+
+    console.log(unreadCount, "unreadCount")
     useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) setUser(JSON.parse(userData));
@@ -28,6 +30,7 @@ const Header = () => {
     const role = useSelector((state: RootState) => state.auth.role);
 
     const isAdmin = role === 'Admin';
+    const isAccountant = role === 'Accountant';
 
 
 
@@ -107,7 +110,7 @@ const Header = () => {
 
 
 
-                        {isAdmin && (
+                        {(isAdmin || isAccountant) && (
 
                             <button
                                 onClick={() => router.push('/notifications')}
@@ -115,13 +118,16 @@ const Header = () => {
                                 aria-label="Notifications"
                             >
                                 <Bell size={24} className="text-gray-600 dark:text-gray-400" />
+
                                 {unreadCount > 0 && (
                                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-black rounded-full min-w-[20px] h-5 flex items-center justify-center animate-pulse border-2 border-white dark:border-slate-900 px-1">
                                         {unreadCount > 99 ? '99+' : unreadCount}
                                     </span>
                                 )}
                             </button>
+
                         )}
+
 
 
                         {/* User Profile Dropdown */}

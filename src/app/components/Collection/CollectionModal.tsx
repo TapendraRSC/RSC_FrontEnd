@@ -32,6 +32,7 @@ const ColletionModal: React.FC<ColletionModalProps> = ({
         "30 Days",
         "35 Days",
         "45 Days",
+        "50 Days",
         "55 Days",
         "60 Days",
         "2 Months",

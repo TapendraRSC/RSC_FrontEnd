@@ -560,10 +560,9 @@
 
 
 
-
 'use client';
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -572,8 +571,9 @@ interface Notification {
     type: string;
     title: string;
     message: string;
-    bookingStatus: string;
-    bookingNumber: string;
+    entityStatus?: string;
+    bookingStatus?: string;
+    bookingNumber: string | null;
     created_at: string;
 }
 
@@ -586,7 +586,6 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     const [unreadCount, setUnreadCount] = useState<number>(0);
-    const previousPendingIdsRef = useRef<number[]>([]);
 
     const fetchNotificationCount = async () => {
         try {
@@ -608,26 +607,13 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             const result = await response.json();
             const data: Notification[] = Array.isArray(result) ? result : result.data || [];
 
-            // Filter only PENDING notifications
-            const pendingNotifications = data.filter((item) =>
-                item.bookingStatus?.toLowerCase() === 'pending'
-            );
+            // Count ALL pending notifications (both entityStatus and bookingStatus)
+            const pendingCount = data.filter((item) => {
+                const status = (item.entityStatus || item.bookingStatus || '').toLowerCase();
+                return status === 'pending';
+            }).length;
 
-            // Get current pending notification IDs
-            const currentPendingIds = pendingNotifications.map((n) => n.id);
-
-            // Find NEW pending notifications (not seen before)
-            const newPendingIds = currentPendingIds.filter(
-                (id) => !previousPendingIdsRef.current.includes(id)
-            );
-
-            // If there are new pending notifications, increase counter
-            if (newPendingIds.length > 0) {
-                setUnreadCount((prev) => prev + newPendingIds.length);
-            }
-
-            // Update the reference with current pending IDs
-            previousPendingIdsRef.current = currentPendingIds;
+            setUnreadCount(pendingCount);
 
         } catch (err) {
             console.error('Error fetching notifications:', err);
@@ -637,7 +623,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         fetchNotificationCount();
 
-        // Check every 10 seconds
+        // Refresh every 10 seconds
         const interval = setInterval(fetchNotificationCount, 10000);
 
         return () => clearInterval(interval);
