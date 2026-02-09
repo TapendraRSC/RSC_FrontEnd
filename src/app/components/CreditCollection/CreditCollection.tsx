@@ -22,6 +22,7 @@ interface CreditRecord {
     plotNumber: string;
     employeeName: string;
     amount: number;
+    createdAt: number;
 }
 
 interface PaginationInfo {
@@ -260,6 +261,25 @@ const CreditCollectionPage: React.FC = () => {
             sortable: true,
             render: (row: any) => `₹${row.amount?.toLocaleString() || 0}`
         },
+        {
+            label: 'Created At',
+            accessor: 'createdAt',
+            sortable: true,
+            render: (row: any) => {
+                if (!row.createdAt) return '-';
+                const date = new Date(row.createdAt);
+                return date.toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                });
+            },
+        },
+
+
     ];
 
     return (
@@ -333,7 +353,7 @@ const CreditCollectionPage: React.FC = () => {
             </div>
 
             {/* Manual Pagination (if CustomTable doesn't support it) */}
-            {pagination.totalPages > 1 && (
+            {/* {pagination.totalPages > 1 && (
                 <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span>Show</span>
@@ -342,10 +362,10 @@ const CreditCollectionPage: React.FC = () => {
                             onChange={(e) => handleLimitChange(Number(e.target.value))}
                             className="border rounded px-2 py-1 dark:bg-slate-800 dark:border-gray-700"
                         >
-                            <option value={5}>5</option>
                             <option value={10}>10</option>
                             <option value={25}>25</option>
                             <option value={50}>50</option>
+                            <option value={100}>100</option>
                         </select>
                         <span>entries</span>
                         <span className="ml-4">
@@ -371,7 +391,6 @@ const CreditCollectionPage: React.FC = () => {
                             Prev
                         </button>
 
-                        {/* Page numbers */}
                         {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                             let pageNum;
                             if (pagination.totalPages <= 5) {
@@ -415,7 +434,7 @@ const CreditCollectionPage: React.FC = () => {
                         </button>
                     </div>
                 </div>
-            )}
+            )} */}
 
             <CreditCollectionModal
                 isOpen={isModalOpen}
