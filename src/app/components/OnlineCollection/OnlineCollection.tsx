@@ -303,7 +303,11 @@ const OnlineCollectionPage: React.FC = () => {
             sortable: true,
             render: (row: any) => {
                 if (!row.createdAt) return '-';
+
+              
                 const date = new Date(row.createdAt);
+
+                
                 return date.toLocaleString('en-IN', {
                     day: '2-digit',
                     month: 'short',
@@ -311,6 +315,7 @@ const OnlineCollectionPage: React.FC = () => {
                     hour: '2-digit',
                     minute: '2-digit',
                     hour12: false,
+                    timeZone: 'Asia/Kolkata'
                 });
             },
         },
