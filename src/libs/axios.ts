@@ -7,9 +7,9 @@ import { Capacitor } from '@capacitor/core';
 
 const axiosInstance = axios.create({
     baseURL:
-        // "http://localhost:8000",
-        process.env.REACT_APP_BASE_URL ??
-        "https://backend.rscgroupdholera.in",
+        "http://localhost:8000",
+    // process.env.REACT_APP_BASE_URL ??
+    // "https://backend.rscgroupdholera.in",
     withCredentials: true,
     timeout: 30000, // 30 seconds
 });
