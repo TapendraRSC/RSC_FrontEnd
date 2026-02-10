@@ -83,10 +83,8 @@ const CreditCollectionPage: React.FC = () => {
 
             const result = await response.json();
 
-            // Debug: Console log to see API response structure
             console.log('API Response:', result);
 
-            // Handle different API response structures
             let records: CreditRecord[] = [];
 
             if (Array.isArray(result)) {
@@ -103,7 +101,6 @@ const CreditCollectionPage: React.FC = () => {
 
             setData(records);
 
-            // Update pagination info from API response
             setPagination({
                 currentPage: result.currentPage || result.page || page,
                 totalPages: result.totalPages || Math.ceil((result.total || result.totalRecords || records.length) / limit),
@@ -261,29 +258,49 @@ const CreditCollectionPage: React.FC = () => {
             sortable: true,
             render: (row: any) => `₹${row.amount?.toLocaleString() || 0}`
         },
+        // {
+        //     label: 'Created At',
+        //     accessor: 'createdAt',
+        //     sortable: true,
+        //     render: (row: any) => {
+        //         if (!row.createdAt) return '-';
+        //         const date = new Date(row.createdAt);
+        //         return date.toLocaleString('en-IN', {
+        //             day: '2-digit',
+        //             month: 'short',
+        //             year: 'numeric',
+        //             hour: '2-digit',
+        //             minute: '2-digit',
+        //             hour12: false,
+        //             timeZone: 'Asia/Kolkata'
+        //         });
+        //     },
+        // },
 
-        {
-            label: 'Created At',
-            accessor: 'createdAt',
-            sortable: true,
-            render: (row: any) => {
-                if (!row.createdAt) return '-';
+      {
+    label: 'Created At',
+    accessor: 'createdAt',
+    sortable: true,
+    render: (row: any) => {
+        if (!row.createdAt) return '-';
 
+        const date = new Date(row.createdAt);
 
-                const date = new Date(row.createdAt);
+        // ⏱️ 5 hours 30 minutes minus
+        date.setHours(date.getHours() - 5);
+        date.setMinutes(date.getMinutes() - 30);
 
-
-                return date.toLocaleString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                    timeZone: 'Asia/Kolkata'
-                });
-            },
-        },
+        return date.toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'Asia/Kolkata',
+        });
+    },
+}
 
 
     ];
@@ -297,19 +314,9 @@ const CreditCollectionPage: React.FC = () => {
                     </h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                         Manage all cash and offline credit entries
-                        {/* {pagination.totalRecords > 0 && (
-                                    <span className="ml-2">({pagination.totalRecords} records)</span>
-                                )} */}
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    {/* <button
-                                onClick={() => fetchCreditCollections(pagination.currentPage, pagination.limit)}
-                                disabled={loading}
-                                className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-lg transition-all"
-                            >
-                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                            </button> */}
                     <button
                         onClick={() => { setCurrentRecord(null); setIsModalOpen(true); }}
                         className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg transition-all shadow-md active:scale-95"
@@ -325,9 +332,6 @@ const CreditCollectionPage: React.FC = () => {
                     columns={columns}
                     showSearch={true}
                     title="Credit Entry List"
-                    // loading={loading}
-                    // Pagination props - adjust based on your CustomTable component
-                    // pagination={true}
                     currentPage={pagination.currentPage}
                     totalPages={pagination.totalPages}
                     totalRecords={pagination.totalRecords}
@@ -347,12 +351,6 @@ const CreditCollectionPage: React.FC = () => {
                                     <Pencil className="w-4 h-4" />
                                 </button>
                             )}
-
-                            {/* {permissions.delete && (
-                                                 <button className="text-red-500 hover:text-red-600">
-                                                     <Trash2 className="w-4 h-4" />
-                                                 </button>
-                                             )} */}
                         </div>
                     )}
                 />

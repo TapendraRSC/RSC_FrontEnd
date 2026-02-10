@@ -90,12 +90,10 @@ const OnlineCollectionPage: React.FC = () => {
 
             console.log('API Response:', result);
 
-            // Handle API response structure
             const records: OnlineRecord[] = result.data || [];
 
             setData(records);
 
-            // Update pagination info from API response
             setPagination({
                 currentPage: result.pagination?.page || page,
                 totalPages: result.pagination?.totalPages || 1,
@@ -152,7 +150,7 @@ const OnlineCollectionPage: React.FC = () => {
             }
 
             const response = await fetch(`${API_BASE_URL}/online/online-collection/${row.id}/approve`, {
-                method: 'POST', // Changed from PUT to POST
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -182,7 +180,7 @@ const OnlineCollectionPage: React.FC = () => {
             }
 
             const response = await fetch(`${API_BASE_URL}/online/online-collection/${row.id}/reject`, {
-                method: 'POST', // Changed from PUT to POST
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -223,7 +221,6 @@ const OnlineCollectionPage: React.FC = () => {
             let response;
 
             if (currentRecord) {
-                // Update existing record
                 response = await fetch(`${API_BASE_URL}/online/update-online-collection/${currentRecord.id}`, {
                     method: 'PUT',
                     headers: {
@@ -233,7 +230,6 @@ const OnlineCollectionPage: React.FC = () => {
                     body: JSON.stringify(payload),
                 });
             } else {
-                // Create new record
                 response = await fetch(`${API_BASE_URL}/online/create-online-collection`, {
                     method: 'POST',
                     headers: {
@@ -286,7 +282,7 @@ const OnlineCollectionPage: React.FC = () => {
             accessor: 'status',
             render: (row: any) => (
                 <span
-                    className={`px-2 py-1 rounded text-[10px] font-bold ${row.status === 'Completed'
+                    className={`px-2 py-1 rounded text-[10px] font-bold ${row.status === 'Confirmed'
                         ? 'bg-green-100 text-green-700'
                         : row.status === 'Rejected'
                             ? 'bg-red-100 text-red-700'
@@ -297,6 +293,24 @@ const OnlineCollectionPage: React.FC = () => {
                 </span>
             ),
         },
+        // {
+        //     label: 'Created At',
+        //     accessor: 'createdAt',
+        //     sortable: true,
+        //     render: (row: any) => {
+        //         if (!row.createdAt) return '-';
+        //         const date = new Date(row.createdAt);
+        //         return date.toLocaleString('en-IN', {
+        //             day: '2-digit',
+        //             month: 'short',
+        //             year: 'numeric',
+        //             hour: '2-digit',
+        //             minute: '2-digit',
+        //             hour12: false,
+        //             timeZone: 'Asia/Kolkata'
+        //         });
+        //     },
+        // },
         {
             label: 'Created At',
             accessor: 'createdAt',
@@ -304,10 +318,12 @@ const OnlineCollectionPage: React.FC = () => {
             render: (row: any) => {
                 if (!row.createdAt) return '-';
 
-              
                 const date = new Date(row.createdAt);
 
-                
+                // ⏱️ 5 hours 30 minutes minus
+                date.setHours(date.getHours() - 5);
+                date.setMinutes(date.getMinutes() - 30);
+
                 return date.toLocaleString('en-IN', {
                     day: '2-digit',
                     month: 'short',
@@ -315,10 +331,10 @@ const OnlineCollectionPage: React.FC = () => {
                     hour: '2-digit',
                     minute: '2-digit',
                     hour12: false,
-                    timeZone: 'Asia/Kolkata'
+                    timeZone: 'Asia/Kolkata',
                 });
             },
-        },
+        }
 
 
     ];
@@ -335,7 +351,6 @@ const OnlineCollectionPage: React.FC = () => {
                     </p>
                 </div>
 
-                {/* {permissions.edit && ( */}
                 <button
                     onClick={() => {
                         setCurrentRecord(null);
@@ -345,7 +360,6 @@ const OnlineCollectionPage: React.FC = () => {
                 >
                     <Plus className="w-4 h-4" /> Add Online
                 </button>
-                {/* )} */}
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
@@ -362,24 +376,19 @@ const OnlineCollectionPage: React.FC = () => {
                     onPageSizeChange={handleLimitChange}
                     actions={(row: any) => (
                         <div className="flex gap-2">
-                            {/* Edit button - only show for Admin and Pending status */}
                             {permissions.edit && isAccountant && row.status === 'Pending' && (
                                 <button
                                     onClick={() => {
                                         setCurrentRecord(row);
                                         setIsModalOpen(true);
                                     }}
-                                    // className="text-blue-500 hover:text-blue-600"
                                     title="Edit"
                                     className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
-
                                 >
-                                    {/* <Pencil className="w-4 h-4" /> */}
                                     Edit
                                 </button>
                             )}
 
-                            {/* Approve/Reject buttons - only for Accountant and Pending status */}
                             {isAccountant && row.status === 'Pending' && (
                                 <>
                                     <button
