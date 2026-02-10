@@ -624,7 +624,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         fetchNotificationCount();
 
         // Refresh every 10 seconds
-        const interval = setInterval(fetchNotificationCount, 10000);
+        const interval = setInterval(fetchNotificationCount, 300000);
 
         return () => clearInterval(interval);
     }, []);

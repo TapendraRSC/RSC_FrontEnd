@@ -282,7 +282,7 @@ const OnlineCollectionPage: React.FC = () => {
             accessor: 'status',
             render: (row: any) => (
                 <span
-                    className={`px-2 py-1 rounded text-[10px] font-bold ${row.status === 'Completed'
+                    className={`px-2 py-1 rounded text-[10px] font-bold ${row.status === 'Confirmed'
                         ? 'bg-green-100 text-green-700'
                         : row.status === 'Rejected'
                             ? 'bg-red-100 text-red-700'
