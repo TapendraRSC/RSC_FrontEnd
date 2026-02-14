@@ -44,7 +44,7 @@ const BulkLand = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [sortConfig, setSortConfig] = useState<SortConfig>({
         key: null,
         direction: "asc",
