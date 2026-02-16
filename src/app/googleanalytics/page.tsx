@@ -76,7 +76,7 @@ const getBaseUrl = () => {
         const hostname = window.location.hostname;
         if (hostname === 'localhost' || hostname === '127.0.0.1') return 'http://localhost:8000';
     }
-    return 'https://backend.rscgroupdholera.in';
+    return 'https://development.rscgroupdholera.in/';
 };
 
 const BASE_URL = getBaseUrl();

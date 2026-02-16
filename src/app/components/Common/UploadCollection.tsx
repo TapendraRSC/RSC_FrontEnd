@@ -36,7 +36,7 @@ const getBaseUrl = () => {
             return 'http://localhost:8000';
         }
     }
-    return 'https://backend.rscgroupdholera.in';
+    return 'https://development.rscgroupdholera.in/';
 };
 
 // Get auth token
