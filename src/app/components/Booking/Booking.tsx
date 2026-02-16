@@ -206,7 +206,7 @@ const BookingComponent: React.FC = () => {
     const [selectedCreatedBy, setSelectedCreatedBy] = useState("");
     const [selectedActivity, setSelectedActivity] = useState('');
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 
     useEffect(() => {
         const tabFromUrl = searchParams.get('tab');
@@ -259,7 +259,7 @@ const BookingComponent: React.FC = () => {
             queryParams.append('page', currentPage.toString());
             queryParams.append('limit', pageSize.toString());
 
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/bookings/getAllBookings?${queryParams.toString()}`;
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/bookings/getAllBookings?${queryParams.toString()}`;
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -483,7 +483,7 @@ const BookingComponent: React.FC = () => {
                 }
 
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/bookings/deleteBooking/${id}`,
+                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/bookings/deleteBooking/${id}`,
                     {
                         method: 'DELETE',
                         headers: buildHeaders(true),

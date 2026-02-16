@@ -10,7 +10,7 @@ import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermission
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;

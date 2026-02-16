@@ -61,7 +61,7 @@
 //   initialData,
 //   isLoading = false,
 // }) => {
-//   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+//   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 //   const dispatch = useDispatch<AppDispatch>();
 //   const { plots, loading: plotsLoading } = useSelector(
 //     (state: RootState) => state.plotSlice
@@ -920,7 +920,7 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
   initialData,
   isLoading = false,
 }) => {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
   const dispatch = useDispatch<AppDispatch>();
   const { plots, loading: plotsLoading } = useSelector(
     (state: RootState) => state.plotSlice

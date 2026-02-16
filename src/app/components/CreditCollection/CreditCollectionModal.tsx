@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, Check, Loader2 } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
@@ -30,12 +30,12 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
     currentData
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // Dropdown options
     const [projectOptions, setProjectOptions] = useState<string[]>([]);
     const [employeeOptions, setEmployeeOptions] = useState<string[]>([]);
     const [plotOptions, setPlotOptions] = useState<string[]>([]);
-    
+
     // Selected values
     const [selectedProject, setSelectedProject] = useState<string>('');
     const [selectedEmployee, setSelectedEmployee] = useState<string>('');
@@ -73,7 +73,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
 
             const result = await response.json();
             const collections = result.data || result.collections || result || [];
-            
+
             // Normalize: trim spaces and convert to consistent case for comparison
             const projectMap = new Map<string, string>();
             collections.forEach((item: any) => {
@@ -86,7 +86,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                     }
                 }
             });
-            
+
             const uniqueProjects = Array.from(projectMap.values()).sort();
             setProjectOptions(uniqueProjects);
         } catch (error) {
@@ -115,13 +115,13 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
 
             const result = await response.json();
             const collections = result.data || result.collections || result || [];
-            
+
             // Filter by project (case-insensitive, trimmed comparison)
             const normalizedProject = projectName.trim().toLowerCase();
-            const filteredCollections = collections.filter((item: any) => 
+            const filteredCollections = collections.filter((item: any) =>
                 item.projectName && item.projectName.trim().toLowerCase() === normalizedProject
             );
-            
+
             // Normalize employee names
             const employeeMap = new Map<string, string>();
             filteredCollections.forEach((item: any) => {
@@ -133,7 +133,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                     }
                 }
             });
-            
+
             const uniqueEmployees = Array.from(employeeMap.values()).sort();
             setEmployeeOptions(uniqueEmployees);
         } catch (error) {
@@ -162,17 +162,17 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
 
             const result = await response.json();
             const collections = result.data || result.collections || result || [];
-            
+
             // Filter by project and employee (case-insensitive, trimmed)
             const normalizedProject = projectName.trim().toLowerCase();
             const normalizedEmployee = employeeName.trim().toLowerCase();
-            
+
             const filteredCollections = collections.filter(
-                (item: any) => 
+                (item: any) =>
                     item.projectName && item.projectName.trim().toLowerCase() === normalizedProject &&
                     item.employeeName && item.employeeName.trim().toLowerCase() === normalizedEmployee
             );
-            
+
             // Normalize plot numbers
             const plotMap = new Map<string, string>();
             filteredCollections.forEach((item: any) => {
@@ -184,7 +184,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                     }
                 }
             });
-            
+
             const uniquePlots = Array.from(plotMap.values()).sort((a, b) => {
                 const numA = parseFloat(a);
                 const numB = parseFloat(b);
@@ -193,7 +193,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                 }
                 return a.localeCompare(b);
             });
-            
+
             setPlotOptions(uniquePlots);
         } catch (error) {
             console.error('Error fetching plots:', error);
@@ -211,7 +211,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
         setValue('projectName', value);
         setValue('employeeName', '');
         setValue('plotNumber', '');
-        
+
         if (value) {
             fetchEmployees(value);
         }
@@ -225,7 +225,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
         setPlotOptions([]);
         setValue('employeeName', value);
         setValue('plotNumber', '');
-        
+
         if (value && selectedProject) {
             fetchPlots(selectedProject, value);
         }

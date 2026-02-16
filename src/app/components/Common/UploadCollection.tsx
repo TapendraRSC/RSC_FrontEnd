@@ -33,7 +33,7 @@ const getBaseUrl = () => {
     if (typeof window !== 'undefined') {
         const hostname = window.location.hostname;
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:8000';
+            return 'http://localhost:8002';
         }
     }
     return 'https://development.rscgroupdholera.in/';
@@ -330,7 +330,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             formData.append('file', selectedFile);
 
             // const response = await fetch(`${BASE_URL}/collection/uploadCollections`, { 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/uploadCollections`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/collection/uploadCollections`, {
                 method: 'POST',
                 headers: {
                     ...(token && { 'Authorization': `Bearer ${token}` })

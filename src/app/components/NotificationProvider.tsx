@@ -3,7 +3,7 @@
 // import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 // import { Sparkles, XCircle, Clock, CheckCircle, Bell } from 'lucide-react';
 
-// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 
 // type NotificationStatus = 'pending' | 'confirmed' | 'rejected';
 // type StatusKey = 'Pending' | 'Confirmed' | 'Rejected';
@@ -564,7 +564,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 
 interface Notification {
     id: number;

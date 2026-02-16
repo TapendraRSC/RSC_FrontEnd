@@ -162,7 +162,7 @@ const CollectionComponent: React.FC = () => {
 
             if (!id) return;
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/updateCollection/${id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/collection/updateCollection/${id}`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(formData),
@@ -288,7 +288,7 @@ const CollectionComponent: React.FC = () => {
 
     const fetchProjectsData = useCallback(async () => {
         try {
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/projects/getAllProjects?page=1&limit=100`;
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/projects/getAllProjects?page=1&limit=100`;
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -331,7 +331,7 @@ const CollectionComponent: React.FC = () => {
             queryParams.append('page', currentPage.toString());
             queryParams.append('limit', pageSize.toString());
 
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/getAllCollections?${queryParams.toString()}`;
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/collection/getAllCollections?${queryParams.toString()}`;
 
             setLastFetchParams({
                 search: searchTerm,
@@ -462,7 +462,7 @@ const CollectionComponent: React.FC = () => {
             if (deleteMode === 'single') {
                 const id = (deleteTarget as { id: number }).id;
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/deleteCollection/${id}`,
+                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/collection/deleteCollection/${id}`,
                     {
                         method: 'DELETE',
                         headers: getAuthHeaders(),
@@ -476,7 +476,7 @@ const CollectionComponent: React.FC = () => {
                 const ids = deleteTarget as number[];
                 for (const id of ids) {
                     const response = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/deleteCollection/${id}`,
+                        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/collection/deleteCollection/${id}`,
                         {
                             method: 'DELETE',
                             headers: getAuthHeaders(),
