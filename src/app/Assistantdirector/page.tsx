@@ -44,7 +44,7 @@ const Director = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState<SortConfig>({
         key: null,
         direction: "asc",
@@ -276,14 +276,81 @@ const Director = () => {
                     </div>
 
                     {/* Pagination - UI Intact */}
-                    <div className="px-4 py-4 border-t flex justify-between items-center">
-                        <select value={rowsPerPage} onChange={(e) => setRowsPerPage(Number(e.target.value))} className="border rounded px-2 py-1">
-                            {[5, 15, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
-                        </select>
+                    {/* Pagination */}
+                    <div className="px-4 py-3 border-t border-slate-700/50 bg-slate-900 flex items-center justify-between">
+                        {/* Left: Rows per page */}
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}><ChevronLeft /></button>
-                            <span>{currentPage} / {totalPages || 1}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}><ChevronRight /></button>
+                            <span className="text-sm text-slate-300 font-medium">Rows:</span>
+                            <select
+                                value={rowsPerPage}
+                                onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                                className="bg-white text-slate-800 border border-slate-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                            >
+                                {[10, 15, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                        </div>
+
+                        {/* Center: Record range info */}
+                        <div className="text-sm text-slate-300">
+                            {sortedData.length > 0
+                                ? `${(currentPage - 1) * rowsPerPage + 1}-${Math.min(currentPage * rowsPerPage, sortedData.length)} of ${sortedData.length}`
+                                : "0 of 0"
+                            }
+                        </div>
+
+                        {/* Right: Page number buttons */}
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+
+                            {(() => {
+                                let pages: (number | string)[] = [];
+
+                                if (totalPages <= 5) {
+                                    pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+                                } else {
+                                    pages.push(1);
+                                    if (currentPage <= 3) {
+                                        pages.push(2, 3, "...", totalPages);
+                                    } else if (currentPage >= totalPages - 2) {
+                                        pages.push("...", totalPages - 2, totalPages - 1, totalPages);
+                                    } else {
+                                        pages.push("...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+                                    }
+                                }
+
+                                return pages.map((page, idx) =>
+                                    page === "..." ? (
+                                        <span key={`dots-${idx}`} className="w-9 h-9 flex items-center justify-center text-slate-400 text-sm font-bold tracking-wider">
+                                            •••
+                                        </span>
+                                    ) : (
+                                        <button
+                                            key={`page-${page}`}
+                                            onClick={() => setCurrentPage(page as number)}
+                                            className={`w-9 h-9 flex items-center justify-center rounded-md text-sm font-semibold transition-colors ${currentPage === page
+                                                ? "bg-orange-500 text-white"
+                                                : "text-slate-300 bg-slate-700/60 hover:bg-slate-700"
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    )
+                                );
+                            })()}
+
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage >= totalPages}
+                                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronRight size={18} />
+                            </button>
                         </div>
                     </div>
                 </div>

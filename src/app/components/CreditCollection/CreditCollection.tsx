@@ -102,10 +102,10 @@ const CreditCollectionPage: React.FC = () => {
             setData(records);
 
             setPagination({
-                currentPage: result.currentPage || result.page || page,
-                totalPages: result.totalPages || Math.ceil((result.total || result.totalRecords || records.length) / limit),
-                totalRecords: result.total || result.totalRecords || result.totalCount || records.length,
-                limit: result.limit || result.pageSize || limit,
+                currentPage: result.pagination?.page || page,
+                totalPages: result.pagination?.totalPages || 1,
+                totalRecords: result.pagination?.totalRecords || records.length,
+                limit: result.pagination?.limit || limit,
             });
 
         } catch (error) {
@@ -277,30 +277,30 @@ const CreditCollectionPage: React.FC = () => {
         //     },
         // },
 
-      {
-    label: 'Created At',
-    accessor: 'createdAt',
-    sortable: true,
-    render: (row: any) => {
-        if (!row.createdAt) return '-';
+        {
+            label: 'Created At',
+            accessor: 'createdAt',
+            sortable: true,
+            render: (row: any) => {
+                if (!row.createdAt) return '-';
 
-        const date = new Date(row.createdAt);
+                const date = new Date(row.createdAt);
 
-        // ⏱️ 5 hours 30 minutes minus
-        date.setHours(date.getHours() - 5);
-        date.setMinutes(date.getMinutes() - 30);
+                // ⏱️ 5 hours 30 minutes minus
+                date.setHours(date.getHours() - 5);
+                date.setMinutes(date.getMinutes() - 30);
 
-        return date.toLocaleString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'Asia/Kolkata',
-        });
-    },
-}
+                return date.toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                    timeZone: 'Asia/Kolkata',
+                });
+            },
+        }
 
 
     ];
