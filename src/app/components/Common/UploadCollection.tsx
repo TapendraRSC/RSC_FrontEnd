@@ -330,7 +330,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             formData.append('file', selectedFile);
 
             // const response = await fetch(`${BASE_URL}/collection/uploadCollections`, { 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/collection/uploadCollections`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8002'}/collection/uploadCollections`, {
                 method: 'POST',
                 headers: {
                     ...(token && { 'Authorization': `Bearer ${token}` })

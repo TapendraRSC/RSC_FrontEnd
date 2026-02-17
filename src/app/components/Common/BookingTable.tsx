@@ -663,7 +663,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
         remark: booking.remark || 'N/A',
     });
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8002';
 
     const handleBookingAction = async (id: number, action: 'approve' | 'reject') => {
         if (role !== 'Admin') {
