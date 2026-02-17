@@ -1,31 +1,14 @@
 'use client';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { usePopper } from 'react-popper';
 
 const Dropdown = (props: any, forwardedRef: any) => {
-    const [visibility, setVisibility] = useState<any>(false);
-
-    const referenceRef = useRef<any>(null);
-    const popperRef = useRef<any>(null);
-
-    const { styles, attributes } = usePopper(referenceRef.current, popperRef.current, {
-        placement: props.placement || 'bottom-end',
-        modifiers: [
-            {
-                name: 'offset',
-                options: {
-                    offset: props.offset || [0],
-                },
-            },
-        ],
-    });
+    const [visibility, setVisibility] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const handleDocumentClick = (event: any) => {
-        if (referenceRef.current.contains(event.target) || popperRef.current.contains(event.target)) {
-            return;
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setVisibility(false);
         }
-
-        setVisibility(false);
     };
 
     useEffect(() => {
@@ -41,16 +24,33 @@ const Dropdown = (props: any, forwardedRef: any) => {
         },
     }));
 
+    const placementClasses: Record<string, string> = {
+        'bottom-end': 'top-full right-0 mt-1',
+        'bottom-start': 'top-full left-0 mt-1',
+        'top-end': 'bottom-full right-0 mb-1',
+        'top-start': 'bottom-full left-0 mb-1',
+        'left': 'right-full top-0 mr-1',
+        'right': 'left-full top-0 ml-1',
+    };
+
+    const placement = props.placement || 'bottom-end';
+    const positionClass = placementClasses[placement] || placementClasses['bottom-end'];
+
     return (
-        <>
-            <button ref={referenceRef} type="button" className={props.btnClassName} onClick={() => setVisibility(!visibility)}>
+        <div ref={dropdownRef} className="relative inline-block">
+            <button type="button" className={props.btnClassName} onClick={() => setVisibility(!visibility)}>
                 {props.button}
             </button>
 
-            <div ref={popperRef} style={styles.popper} {...attributes.popper} className="z-50" onClick={() => setVisibility(!visibility)}>
-                {visibility && props.children}
-            </div>
-        </>
+            {visibility && (
+                <div
+                    className={`absolute z-50 ${positionClass}`}
+                    onClick={() => setVisibility(!visibility)}
+                >
+                    {props.children}
+                </div>
+            )}
+        </div>
     );
 };
 
