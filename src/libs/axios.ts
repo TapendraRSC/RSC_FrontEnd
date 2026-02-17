@@ -6,10 +6,13 @@ import { Capacitor } from '@capacitor/core';
 // ✅ Fixed base URL with trailing slash (use env var fallback)
 
 const axiosInstance = axios.create({
-    baseURL: "https://development.rscgroupdholera.in",
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
     withCredentials: true,
-    timeout: 30000, // 30 seconds
+    timeout: 30000,
 });
+
+console.log("API BASE =>", axiosInstance.defaults.baseURL);
+
 
 
 // Custom adapter for Capacitor with cookie handling
