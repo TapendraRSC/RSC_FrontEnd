@@ -7,15 +7,13 @@ import { Capacitor } from '@capacitor/core';
 
 // libs/axios.ts
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://development.rscgroupdholera.in";
+
+console.log("Checking Env:", process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const axiosInstance = axios.create({
-    baseURL: API_URL, // Use variable here
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://development.rscgroupdholera.in",
     withCredentials: true,
-    timeout: 30000,
 });
-
-console.log("API BASE =>", axiosInstance.defaults.baseURL);
 
 
 
