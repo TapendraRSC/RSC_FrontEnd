@@ -3,15 +3,15 @@ import axios from "axios";
 import { CapacitorHttp, CapacitorCookies } from '@capacitor/core';
 import { Capacitor } from '@capacitor/core';
 
+import { API_BASE_URL } from '../libs/api';
 // ✅ Fixed base URL with trailing slash (use env var fallback)
 
 // libs/axios.ts
 
 
-console.log("Checking Env:", process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://development.rscgroupdholera.in",
+    baseURL: API_BASE_URL,
     withCredentials: true,
 });
 

@@ -5,6 +5,7 @@ import {
     CreditCard, MessageCircle, Edit3, Copy, Check, Eye, EyeOff
 } from 'lucide-react';
 import Image from 'next/image';
+import { API_BASE_URL } from '../../libs/api';
 
 type UserProfile = {
     id: number;
@@ -53,7 +54,7 @@ const Profile = () => {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8002'}/profile/get-profile`;
+                const apiUrl = `${API_BASE_URL}/profile/get-profile`;
 
                 const response = await fetch(apiUrl, {
                     method: 'GET',

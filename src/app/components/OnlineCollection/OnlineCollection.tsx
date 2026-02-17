@@ -9,8 +9,7 @@ import { AppDispatch, RootState } from '../../../../store/store';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { toast } from 'react-toastify';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8002';
+import { API_BASE_URL } from '../../../libs/api';
 
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;

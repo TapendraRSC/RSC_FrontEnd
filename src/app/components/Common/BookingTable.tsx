@@ -13,7 +13,7 @@ import axiosInstance from "@/libs/axios";
 import { toast } from "react-toastify";
 import PaymentReceipt, { convertNumberToWords } from './PaymentReceiptDownload';
 import WelcomeLetterDownload, { WelcomeLetterData } from './WelcomeLetterDownload';
-
+import { API_BASE_URL } from '../../../libs/api';
 interface BookingTableProps {
     leads?: Booking[];
     onAddLead?: () => void;
@@ -663,7 +663,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
         remark: booking.remark || 'N/A',
     });
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8002';
+   
 
     const handleBookingAction = async (id: number, action: 'approve' | 'reject') => {
         if (role !== 'Admin') {

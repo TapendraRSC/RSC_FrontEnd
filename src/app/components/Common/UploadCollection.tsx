@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { toast } from "react-toastify";
+import { API_BASE_URL } from '../../../libs/api';
+
 
 interface UploadCollectionProps {
     isOpen: boolean;
@@ -330,14 +332,14 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             formData.append('file', selectedFile);
 
             // const response = await fetch(`${BASE_URL}/collection/uploadCollections`, { 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8002'}/collection/uploadCollections`, {
-                method: 'POST',
-                headers: {
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
-                credentials: 'include',
-                body: formData,
-            });
+          const response = await fetch(`${API_BASE_URL}/collection/uploadCollections`, {
+    method: 'POST',
+    headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    },
+    credentials: 'include',
+    body: formData,
+});
 
             const result = await response.json();
 
