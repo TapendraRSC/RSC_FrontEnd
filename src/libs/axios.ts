@@ -5,8 +5,12 @@ import { Capacitor } from '@capacitor/core';
 
 // ✅ Fixed base URL with trailing slash (use env var fallback)
 
+// libs/axios.ts
+
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://development.rscgroupdholera.in";
+
 const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    baseURL: API_URL, // Use variable here
     withCredentials: true,
     timeout: 30000,
 });
@@ -19,10 +23,15 @@ console.log("API BASE =>", axiosInstance.defaults.baseURL);
 async function capacitorAdapter(config: any) {
     // ✅ Ensure proper URL formation
     let url = config.url;
+    //  if (!url.startsWith('http')) {
+    //     const baseURL = config.baseURL?.endsWith('/') ? config.baseURL : `${config.baseURL}/`;
+    //     const endpoint = url.startsWith('/') ? url.substring(1) : url;
+    //     url = `${baseURL}${endpoint}`;
+    // }
     if (!url.startsWith('http')) {
-        const baseURL = config.baseURL?.endsWith('/') ? config.baseURL : `${config.baseURL}/`;
-        const endpoint = url.startsWith('/') ? url.substring(1) : url;
-        url = `${baseURL}${endpoint}`;
+        const base = config.baseURL.replace(/\/+$/, ''); // Remove trailing slash
+        const path = url.replace(/^\/+/, '');          // Remove leading slash
+        url = `${base}/${path}`;
     }
 
     console.log('📡 Capacitor HTTP Request:', config.method?.toUpperCase(), url);
