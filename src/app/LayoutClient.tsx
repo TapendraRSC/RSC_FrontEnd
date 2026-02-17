@@ -258,18 +258,44 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
     if (!mounted) return null;
 
+    // if (isCheckingAuth || isRedirecting || (!permissionChecked && !isAuthRoute)) {
+    //     return (
+    //         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
+    //             <div className="flex flex-col items-center gap-4">
+    //                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+    //                 <p className="text-gray-600 dark:text-gray-400">
+    //                     {isRedirecting ? 'Redirecting...' : 'Verifying Permissions...'}
+    //                 </p>
+    //             </div>
+    //         </div>
+    //     );
+    // }
+
     if (isCheckingAuth || isRedirecting || (!permissionChecked && !isAuthRoute)) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        {isRedirecting ? 'Redirecting...' : 'Verifying Permissions...'}
-                    </p>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-black dark:via-gray-900 dark:to-black">
+                <div className="flex flex-col items-center gap-6">
+
+                    {/* Loader */}
+                    <div className="relative">
+                        <div className="h-16 w-16 rounded-full border-4 border-orange-500/30"></div>
+                        <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
+                    </div>
+
+                    {/* Text */}
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                            {isRedirecting ? 'Redirecting you safely' : 'Verifying your access'}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Please wait a moment...
+                        </p>
+                    </div>
                 </div>
             </div>
         );
     }
+
 
     if (isUnauthorized) return <NotFoundPage />;
     if (isAuthRoute) return <main className="flex-1">{children}</main>;

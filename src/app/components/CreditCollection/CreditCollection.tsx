@@ -102,10 +102,10 @@ const CreditCollectionPage: React.FC = () => {
             setData(records);
 
             setPagination({
-                currentPage: result.currentPage || result.page || page,
-                totalPages: result.totalPages || Math.ceil((result.total || result.totalRecords || records.length) / limit),
-                totalRecords: result.total || result.totalRecords || result.totalCount || records.length,
-                limit: result.limit || result.pageSize || limit,
+                currentPage: result.pagination?.page || page,
+                totalPages: result.pagination?.totalPages || 1,
+                totalRecords: result.pagination?.totalRecords || records.length,
+                limit: result.pagination?.limit || limit,
             });
 
         } catch (error) {
