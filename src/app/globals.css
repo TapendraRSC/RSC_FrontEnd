@@ -704,58 +704,105 @@
 
 
 @layer utilities {
-  /* Text Shine Animation */
-  .animate-text-shine {
-    background-size: 200% auto;
-    animation: textShine 3s linear infinite;
-  }
+    /* Text Shine Animation */
+    .animate-text-shine {
+        background-size: 200% auto;
+        animation: textShine 3s linear infinite;
+    }
 
-  /* Letter Wave Animation */
-  .animate-letter-wave span {
-    display: inline-block;
-    transition: transform 0.3s ease, color 0.3s ease;
-  }
+    /* Letter Wave Animation */
+    .animate-letter-wave span {
+        display: inline-block;
+        transition: transform 0.3s ease, color 0.3s ease;
+    }
 
-  .animate-letter-wave:hover span {
-    animation: letterFly 0.4s ease-in-out;
-    animation-delay: var(--delay);
-  }
+    .animate-letter-wave:hover span {
+        animation: letterFly 0.4s ease-in-out;
+        animation-delay: var(--delay);
+    }
 
-  /* Shine Glint Animation for Logos */
-  .animate-shine-glint {
-    position: relative;
-    overflow: hidden;
-  }
+    /* Shine Glint Animation for Logos */
+    .animate-shine-glint {
+        position: relative;
+        overflow: hidden;
+    }
 
-  .animate-shine-glint::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -150%;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(
-      to right,
-      transparent,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    );
-    transform: skewX(-20deg);
-    transition: 0.8s;
-  }
+    .animate-shine-glint::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(to right,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent);
+        transform: skewX(-20deg);
+        transition: 0.8s;
+    }
 
-  .animate-shine-glint:hover::after {
-    left: 150%;
-  }
+    .animate-shine-glint:hover::after {
+        left: 150%;
+    }
 }
 
 /* Keyframes */
 @keyframes textShine {
-  from { background-position: 0% center; }
-  to { background-position: 200% center; }
+    from {
+        background-position: 0% center;
+    }
+
+    to {
+        background-position: 200% center;
+    }
 }
 
 @keyframes letterFly {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); color: #f97316; }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+        color: #f97316;
+    }
+}
+
+
+
+/* Premium animated border for dark dashboards */
+.premium-border {
+    background: linear-gradient(120deg,
+            #0ea5e9,
+            /* sky blue */
+            #22c55e,
+            /* emerald */
+            #6366f1,
+            /* indigo */
+            #0ea5e9);
+    background-size: 300% 300%;
+    animation: premiumFlow 10s ease infinite;
+}
+
+/* Smooth & slow animation */
+@keyframes premiumFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Subtle glow on hover (not flashy) */
+.premium-border:hover {
+    filter: drop-shadow(0 0 10px rgba(14, 165, 233, 0.35));
 }

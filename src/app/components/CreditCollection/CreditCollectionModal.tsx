@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, Check, Loader2 } from 'lucide-react';
+import { API_BASE_URL } from '../../../libs/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
@@ -10,10 +10,25 @@ const getAuthToken = (): string | null => {
 };
 
 interface CreditFormData {
-    projectName: string;
-    plotNumber: string;
-    employeeName: string;
+    projectId: number | string;
+    plotId: number | string;
+    userId: number | string;
     amount: number | string;
+}
+
+interface ProjectOption {
+    projectId: number;
+    projectTitle: string;
+}
+
+interface EmployeeOption {
+    employeeId: number;
+    employeeName: string;
+}
+
+interface PlotOption {
+    plotId: number;
+    plotNumber: string;
 }
 
 interface CreditCollectionModalProps {
@@ -30,16 +45,16 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
     currentData
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
-    // Dropdown options
-    const [projectOptions, setProjectOptions] = useState<string[]>([]);
-    const [employeeOptions, setEmployeeOptions] = useState<string[]>([]);
-    const [plotOptions, setPlotOptions] = useState<string[]>([]);
-    
-    // Selected values
-    const [selectedProject, setSelectedProject] = useState<string>('');
-    const [selectedEmployee, setSelectedEmployee] = useState<string>('');
-    const [selectedPlot, setSelectedPlot] = useState<string>('');
+
+    // Dropdown options (id + name)
+    const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
+    const [plotOptions, setPlotOptions] = useState<PlotOption[]>([]);
+
+    // Selected IDs
+    const [selectedProjectId, setSelectedProjectId] = useState<number | ''>('');
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | ''>('');
+    const [selectedPlotId, setSelectedPlotId] = useState<number | ''>('');
 
     const isEditMode = !!currentData;
 
@@ -48,152 +63,128 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
         handleSubmit,
         reset,
         setValue,
-        clearErrors,
         formState: { errors }
     } = useForm<CreditFormData>();
 
-    // Fetch unique project names
+    // Fetch unique projects
     const fetchProjects = async () => {
         const token = getAuthToken();
         if (!token) return;
 
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/collection/getAllCollections`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
+            const response = await fetch(`${API_BASE_URL}/collection/getAllCollections`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
             if (!response.ok) throw new Error('Failed to fetch projects');
 
             const result = await response.json();
             const collections = result.data || result.collections || result || [];
-            
-            // Normalize: trim spaces and convert to consistent case for comparison
-            const projectMap = new Map<string, string>();
+
+            // Unique projects by projectId
+            const projectMap = new Map<number, ProjectOption>();
             collections.forEach((item: any) => {
-                if (item.projectName) {
-                    const trimmed = item.projectName.trim();
-                    const normalized = trimmed.toLowerCase();
-                    // Store original case version (first occurrence)
-                    if (!projectMap.has(normalized)) {
-                        projectMap.set(normalized, trimmed);
-                    }
+                if (item.projectId && item.projectTitle && !projectMap.has(item.projectId)) {
+                    projectMap.set(item.projectId, {
+                        projectId: item.projectId,
+                        projectTitle: item.projectTitle,
+                    });
                 }
             });
-            
-            const uniqueProjects = Array.from(projectMap.values()).sort();
+
+            const uniqueProjects = Array.from(projectMap.values()).sort((a, b) =>
+                a.projectTitle.localeCompare(b.projectTitle)
+            );
             setProjectOptions(uniqueProjects);
         } catch (error) {
             console.error('Error fetching projects:', error);
         }
     };
 
-    // Fetch employees based on selected project
-    const fetchEmployees = async (projectName: string) => {
+    // Fetch employees based on selected projectId
+    const fetchEmployees = async (projectId: number) => {
         const token = getAuthToken();
-        if (!token || !projectName) return;
+        if (!token || !projectId) return;
 
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/collection/getAllCollections`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
+            const response = await fetch(`${API_BASE_URL}/collection/getAllCollections`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
             if (!response.ok) throw new Error('Failed to fetch employees');
 
             const result = await response.json();
             const collections = result.data || result.collections || result || [];
-            
-            // Filter by project (case-insensitive, trimmed comparison)
-            const normalizedProject = projectName.trim().toLowerCase();
-            const filteredCollections = collections.filter((item: any) => 
-                item.projectName && item.projectName.trim().toLowerCase() === normalizedProject
-            );
-            
-            // Normalize employee names
-            const employeeMap = new Map<string, string>();
-            filteredCollections.forEach((item: any) => {
-                if (item.employeeName) {
-                    const trimmed = item.employeeName.trim();
-                    const normalized = trimmed.toLowerCase();
-                    if (!employeeMap.has(normalized)) {
-                        employeeMap.set(normalized, trimmed);
-                    }
+
+            const filtered = collections.filter((item: any) => item.projectId === projectId);
+
+            const employeeMap = new Map<number, EmployeeOption>();
+            filtered.forEach((item: any) => {
+                if (item.employeeId && item.employeeName && !employeeMap.has(item.employeeId)) {
+                    employeeMap.set(item.employeeId, {
+                        employeeId: item.employeeId,
+                        employeeName: item.employeeName,
+                    });
                 }
             });
-            
-            const uniqueEmployees = Array.from(employeeMap.values()).sort();
+
+            const uniqueEmployees = Array.from(employeeMap.values()).sort((a, b) =>
+                a.employeeName.localeCompare(b.employeeName)
+            );
             setEmployeeOptions(uniqueEmployees);
         } catch (error) {
             console.error('Error fetching employees:', error);
         }
     };
 
-    // Fetch plots based on selected project and employee
-    const fetchPlots = async (projectName: string, employeeName: string) => {
+    // Fetch plots based on selected projectId and employeeId
+    const fetchPlots = async (projectId: number, employeeId: number) => {
         const token = getAuthToken();
-        if (!token || !projectName || !employeeName) return;
+        if (!token || !projectId || !employeeId) return;
 
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/collection/getAllCollections`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
+            const response = await fetch(`${API_BASE_URL}/collection/getAllCollections`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
             if (!response.ok) throw new Error('Failed to fetch plots');
 
             const result = await response.json();
             const collections = result.data || result.collections || result || [];
-            
-            // Filter by project and employee (case-insensitive, trimmed)
-            const normalizedProject = projectName.trim().toLowerCase();
-            const normalizedEmployee = employeeName.trim().toLowerCase();
-            
-            const filteredCollections = collections.filter(
-                (item: any) => 
-                    item.projectName && item.projectName.trim().toLowerCase() === normalizedProject &&
-                    item.employeeName && item.employeeName.trim().toLowerCase() === normalizedEmployee
+
+            const filtered = collections.filter(
+                (item: any) => item.projectId === projectId && item.employeeId === employeeId
             );
-            
-            // Normalize plot numbers
-            const plotMap = new Map<string, string>();
-            filteredCollections.forEach((item: any) => {
-                if (item.plotNumber) {
-                    const trimmed = String(item.plotNumber).trim();
-                    const normalized = trimmed.toLowerCase();
-                    if (!plotMap.has(normalized)) {
-                        plotMap.set(normalized, trimmed);
-                    }
+
+            const plotMap = new Map<number, PlotOption>();
+            filtered.forEach((item: any) => {
+                if (item.plotId && item.plotNumber && !plotMap.has(item.plotId)) {
+                    plotMap.set(item.plotId, {
+                        plotId: item.plotId,
+                        plotNumber: String(item.plotNumber),
+                    });
                 }
             });
-            
+
             const uniquePlots = Array.from(plotMap.values()).sort((a, b) => {
-                const numA = parseFloat(a);
-                const numB = parseFloat(b);
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return numA - numB;
-                }
-                return a.localeCompare(b);
+                const numA = parseFloat(a.plotNumber);
+                const numB = parseFloat(b.plotNumber);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.plotNumber.localeCompare(b.plotNumber);
             });
-            
+
             setPlotOptions(uniquePlots);
         } catch (error) {
             console.error('Error fetching plots:', error);
@@ -202,66 +193,57 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
 
     // Handle project change
     const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        setSelectedProject(value);
-        setSelectedEmployee('');
-        setSelectedPlot('');
+        const id = e.target.value ? Number(e.target.value) : '';
+        setSelectedProjectId(id);
+        setSelectedEmployeeId('');
+        setSelectedPlotId('');
         setEmployeeOptions([]);
         setPlotOptions([]);
-        setValue('projectName', value);
-        setValue('employeeName', '');
-        setValue('plotNumber', '');
-        
-        if (value) {
-            fetchEmployees(value);
-        }
+        setValue('projectId', id);
+        setValue('userId', '');
+        setValue('plotId', '');
+
+        if (id) fetchEmployees(id as number);
     };
 
     // Handle employee change
     const handleEmployeeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        setSelectedEmployee(value);
-        setSelectedPlot('');
+        const id = e.target.value ? Number(e.target.value) : '';
+        setSelectedEmployeeId(id);
+        setSelectedPlotId('');
         setPlotOptions([]);
-        setValue('employeeName', value);
-        setValue('plotNumber', '');
-        
-        if (value && selectedProject) {
-            fetchPlots(selectedProject, value);
-        }
+        setValue('userId', id);
+        setValue('plotId', '');
+
+        if (id && selectedProjectId) fetchPlots(selectedProjectId as number, id as number);
     };
 
     // Handle plot change
     const handlePlotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        setSelectedPlot(value);
-        setValue('plotNumber', value);
+        const id = e.target.value ? Number(e.target.value) : '';
+        setSelectedPlotId(id);
+        setValue('plotId', id);
     };
 
     useEffect(() => {
         if (isOpen) {
             if (currentData) {
-                // Edit mode - set data as read-only
+                // Edit mode
                 reset({
-                    projectName: currentData.projectName || '',
-                    plotNumber: currentData.plotNumber || '',
-                    employeeName: currentData.employeeName || '',
+                    projectId: currentData.projectId || '',
+                    plotId: currentData.plotId || '',
+                    userId: currentData.employeeId || '',
                     amount: currentData.amount || '',
                 });
-                setSelectedProject(currentData.projectName || '');
-                setSelectedEmployee(currentData.employeeName || '');
-                setSelectedPlot(currentData.plotNumber || '');
+                setSelectedProjectId(currentData.projectId || '');
+                setSelectedEmployeeId(currentData.employeeId || '');
+                setSelectedPlotId(currentData.plotId || '');
             } else {
-                // Add mode - fetch projects and reset form
-                reset({
-                    projectName: '',
-                    plotNumber: '',
-                    employeeName: '',
-                    amount: ''
-                });
-                setSelectedProject('');
-                setSelectedEmployee('');
-                setSelectedPlot('');
+                // Add mode
+                reset({ projectId: '', plotId: '', userId: '', amount: '' });
+                setSelectedProjectId('');
+                setSelectedEmployeeId('');
+                setSelectedPlotId('');
                 setEmployeeOptions([]);
                 setPlotOptions([]);
                 fetchProjects();
@@ -301,7 +283,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
-                    {/* Project Name - Dropdown in Add mode, Text in Edit mode */}
+                    {/* Project */}
                     <div>
                         <label className={labelStyles}>
                             Project Name {!isEditMode && <span className="text-red-500">*</span>}
@@ -309,31 +291,28 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                         {isEditMode ? (
                             <input
                                 type="text"
-                                {...register('projectName')}
-                                disabled={true}
+                                value={currentData?.projectTitle || currentData?.projectName || ''}
+                                disabled
                                 className={`${inputStyles} ${disabledStyles}`}
                             />
                         ) : (
                             <select
-                                value={selectedProject}
+                                value={selectedProjectId}
                                 onChange={handleProjectChange}
                                 className={inputStyles}
                                 required
                             >
                                 <option value="">Select Project</option>
-                                {projectOptions.map((project) => (
-                                    <option key={project} value={project}>
-                                        {project}
+                                {projectOptions.map((p) => (
+                                    <option key={p.projectId} value={p.projectId}>
+                                        {p.projectTitle}
                                     </option>
                                 ))}
                             </select>
                         )}
-                        {errors.projectName && (
-                            <p className="text-red-500 text-xs mt-1">{String(errors.projectName.message)}</p>
-                        )}
                     </div>
 
-                    {/* Employee Name - Dropdown in Add mode, Text in Edit mode */}
+                    {/* Employee */}
                     <div>
                         <label className={labelStyles}>
                             Employee Name {!isEditMode && <span className="text-red-500">*</span>}
@@ -341,32 +320,29 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                         {isEditMode ? (
                             <input
                                 type="text"
-                                {...register('employeeName')}
-                                disabled={true}
+                                value={currentData?.employeeName || ''}
+                                disabled
                                 className={`${inputStyles} ${disabledStyles}`}
                             />
                         ) : (
                             <select
-                                value={selectedEmployee}
+                                value={selectedEmployeeId}
                                 onChange={handleEmployeeChange}
-                                disabled={!selectedProject}
-                                className={`${inputStyles} ${!selectedProject ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!selectedProjectId}
+                                className={`${inputStyles} ${!selectedProjectId ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 required
                             >
                                 <option value="">Select Employee</option>
-                                {employeeOptions.map((employee) => (
-                                    <option key={employee} value={employee}>
-                                        {employee}
+                                {employeeOptions.map((emp) => (
+                                    <option key={emp.employeeId} value={emp.employeeId}>
+                                        {emp.employeeName}
                                     </option>
                                 ))}
                             </select>
                         )}
-                        {errors.employeeName && (
-                            <p className="text-red-500 text-xs mt-1">{String(errors.employeeName.message)}</p>
-                        )}
                     </div>
 
-                    {/* Plot Number - Dropdown in Add mode, Text in Edit mode */}
+                    {/* Plot */}
                     <div>
                         <label className={labelStyles}>
                             Plot Number {!isEditMode && <span className="text-red-500">*</span>}
@@ -374,32 +350,29 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                         {isEditMode ? (
                             <input
                                 type="text"
-                                {...register('plotNumber')}
-                                disabled={true}
+                                value={currentData?.plotNumber || ''}
+                                disabled
                                 className={`${inputStyles} ${disabledStyles}`}
                             />
                         ) : (
                             <select
-                                value={selectedPlot}
+                                value={selectedPlotId}
                                 onChange={handlePlotChange}
-                                disabled={!selectedEmployee}
-                                className={`${inputStyles} ${!selectedEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!selectedEmployeeId}
+                                className={`${inputStyles} ${!selectedEmployeeId ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 required
                             >
                                 <option value="">Select Plot</option>
                                 {plotOptions.map((plot) => (
-                                    <option key={plot} value={plot}>
-                                        {plot}
+                                    <option key={plot.plotId} value={plot.plotId}>
+                                        {plot.plotNumber}
                                     </option>
                                 ))}
                             </select>
                         )}
-                        {errors.plotNumber && (
-                            <p className="text-red-500 text-xs mt-1">{String(errors.plotNumber.message)}</p>
-                        )}
                     </div>
 
-                    {/* Amount - Always Editable */}
+                    {/* Amount */}
                     <div>
                         <label className={labelStyles}>
                             Amount <span className="text-red-500">*</span>
@@ -433,13 +406,9 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
                             className="bg-orange-500 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {isSubmitting ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" /> Saving...
-                                </>
+                                <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
                             ) : (
-                                <>
-                                    <Check className="w-4 h-4" /> {isEditMode ? 'Update' : 'Save'} Record
-                                </>
+                                <><Check className="w-4 h-4" /> {isEditMode ? 'Update' : 'Save'} Record</>
                             )}
                         </button>
                     </div>

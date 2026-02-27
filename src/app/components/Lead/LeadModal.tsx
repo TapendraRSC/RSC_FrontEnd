@@ -36,8 +36,6 @@ interface LeadFormValues {
   state: string;
   assignedTo: number | null;
   platformId: number | null;
-  projectStatusId: number | null;
-  plotId: number | null;
   leadStageId: number | null;
   leadStatusId: number | null;
   interestStatus: string | null;
@@ -79,8 +77,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       state: "",
       assignedTo: null,
       platformId: null,
-      projectStatusId: null,
-      plotId: null,
       leadStageId: null,
       leadStatusId: null,
       interestStatus: null,
@@ -88,7 +84,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
   });
 
   const selectedState = watch("state");
-  const selectedProjectId = watch("projectStatusId");
 
   const actualUsersData = useMemo(() => {
     if (Array.isArray(users)) return users;
@@ -178,8 +173,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
       state: "",
       assignedTo: !isAdmin ? (currentUser.id as number) ?? null : null,
       platformId: null,
-      projectStatusId: null,
-      plotId: null,
       leadStageId: null,
       leadStatusId: null,
       interestStatus: null,
@@ -217,10 +210,8 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
         city: initialData.city || "",
         state: initialData.state || "",
         interestStatus: initialData.interestStatus || null,
-        projectStatusId: initialData.plotProjectId || null,
         assignedTo: null,
         platformId: null,
-        plotId: null,
         leadStageId: null,
         leadStatusId: null,
       };
@@ -275,7 +266,6 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
         plots.map((p: any) => ({ label: p.plotNumber || '', value: p.id })),
         initialData.plotNumber as string
       );
-      if (plotOption) setValue("plotId", plotOption.value as number);
     }
   }, [plots, initialData, setValue, findOptionByName]);
 
@@ -290,14 +280,7 @@ const ComprehensiveLeadModal: React.FC<ComprehensiveLeadModalProps> = ({
     onClose();
   };
 
-  useEffect(() => {
-    if (selectedProjectId) {
-      dispatch(
-        fetchPlots({ projectId: selectedProjectId as number, page: 1, limit: 100, search: "" })
-      );
-      setValue("plotId", null);
-    }
-  }, [dispatch, selectedProjectId, setValue]);
+
 
   useEffect(() => {
     setValue("city", "");

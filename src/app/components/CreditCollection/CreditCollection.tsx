@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Pencil, Trash2, Plus, Wallet, RefreshCw } from 'lucide-react';
+import { Pencil, Plus, Wallet } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import CreditCollectionModal from './CreditCollectionModal';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,8 +8,9 @@ import { AppDispatch, RootState } from '../../../../store/store';
 import { fetchRolePermissionsSidebar } from '../../../../store/sidebarPermissionSlice';
 import { fetchPermissions } from '../../../../store/permissionSlice';
 import { toast } from 'react-toastify';
+import { API_BASE_URL } from '../../../libs/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
@@ -18,11 +19,15 @@ const getAuthToken = (): string | null => {
 
 interface CreditRecord {
     id: number;
+    projectId: number;
     projectName: string;
+    projectTitle: string;
+    plotId: number;
     plotNumber: string;
+    employeeId: number;
     employeeName: string;
     amount: number;
-    createdAt: number;
+    createdAt: string;
 }
 
 interface PaginationInfo {
@@ -77,9 +82,7 @@ const CreditCollectionPage: React.FC = () => {
                 }
             );
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch credit collections');
-            }
+            if (!response.ok) throw new Error('Failed to fetch credit collections');
 
             const result = await response.json();
 
@@ -126,18 +129,22 @@ const CreditCollectionPage: React.FC = () => {
         }
 
         try {
+            const payload = {
+                projectId: Number(formData.projectId),
+                plotId: Number(formData.plotId),
+                userId: Number(formData.userId),     // employeeId goes as userId
+                amount: Number(formData.amount),
+            };
+
+            console.log('Create Payload:', payload);
+
             const response = await fetch(`${API_BASE_URL}/credit/create-credit-collection`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    projectName: formData.projectName,
-                    plotNumber: formData.plotNumber,
-                    employeeName: formData.employeeName,
-                    amount: Number(formData.amount),
-                }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -163,18 +170,19 @@ const CreditCollectionPage: React.FC = () => {
         }
 
         try {
+            const payload = {
+                amount: Number(formData.amount),
+            };
+
+            console.log('Update Payload:', payload);
+
             const response = await fetch(`${API_BASE_URL}/credit/update-credit-collection/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    projectName: formData.projectName,
-                    plotNumber: formData.plotNumber,
-                    employeeName: formData.employeeName,
-                    amount: Number(formData.amount),
-                }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -249,7 +257,13 @@ const CreditCollectionPage: React.FC = () => {
     }, [sidebarPermissions]);
 
     const columns: any[] = [
-        { label: 'Project Name', accessor: 'projectName', sortable: true },
+        // { label: 'Project Name', accessor: 'projectTitle', sortable: true },
+        {
+            label: 'Project',
+            accessor: 'projectTitle',
+            sortable: true,
+            render: (row: any) => row.projectTitle || row.projectName || '-',
+        },
         { label: 'Plot Number', accessor: 'plotNumber', sortable: true },
         { label: 'Employee Name', accessor: 'employeeName', sortable: true },
         {

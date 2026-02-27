@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Loader2, Pencil, Plus, Trash2, Upload, Filter, Grid3X3, List, Menu, Download } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Upload, Grid3X3, List, Menu, Download } from "lucide-react";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { addPlot, deletePlot, fetchPlots, updatePlot, uploadPlotData } from "../../../../store/plotSlice";
 import PlotModal from "../PlotModal";
@@ -17,12 +17,15 @@ import ExportModal from "../../components/Common/ExportModal";
 
 export default function ProjectStatusDetailClient({ params }: { params: any }) {
     const { id } = params;
-    // console.log('ProjectStatusDetailClient received ID:', params);
+
     const dispatch = useDispatch<AppDispatch>();
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // ✅ Redux state — plots comes from response.data, total/totalPages from response.pagination
     const { plots, total, totalPages, loading, uploadLoading } = useSelector(
         (state: RootState) => state.plotSlice
     );
+
     const [searchValue, setSearchValue] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -40,10 +43,11 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
     const [fileName, setFileName] = useState("");
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+    // ✅ Fixed: projectId: id  (was: projectId: params)
     useEffect(() => {
-        if (!params) return;
+        if (!id) return;
         dispatch(fetchPlots({
-            projectId: params,
+            projectId: id,
             page: currentPage,
             limit: pageSize,
             search: searchValue,
@@ -52,6 +56,8 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
         }));
     }, [id, currentPage, pageSize, searchValue, sortConfig, dispatch]);
 
+    // ✅ Columns match API response fields exactly:
+    // plotNumber, plotSize, price, onlinePrice, creditPoint, city, facing, status, projectTitle
     const columns: any = [
         {
             label: "Plot No.",
@@ -61,68 +67,95 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             sortable: true
         },
         {
-            label: "City",
-            accessor: "city",
-            mobile: true,
-            showTooltip: true,
-            sortable: true
-        },
-        {
-            label: "Facing",
-            accessor: "facing",
-            mobile: false,
-            showTooltip: true,
-            sortable: true
-        },
-        {
-            label: "Land Type",
-            accessor: "landType",
-            mobile: false,
-            showTooltip: true,
-            sortable: true
-        },
-        {
             label: "Project",
             accessor: "projectTitle",
-            mobile: false,
-            minWidth: 200,
-            maxWidth: 500,
-            showTooltip: true,
-            sortable: true
-        },
-        {
-            label: "Sq. Yard",
-            accessor: "sqYard",
-            mobile: true,
-            showTooltip: true,
-            sortable: true
-        },
-        {
-            label: "Sq. Feet",
-            accessor: "sqFeet",
-            mobile: false,
-            showTooltip: true,
-            sortable: true
-        },
-        {
-            label: "Price",
-            accessor: "price",
-            mobile: true,
-            showTooltip: true,
-            sortable: true
-        },
-        {
-            label: "Status",
-            accessor: "status",
             mobile: true,
             minWidth: 150,
             maxWidth: 300,
             showTooltip: true,
             sortable: true
         },
+        {
+            label: "City",
+            accessor: "city",
+            mobile: false,
+            showTooltip: true,
+            sortable: true,
+            render: (row: any) => <span>{row.city || '—'}</span>
+        },
+        {
+            label: "Facing",
+            accessor: "facing",
+            mobile: false,
+            showTooltip: true,
+            sortable: true,
+            render: (row: any) => <span>{row.facing || '—'}</span>
+        },
+        {
+            label: "Plot Size",
+            accessor: "plotSize",
+            mobile: true,
+            showTooltip: true,
+            sortable: true
+        },
+        {
+            label: "Price (₹)",
+            accessor: "price",
+            mobile: true,
+            showTooltip: true,
+            sortable: true,
+            render: (row: any) => (
+                <span className="font-medium text-green-600 dark:text-green-400">
+                    ₹{row.price ? Number(row.price).toLocaleString() : '—'}
+                </span>
+            )
+        },
+        {
+            label: "Online Price (₹)",
+            accessor: "onlinePrice",
+            mobile: false,
+            showTooltip: true,
+            sortable: true,
+            render: (row: any) => (
+                <span className="font-medium text-blue-600 dark:text-blue-400">
+                    ₹{row.onlinePrice ? Number(row.onlinePrice).toLocaleString() : '—'}
+                </span>
+            )
+        },
+        {
+            label: "Credit Point",
+            accessor: "creditPoint",
+            mobile: false,
+            showTooltip: true,
+            sortable: true,
+            render: (row: any) => (
+                <span className="font-medium text-blue-600 dark:text-blue-400">
+                    ₹{row.creditPoint ? Number(row.creditPoint).toLocaleString() : '0'}
+                </span>
+            )
+        },
+        {
+            label: "Status",
+            accessor: "status",
+            mobile: true,
+            minWidth: 120,
+            maxWidth: 200,
+            showTooltip: true,
+            sortable: true,
+            render: (row: any) => (
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'Available'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                    : row.status === 'Sold'
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                    }`}>
+                    {row.status}
+                </span>
+            )
+        },
     ];
 
-    const { permissions: rolePermissions, loading: rolePermissionsLoading } = useSelector(
+    const { permissions: rolePermissions } = useSelector(
         (state: RootState) => state.sidebarPermissions
     );
     const { list: allPermissions } = useSelector(
@@ -142,6 +175,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
     };
 
     const leadPermissionIds = getLeadPermissions();
+
     const hasPermission = (permId: number, permName: string) => {
         if (!leadPermissionIds.includes(permId)) return false;
         const matched = allPermissions?.data?.permissions?.find((p: any) => p.id === permId);
@@ -298,11 +332,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             if (uploadPlotData.fulfilled.match(result)) {
                 toast.success("File uploaded successfully!");
                 setIsUploadPreviewOpen(false);
-                dispatch(fetchPlots({
-                    projectId: id,
-                    page: currentPage,
-                    limit: pageSize
-                }));
+                dispatch(fetchPlots({ projectId: id, page: currentPage, limit: pageSize }));
                 setSelectedFile(null);
                 setPreviewData([]);
                 setFileName("");
@@ -322,40 +352,68 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
         setFileName("");
     };
 
+    // ✅ PlotCard — shows all API fields: plotNumber, projectTitle, city, facing,
+    //               plotSize, price, onlinePrice, creditPoint, status
     const PlotCard = ({ plot }: { plot: any }) => (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4 hover:shadow-md dark:hover:shadow-lg transition-shadow" style={{ marginTop: "15px" }}>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 hover:shadow-md dark:hover:shadow-lg transition-shadow" style={{ marginTop: "15px" }}>
+
+            {/* Header Row */}
             <div className="flex justify-between items-start">
                 <div>
-                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{plot.plotNumber}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{plot.city}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{plot.projectTitle}</p>
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+                        Plot No. {plot.plotNumber}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{plot.projectTitle}</p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${plot.status === 'Available' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                    plot.status === 'Sold' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${plot.status === 'Available'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                    : plot.status === 'Sold'
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                     }`}>
                     {plot.status}
                 </span>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+
+            {/* Fields Grid */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <div>
-                    <span className="text-gray-500 dark:text-gray-400 block">Sq. Yard</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{plot.sqYard?.toLocaleString() || 'N/A'}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 block">Plot Size</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{plot.plotSize || '—'}</span>
                 </div>
                 <div>
-                    <span className="text-gray-500 dark:text-gray-400 block">Price</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 block">City</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{plot.city || '—'}</span>
+                </div>
+                <div>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 block">Facing</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{plot.facing || '—'}</span>
+                </div>
+                <div>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 block">Credit Point</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{plot.creditPoint ?? '0'}</span>
+                </div>
+                <div>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 block">Price</span>
                     <span className="font-semibold text-green-600 dark:text-green-400">
-                        ₹{plot.price?.toLocaleString() || 'N/A'}
+                        ₹{plot.price ? Number(plot.price).toLocaleString() : '—'}
+                    </span>
+                </div>
+                <div>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 block">Online Price</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">
+                        ₹{plot.onlinePrice ? Number(plot.onlinePrice).toLocaleString() : '—'}
                     </span>
                 </div>
             </div>
-            <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                 {hasPermission(22, "edit") && (
                     <button
                         onClick={() => handleOpenEdit(plot)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
                                    bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50 cursor-pointer"
-                        title="Edit"
                     >
                         <Pencil className="w-4 h-4" />
                         Edit
@@ -366,7 +424,6 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                         onClick={() => handleOpenDelete(plot)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
                                    bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 cursor-pointer"
-                        title="Delete"
                     >
                         <Trash2 className="w-4 h-4" />
                         Delete
@@ -378,6 +435,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+
             {/* Mobile Header */}
             <div className="sticky top-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 lg:hidden">
                 <div className="flex items-center justify-between">
@@ -412,13 +470,8 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                             onClick={handleUploadClick}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
                                        bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white cursor-pointer"
-                            title="Upload"
                         >
-                            {uploadLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Upload className="w-4 h-4" />
-                            )}
+                            {uploadLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                             Upload
                         </button>
                     )}
@@ -427,7 +480,6 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                             onClick={handleOpenAdd}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
                                        bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white cursor-pointer"
-                            title="Add New"
                         >
                             <Plus className="w-4 h-4" />
                             Add New
@@ -436,13 +488,13 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                     <button
                         onClick={() => setIsExportModalOpen(true)}
                         className="flex items-center justify-center p-2.5 rounded-lg bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white transition-colors"
-                        title="Export"
                     >
                         <Download className="w-5 h-5" />
                     </button>
                 </div>
             </div>
 
+            {/* Desktop Header */}
             <div className="hidden lg:block p-6">
                 <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
@@ -450,15 +502,14 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                             Project Plots
                         </h1>
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                            {plots[0]?.projectTitle || "Project Name"}
+                            {plots[0]?.projectTitle || "Project Name"} &nbsp;•&nbsp; Total: {total} plots
                         </p>
                     </div>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setIsExportModalOpen(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm
                                        bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white cursor-pointer"
-                            title="Export"
                         >
                             <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                             Export
@@ -466,24 +517,18 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                         {hasPermission(26, "upload") && (
                             <button
                                 onClick={handleUploadClick}
-                                className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm
                                            bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white cursor-pointer"
-                                title="Upload"
                             >
-                                {uploadLoading ? (
-                                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                                ) : (
-                                    <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
-                                )}
+                                {uploadLoading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Upload className="w-4 h-4 sm:w-5 sm:h-5" />}
                                 Upload
                             </button>
                         )}
                         {hasPermission(21, "add") && (
                             <button
                                 onClick={handleOpenAdd}
-                                className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm
                                            bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white cursor-pointer"
-                                title="Add New"
                             >
                                 <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                                 Add New
@@ -502,6 +547,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             />
 
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+
                 {/* Mobile Grid View */}
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
                     <div className="space-y-4">
@@ -520,11 +566,12 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                                            placeholder:text-gray-500 dark:placeholder:text-gray-400"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
                         </div>
+
                         {loading ? (
                             <div className="flex justify-center py-8">
                                 <Loader2 className="w-6 h-6 animate-spin text-orange-500 dark:text-orange-400" />
@@ -543,15 +590,14 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                                 )}
                             </>
                         )}
-                        {/* Mobile Pagination */}
+
                         {totalPages > 1 && (
                             <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <button
                                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                     disabled={currentPage === 1}
                                     className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
-                                               rounded-md disabled:opacity-50 disabled:cursor-not-allowed
-                                               hover:bg-gray-200 dark:hover:bg-gray-700"
+                                               rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700"
                                 >
                                     Previous
                                 </button>
@@ -562,8 +608,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                     disabled={currentPage === totalPages}
                                     className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
-                                               rounded-md disabled:opacity-50 disabled:cursor-not-allowed
-                                               hover:bg-gray-200 dark:hover:bg-gray-700"
+                                               rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700"
                                 >
                                     Next
                                 </button>
@@ -572,7 +617,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                     </div>
                 </div>
 
-                {/* Table View - Mobile & Desktop */}
+                {/* Table View */}
                 <div className={`${viewMode === 'table' ? 'block' : 'hidden lg:block'}`}>
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ marginTop: "15px" }}>
                         <CustomTable<any>
@@ -631,13 +676,15 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                 </div>
             </div>
 
-            <PlotModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSavePlot={handleSavePlot}
-                isLoading={loading}
-                currentPlot={selectedPlot}
-            />
+            {/* Modals */}
+          <PlotModal
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    onSavePlot={handleSavePlot}
+    isLoading={loading}
+    currentPlot={selectedPlot}
+    projectTitle={plots[0]?.projectTitle}  // ✅ yeh add karo
+/>
 
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}

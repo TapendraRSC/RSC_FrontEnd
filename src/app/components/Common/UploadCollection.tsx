@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { toast } from "react-toastify";
+import { API_BASE_URL } from '../../../libs/api';
+
 
 interface UploadCollectionProps {
     isOpen: boolean;
@@ -84,9 +86,11 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
 
     // Allowed headers list (case-insensitive)
     const allowedHeaders = [
+        "Booking Date",
         "Project Name",
-        "Employee Name",
+        "Employee Email",
         "Client Name",
+        "Booking Amount",
         "Mobile Number",
         "Email Id",
         "Plot Number",
@@ -95,23 +99,18 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
         "Price",
         "Online Price",
         "Credit Point",
-        "Plot Online Price",
-        "Plot Credit Point",
-        "Plot Value",
         "Maintenance",
         "Stamp Duty",
         "Legal Fees",
-        "Total Amount",
-        "Payment Received",
         "Online Payment Received",
         "Credit Point Received",
-        "Pending Amount",
         "Online Payment Pending",
         "Credit Points Pending",
         "Incentive",
         "CP Name",
+        "Remark",
         "Commission",
-        "Registry Status"
+        "Registry Status",
     ];
 
 
@@ -330,7 +329,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             formData.append('file', selectedFile);
 
             // const response = await fetch(`${BASE_URL}/collection/uploadCollections`, { 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/collection/uploadCollections`, {
+            const response = await fetch(`${API_BASE_URL}/collection/uploadCollections`, {
                 method: 'POST',
                 headers: {
                     ...(token && { 'Authorization': `Bearer ${token}` })
@@ -370,85 +369,46 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
         }
     };
 
+
     const handleDownloadSample = () => {
-        const headers = [
-            "Project Name",
-            "Employee Name",
-            "Client Name",
-            "Mobile Number",
-            "Email Id",
-            "Plot Number",
-            "EMI Plan",
-            "Plot Size",
-            "Price",
-            "Online Price",
-            "Credit Point",
-            "Plot Online Price",
-            "Plot Credit Point",
-            "Plot Value",
-            "Maintenance",
-            "Stamp Duty",
-            "Legal Fees",
-            "Total Amount",
-            "Payment Received",
-            "Online Payment Received",
-            "Credit Point Received",
-            "Pending Amount",
-            "Online Payment Pending",
-            "Credit Points Pending",
-            "Incentive",
-            "CP Name",
-            "Commission",
-            "Registry Status"
+        const headers = allowedHeaders;
+
+        const sampleRow = [
+            "14/02/2026",            // Booking Date
+            "Paradise",              // Project Name
+            "employee@example.com",  // Employee Email
+            "Rakesh Kumar",          // Client Name
+            "51000",                 // Booking Amount
+            "9896637005",            // Mobile Number
+            "rakesh@example.com",    // Email Id
+            "126",                   // Plot Number
+            "45 Days",               // EMI Plan
+            "124.77",                // Plot Size
+            "4000",                  // Price
+            "4000",                  // Online Price
+            "0",                     // Credit Point
+            "0.00",                  // Maintenance
+            "14723.00",              // Stamp Duty
+            "12477.00",              // Legal Fees
+            "276740.00",             // Online Payment Received
+            "249540.00",             // Credit Point Received
+            "0.00",                  // Online Payment Pending
+            "0.00",                  // Credit Points Pending
+            "0.00",                  // Incentive
+            "Pankaj",                // CP Name
+            "Sample Remark",         // Remark
+            "0.00",                  // Commission
+            "pending",               // Registry Status
         ];
 
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+        ws["!cols"] = headers.map(() => ({ wch: 22 }));
 
-        const rows = [
-            [
-                "Dummy",                       // Project Name
-                "Patel",            // Employee Name
-                "Sparsh Jain",                 // Client Name
-                "8120057290",                  // Mobile Number
-                "sparsh@gmail.com",       // Email Id
-                "210",                         // Plot Number
-                "45 Days",                     // EMI Plan
-                "144.99",                      // Plot Size
-                "6500",                        // Price
-                "4500",                        // Online Price
-                "2000",                        // Credit Point
-                "652455",                      // Plot Online Price
-                "289980",                      // Plot Credit Point
-                "942435",                      // Plot Value
-                "14499",                       // Maintenance
-                "55603",                       // Stamp Duty
-                "15000",                       // Legal Fees
-                "852455",                      // Total Amount
-                "852455",                      // Total Payment Received
-                "652455",                      // Online Payment Received
-                "200000",                      // Credit Point Received
-                "852455",                      // Total Pending Amount
-                "-185000",                     // Online Payment Pending
-                "-767208.01",                  // Credit Points Pending
-                "15000",                       // Incentive
-                "Jagmohan",              // CP Name
-                "150000",                      // Commission
-                "Pending"                      // Registry Status
-            ],
+        XLSX.utils.book_append_sheet(wb, ws, "Collection");
+        XLSX.writeFile(wb, "sample_collection.xlsx");
 
-        ];
-
-        const csvContent = [
-            headers.map((h) => `"${h}"`).join(","),
-            ...rows.map((r) => `"${r.join('","')}"`),
-        ].join("\n");
-
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "Sample_Collection.csv";
-        a.click();
-        URL.revokeObjectURL(url);
+        toast.success("Sample file downloaded");
     };
 
     const handleDownloadFailedLeads = () => {
@@ -935,7 +895,36 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                         <AlertCircle className="w-4 h-4" />
-                        Headers must come only from: Project Name, Employee Name, Client Name, Mobile Number, Email Id, Plot Number, EMI Plan, Plot Size, Price, Registry Status, Plot Value, Payment Received, Pending Amount, Commission, Maintenance, Stamp Duty, Legal Fees, Online Amount, Credit Points,Plot Online Price,Plot Credit Point, Total Payment Received,Online Payment Received,Credit Point Received,Total Pending Amount, Total Amount, Incentive, CP Name
+                        Headers must come only from:
+                        Booking Date,
+                        Project Name,
+                        Registry Status,
+                        Client Name,
+                        Mobile Number,
+                        Email Id,
+                        Employee Name,
+                        Plot Number,
+                        Plot Size,
+                        Price,
+                        Online Price,
+                        Credit Point,
+                        EMI Plan,
+                        Booking Amount,
+                        Payment Received,
+                        Pending Amount,
+                        Online Payment Received,
+                        Online Payment Pending,
+                        Credit Point Received,
+                        Credit Points Pending,
+                        Maintenance,
+                        Stamp Duty,
+                        Legal Fees,
+                        CP Commission,
+                        User Incentive,
+                        Total Amount,
+                        CP Name,
+                        Remark,
+                        Booking Number
                         <span></span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">

@@ -3,26 +3,33 @@ import axios from "axios";
 import { CapacitorHttp, CapacitorCookies } from '@capacitor/core';
 import { Capacitor } from '@capacitor/core';
 
+import { API_BASE_URL } from '../libs/api';
 // ✅ Fixed base URL with trailing slash (use env var fallback)
 
+// libs/axios.ts
+
+
+
 const axiosInstance = axios.create({
-    baseURL:
-        // "http://localhost:8000",
-        process.env.REACT_APP_BASE_URL ??
-        "https://backend.rscgroupdholera.in",
+    baseURL: API_BASE_URL,
     withCredentials: true,
-    timeout: 30000, // 30 seconds
 });
+
 
 
 // Custom adapter for Capacitor with cookie handling
 async function capacitorAdapter(config: any) {
     // ✅ Ensure proper URL formation
     let url = config.url;
+    //  if (!url.startsWith('http')) {
+    //     const baseURL = config.baseURL?.endsWith('/') ? config.baseURL : `${config.baseURL}/`;
+    //     const endpoint = url.startsWith('/') ? url.substring(1) : url;
+    //     url = `${baseURL}${endpoint}`;
+    // }
     if (!url.startsWith('http')) {
-        const baseURL = config.baseURL?.endsWith('/') ? config.baseURL : `${config.baseURL}/`;
-        const endpoint = url.startsWith('/') ? url.substring(1) : url;
-        url = `${baseURL}${endpoint}`;
+        const base = config.baseURL.replace(/\/+$/, ''); // Remove trailing slash
+        const path = url.replace(/^\/+/, '');          // Remove leading slash
+        url = `${base}/${path}`;
     }
 
     console.log('📡 Capacitor HTTP Request:', config.method?.toUpperCase(), url);

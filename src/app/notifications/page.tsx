@@ -14,8 +14,7 @@ import {
     Inbox,
 } from 'lucide-react';
 import { useNotifications } from '../components/NotificationProvider';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_BASE_URL } from '../../libs/api';
 
 type NotificationStatus = 'pending' | 'confirmed' | 'rejected';
 type StatusKey = 'Pending' | 'Confirmed' | 'Rejected';

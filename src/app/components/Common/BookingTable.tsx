@@ -13,7 +13,7 @@ import axiosInstance from "@/libs/axios";
 import { toast } from "react-toastify";
 import PaymentReceipt, { convertNumberToWords } from './PaymentReceiptDownload';
 import WelcomeLetterDownload, { WelcomeLetterData } from './WelcomeLetterDownload';
-
+import { API_BASE_URL } from '../../../libs/api';
 interface BookingTableProps {
     leads?: Booking[];
     onAddLead?: () => void;
@@ -521,20 +521,58 @@ const BookingTable: React.FC<BookingTableProps> = ({
 
         const fetchProjects = async () => {
             setProjectsLoading(true);
-            try {
-                const response = await axiosInstance.get('/projects/getAllProjects?page=1&limit=100');
-                const projectData = response.data?.data?.projects || response.data?.projects || response.data?.data || [];
-                setProjectList(Array.isArray(projectData) ? projectData : []);
-            } catch (error: any) {
-                console.error("Error fetching projects:", error);
-                setProjectList([]);
-            } finally {
-                setProjectsLoading(false);
+
+            // Try multiple common endpoint patterns
+            const endpoints = [
+                '/projects/getAllProjects?page=1&limit=100',
+                '/projects/getAll?page=1&limit=100',
+                '/projects?page=1&limit=100',
+                '/project/getAllProjects?page=1&limit=100',
+                '/project?page=1&limit=100',
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await axiosInstance.get(endpoint);
+                    const projectData =
+                        response.data?.data?.projects ||
+                        response.data?.projects ||
+                        response.data?.data ||
+                        [];
+                    setProjectList(Array.isArray(projectData) ? projectData : []);
+                    setProjectsLoading(false);
+                    return; // Success — stop trying
+                } catch {
+                    continue; // Try next endpoint
+                }
             }
+
+            // All failed — silently set empty list, no console error spam
+            setProjectList([]);
+            setProjectsLoading(false);
         };
 
         fetchProjects();
     }, []);
+
+
+
+    //  const fetchProjects = async () => {
+    //         setProjectsLoading(true);
+    //         try {
+    //             const response = await axiosInstance.get('/projects/getAllProjects?page=1&limit=100');
+    //             const projectData = response.data?.data?.projects || response.data?.projects || response.data?.data || [];
+    //             setProjectList(Array.isArray(projectData) ? projectData : []);
+    //         } catch (error: any) {
+    //             console.error("Error fetching projects:", error);
+    //             setProjectList([]);
+    //         } finally {
+    //             setProjectsLoading(false);
+    //         }
+    //     };
+
+    //     fetchProjects();
+    // }, []);
 
     const actualUsersData = React.useMemo(() => {
         if (Array.isArray(users)) return users;
@@ -663,7 +701,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
         remark: booking.remark || 'N/A',
     });
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 
     const handleBookingAction = async (id: number, action: 'approve' | 'reject') => {
         if (role !== 'Admin') {
@@ -1160,14 +1198,20 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-3 text-sm text-gray-600 dark:text-gray-300">
+                                        {/* <div className="grid grid-cols-1 gap-3 text-sm text-gray-600 dark:text-gray-300">
                                             <div className="flex items-start gap-2 p-2 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
                                                 <span className="font-semibold text-indigo-600 dark:text-indigo-400 min-w-fit">Remarks:</span>
                                                 <span className="break-all italic">
                                                     {booking.remark || 'N/A'}
                                                 </span>
                                             </div>
-                                        </div>
+                                        </div> */}
+
+                                        {booking.remark && booking.remark !== 'N/A' && (
+                                            <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                                                <p className="text-[10px] sm:text-xs text-yellow-700 dark:text-yellow-300"><span className="font-semibold">Remark:</span> {booking.remark}</p>
+                                            </div>
+                                        )}
 
                                         {isHovered && (
                                             <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2 animate-[fadeSlideUp_0.25s_ease-out]">

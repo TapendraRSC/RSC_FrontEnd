@@ -1,251 +1,176 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, Check } from 'lucide-react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_BASE_URL } from '../../../libs/api';
 
 const getAuthToken = (): string | null => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('accessToken') || localStorage.getItem('token');
 };
 
+interface ProjectOption {
+    projectId: number;
+    projectTitle: string;
+}
+
+interface EmployeeOption {
+    employeeId: number;
+    employeeName: string;
+}
+
+interface PlotOption {
+    plotId: number;
+    plotNumber: string;
+}
+
 const OnlineCollectionModal = ({ isOpen, onClose, onSave, currentData }: any) => {
-    const { register, handleSubmit, reset, setValue, clearErrors, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
-    // Dropdown options
-    const [projectOptions, setProjectOptions] = useState<string[]>([]);
-    const [employeeOptions, setEmployeeOptions] = useState<string[]>([]);
-    const [plotOptions, setPlotOptions] = useState<string[]>([]);
+    const [allCollections, setAllCollections] = useState<any[]>([]);
+    const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
+    const [plotOptions, setPlotOptions] = useState<PlotOption[]>([]);
 
-    // Selected values
-    const [selectedProject, setSelectedProject] = useState<string>('');
-    const [selectedEmployee, setSelectedEmployee] = useState<string>('');
-    const [selectedPlot, setSelectedPlot] = useState<string>('');
+    const [selectedProjectId, setSelectedProjectId] = useState<number | ''>('');
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | ''>('');
+    const [selectedPlotId, setSelectedPlotId] = useState<number | ''>('');
 
     const isEditMode = !!currentData;
 
-    // Fetch unique project names
-    const fetchProjects = async () => {
+    // Fetch all collections ONCE — filter in memory
+    const loadAllCollections = async () => {
         const token = getAuthToken();
         if (!token) return;
-
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/collection/getAllCollections`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch projects');
-
+            const response = await fetch(`${API_BASE_URL}/collection/getAllCollections`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) throw new Error('Failed to fetch');
             const result = await response.json();
-            const collections = result.data || result.collections || result || [];
 
-            // Normalize: trim spaces and convert to consistent case for comparison
-            const projectMap = new Map<string, string>();
+            // getAllCollections response: result is array directly OR result.data
+            const collections: any[] = Array.isArray(result)
+                ? result
+                : result.data || result.collections || [];
+
+            setAllCollections(collections);
+
+            // Unique projects by projectId
+            // getAllCollections item has: projectId, projectTitle, plotId, plotNumber, employeeId, employeeName
+            const projectMap = new Map<number, ProjectOption>();
             collections.forEach((item: any) => {
-                if (item.projectName) {
-                    const trimmed = item.projectName.trim();
-                    const normalized = trimmed.toLowerCase();
-                    // Store original case version (first occurrence)
-                    if (!projectMap.has(normalized)) {
-                        projectMap.set(normalized, trimmed);
-                    }
+                const pid = item.projectId;
+                const ptitle = item.projectTitle || item.projectName || '';
+                if (pid && ptitle && !projectMap.has(pid)) {
+                    projectMap.set(pid, { projectId: pid, projectTitle: ptitle });
                 }
             });
 
-            const uniqueProjects = Array.from(projectMap.values()).sort();
+            const uniqueProjects = Array.from(projectMap.values()).sort((a, b) =>
+                a.projectTitle.localeCompare(b.projectTitle)
+            );
             setProjectOptions(uniqueProjects);
         } catch (error) {
-            console.error('Error fetching projects:', error);
+            console.error('Error loading collections:', error);
         }
     };
 
-    // Fetch employees based on selected project
-    const fetchEmployees = async (projectName: string) => {
-        const token = getAuthToken();
-        if (!token || !projectName) return;
-
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/collection/getAllCollections`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch employees');
-
-            const result = await response.json();
-            const collections = result.data || result.collections || result || [];
-
-            // Filter by project (case-insensitive, trimmed comparison)
-            const normalizedProject = projectName.trim().toLowerCase();
-            const filteredCollections = collections.filter((item: any) =>
-                item.projectName && item.projectName.trim().toLowerCase() === normalizedProject
-            );
-
-            // Normalize employee names
-            const employeeMap = new Map<string, string>();
-            filteredCollections.forEach((item: any) => {
-                if (item.employeeName) {
-                    const trimmed = item.employeeName.trim();
-                    const normalized = trimmed.toLowerCase();
-                    if (!employeeMap.has(normalized)) {
-                        employeeMap.set(normalized, trimmed);
-                    }
-                }
-            });
-
-            const uniqueEmployees = Array.from(employeeMap.values()).sort();
-            setEmployeeOptions(uniqueEmployees);
-        } catch (error) {
-            console.error('Error fetching employees:', error);
-        }
-    };
-
-    // Fetch plots based on selected project and employee
-    const fetchPlots = async (projectName: string, employeeName: string) => {
-        const token = getAuthToken();
-        if (!token || !projectName || !employeeName) return;
-
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/collection/getAllCollections`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch plots');
-
-            const result = await response.json();
-            const collections = result.data || result.collections || result || [];
-
-            // Filter by project and employee (case-insensitive, trimmed)
-            const normalizedProject = projectName.trim().toLowerCase();
-            const normalizedEmployee = employeeName.trim().toLowerCase();
-
-            const filteredCollections = collections.filter(
-                (item: any) =>
-                    item.projectName && item.projectName.trim().toLowerCase() === normalizedProject &&
-                    item.employeeName && item.employeeName.trim().toLowerCase() === normalizedEmployee
-            );
-
-            // Normalize plot numbers
-            const plotMap = new Map<string, string>();
-            filteredCollections.forEach((item: any) => {
-                if (item.plotNumber) {
-                    const trimmed = String(item.plotNumber).trim();
-                    const normalized = trimmed.toLowerCase();
-                    if (!plotMap.has(normalized)) {
-                        plotMap.set(normalized, trimmed);
-                    }
-                }
-            });
-
-            const uniquePlots = Array.from(plotMap.values()).sort((a, b) => {
-                const numA = parseFloat(a);
-                const numB = parseFloat(b);
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return numA - numB;
-                }
-                return a.localeCompare(b);
-            });
-
-            setPlotOptions(uniquePlots);
-        } catch (error) {
-            console.error('Error fetching plots:', error);
-        }
-    };
-
-    // Handle project change
     const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        setSelectedProject(value);
-        setSelectedEmployee('');
-        setSelectedPlot('');
+        const projectId = e.target.value ? Number(e.target.value) : '';
+        setSelectedProjectId(projectId);
+        setSelectedEmployeeId('');
+        setSelectedPlotId('');
         setEmployeeOptions([]);
         setPlotOptions([]);
-        setValue('project_name', value);
-        setValue('employee_name', '');
-        setValue('plot_number', '');
+        setValue('projectId', projectId || '');
+        setValue('userId', '');
+        setValue('plotId', '');
 
-        if (value) {
-            fetchEmployees(value);
-        }
+        if (!projectId) return;
+
+        // Filter employees for this projectId
+        const filtered = allCollections.filter((item: any) => item.projectId === projectId);
+        const employeeMap = new Map<number, EmployeeOption>();
+        filtered.forEach((item: any) => {
+            const empId = item.employeeId;
+            const empName = item.employeeName || '';
+            if (empId && empName && !employeeMap.has(empId)) {
+                employeeMap.set(empId, { employeeId: empId, employeeName: empName });
+            }
+        });
+        const uniqueEmployees = Array.from(employeeMap.values()).sort((a, b) =>
+            a.employeeName.localeCompare(b.employeeName)
+        );
+        setEmployeeOptions(uniqueEmployees);
     };
 
-    // Handle employee change
     const handleEmployeeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        setSelectedEmployee(value);
-        setSelectedPlot('');
+        const employeeId = e.target.value ? Number(e.target.value) : '';
+        setSelectedEmployeeId(employeeId);
+        setSelectedPlotId('');
         setPlotOptions([]);
-        setValue('employee_name', value);
-        setValue('plot_number', '');
+        setValue('userId', employeeId || '');
+        setValue('plotId', '');
 
-        if (value && selectedProject) {
-            fetchPlots(selectedProject, value);
-        }
+        if (!employeeId || !selectedProjectId) return;
+
+        // Filter plots for this projectId + employeeId
+        const filtered = allCollections.filter(
+            (item: any) => item.projectId === selectedProjectId && item.employeeId === employeeId
+        );
+        const plotMap = new Map<number, PlotOption>();
+        filtered.forEach((item: any) => {
+            const pid = item.plotId;
+            const pnum = String(item.plotNumber || '').trim();
+            if (pid && pnum && !plotMap.has(pid)) {
+                plotMap.set(pid, { plotId: pid, plotNumber: pnum });
+            }
+        });
+        const uniquePlots = Array.from(plotMap.values()).sort((a, b) => {
+            const na = parseFloat(a.plotNumber);
+            const nb = parseFloat(b.plotNumber);
+            if (!isNaN(na) && !isNaN(nb)) return na - nb;
+            return a.plotNumber.localeCompare(b.plotNumber);
+        });
+        setPlotOptions(uniquePlots);
     };
 
-    // Handle plot change
     const handlePlotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        setSelectedPlot(value);
-        setValue('plot_number', value);
+        const plotId = e.target.value ? Number(e.target.value) : '';
+        setSelectedPlotId(plotId);
+        setValue('plotId', plotId || '');
     };
 
     useEffect(() => {
         if (isOpen) {
             if (currentData) {
-                // Edit mode
                 reset({
-                    project_name: currentData.projectName || '',
-                    plot_number: currentData.plotNumber || '',
-                    employee_name: currentData.employeeName || '',
+                    projectId: currentData.projectId || '',
+                    plotId: currentData.plotId || '',
+                    userId: currentData.employeeId || '',
                     bank_name: currentData.bankName || '',
                     amount: currentData.amount || '',
                     transaction_id: currentData.transactionId || '',
                     status: currentData.status || 'Pending',
                 });
-                setSelectedProject(currentData.projectName || '');
-                setSelectedEmployee(currentData.employeeName || '');
-                setSelectedPlot(currentData.plotNumber || '');
+                setSelectedProjectId(currentData.projectId || '');
+                setSelectedEmployeeId(currentData.employeeId || '');
+                setSelectedPlotId(currentData.plotId || '');
             } else {
-                // Add mode
-                reset({
-                    status: 'Pending',
-                    project_name: '',
-                    plot_number: '',
-                    employee_name: '',
-                    bank_name: '',
-                    amount: '',
-                    transaction_id: ''
-                });
-                setSelectedProject('');
-                setSelectedEmployee('');
-                setSelectedPlot('');
+                reset({ status: 'Pending', projectId: '', plotId: '', userId: '', bank_name: '', amount: '', transaction_id: '' });
+                setSelectedProjectId('');
+                setSelectedEmployeeId('');
+                setSelectedPlotId('');
                 setEmployeeOptions([]);
                 setPlotOptions([]);
-                fetchProjects();
+                loadAllCollections();
             }
         }
-    }, [currentData, reset, isOpen]);
+    }, [currentData, isOpen]);
 
     if (!isOpen) return null;
 
@@ -258,13 +183,13 @@ const OnlineCollectionModal = ({ isOpen, onClose, onSave, currentData }: any) =>
             <div className="bg-white dark:bg-slate-900 rounded-xl w-full max-w-md overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
                 <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
                     <h2 className="text-xl font-bold dark:text-white">{currentData ? 'Edit' : 'Add'} Online Entry</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                        <X />
-                    </button>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><X /></button>
                 </div>
+
                 <div className="overflow-y-auto flex-1 p-4">
                     <form onSubmit={handleSubmit(onSave)} className="space-y-3">
-                        {/* Project Name */}
+
+                        {/* Project */}
                         <div>
                             <label className={labelStyles}>
                                 Project Name {!isEditMode && <span className="text-red-500">*</span>}
@@ -272,31 +197,28 @@ const OnlineCollectionModal = ({ isOpen, onClose, onSave, currentData }: any) =>
                             {isEditMode ? (
                                 <input
                                     type="text"
-                                    {...register('project_name')}
-                                    disabled={true}
+                                    value={currentData?.projectTitle || currentData?.projectName || ''}
+                                    disabled
                                     className={`${inputStyles} ${disabledStyles}`}
                                 />
                             ) : (
                                 <select
-                                    value={selectedProject}
+                                    value={selectedProjectId}
                                     onChange={handleProjectChange}
                                     className={inputStyles}
                                     required
                                 >
                                     <option value="">Select Project</option>
-                                    {projectOptions.map((project) => (
-                                        <option key={project} value={project}>
-                                            {project}
+                                    {projectOptions.map((p) => (
+                                        <option key={p.projectId} value={p.projectId}>
+                                            {p.projectTitle}
                                         </option>
                                     ))}
                                 </select>
                             )}
-                            {errors.project_name && (
-                                <p className="text-red-500 text-xs mt-1">{String(errors.project_name.message)}</p>
-                            )}
                         </div>
 
-                        {/* Employee Name */}
+                        {/* Employee */}
                         <div>
                             <label className={labelStyles}>
                                 Employee Name {!isEditMode && <span className="text-red-500">*</span>}
@@ -304,32 +226,29 @@ const OnlineCollectionModal = ({ isOpen, onClose, onSave, currentData }: any) =>
                             {isEditMode ? (
                                 <input
                                     type="text"
-                                    {...register('employee_name')}
-                                    disabled={true}
+                                    value={currentData?.employeeName || ''}
+                                    disabled
                                     className={`${inputStyles} ${disabledStyles}`}
                                 />
                             ) : (
                                 <select
-                                    value={selectedEmployee}
+                                    value={selectedEmployeeId}
                                     onChange={handleEmployeeChange}
-                                    disabled={!selectedProject}
-                                    className={`${inputStyles} ${!selectedProject ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={!selectedProjectId}
+                                    className={`${inputStyles} ${!selectedProjectId ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     required
                                 >
                                     <option value="">Select Employee</option>
-                                    {employeeOptions.map((employee) => (
-                                        <option key={employee} value={employee}>
-                                            {employee}
+                                    {employeeOptions.map((emp) => (
+                                        <option key={emp.employeeId} value={emp.employeeId}>
+                                            {emp.employeeName}
                                         </option>
                                     ))}
                                 </select>
                             )}
-                            {errors.employee_name && (
-                                <p className="text-red-500 text-xs mt-1">{String(errors.employee_name.message)}</p>
-                            )}
                         </div>
 
-                        {/* Plot Number */}
+                        {/* Plot */}
                         <div>
                             <label className={labelStyles}>
                                 Plot Number {!isEditMode && <span className="text-red-500">*</span>}
@@ -337,28 +256,25 @@ const OnlineCollectionModal = ({ isOpen, onClose, onSave, currentData }: any) =>
                             {isEditMode ? (
                                 <input
                                     type="text"
-                                    {...register('plot_number')}
-                                    disabled={true}
+                                    value={currentData?.plotNumber || ''}
+                                    disabled
                                     className={`${inputStyles} ${disabledStyles}`}
                                 />
                             ) : (
                                 <select
-                                    value={selectedPlot}
+                                    value={selectedPlotId}
                                     onChange={handlePlotChange}
-                                    disabled={!selectedEmployee}
-                                    className={`${inputStyles} ${!selectedEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={!selectedEmployeeId}
+                                    className={`${inputStyles} ${!selectedEmployeeId ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     required
                                 >
                                     <option value="">Select Plot</option>
                                     {plotOptions.map((plot) => (
-                                        <option key={plot} value={plot}>
-                                            {plot}
+                                        <option key={plot.plotId} value={plot.plotId}>
+                                            {plot.plotNumber}
                                         </option>
                                     ))}
                                 </select>
-                            )}
-                            {errors.plot_number && (
-                                <p className="text-red-500 text-xs mt-1">{String(errors.plot_number.message)}</p>
                             )}
                         </div>
 
@@ -370,62 +286,41 @@ const OnlineCollectionModal = ({ isOpen, onClose, onSave, currentData }: any) =>
                             <input
                                 type="text"
                                 placeholder='Enter Bank Name'
-                                {...register('bank_name', {
-                                    required: isEditMode ? false : "Bank name is required"
-                                })}
+                                {...register('bank_name', { required: isEditMode ? false : "Bank name is required" })}
                                 disabled={isEditMode}
                                 className={`${inputStyles} ${isEditMode ? disabledStyles : ''}`}
                             />
-                            {errors.bank_name && (
-                                <p className="text-red-500 text-xs mt-1">{String(errors.bank_name.message)}</p>
-                            )}
+                            {errors.bank_name && <p className="text-red-500 text-xs mt-1">{String(errors.bank_name.message)}</p>}
                         </div>
 
                         {/* Amount */}
                         <div>
-                            <label className={labelStyles}>
-                                Amount <span className="text-red-500">*</span>
-                            </label>
+                            <label className={labelStyles}>Amount <span className="text-red-500">*</span></label>
                             <input
                                 type="number"
                                 placeholder='Enter Amount'
-                                {...register('amount', {
-                                    required: "Amount is required",
-                                    min: { value: 1, message: "Amount must be greater than 0" }
-                                })}
+                                {...register('amount', { required: "Amount is required", min: { value: 1, message: "Amount must be greater than 0" } })}
                                 className={inputStyles}
                             />
-                            {errors.amount && (
-                                <p className="text-red-500 text-xs mt-1">{String(errors.amount.message)}</p>
-                            )}
+                            {errors.amount && <p className="text-red-500 text-xs mt-1">{String(errors.amount.message)}</p>}
                         </div>
 
                         {/* Transaction ID */}
                         <div>
-                            <label className={labelStyles}>
-                                Transaction ID <span className="text-red-500">*</span>
-                            </label>
+                            <label className={labelStyles}>Transaction ID <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 placeholder='Enter Transaction Id'
-                                {...register('transaction_id', {
-                                    required: "Transaction ID is required"
-                                })}
+                                {...register('transaction_id', { required: "Transaction ID is required" })}
                                 className={inputStyles}
                             />
-                            {errors.transaction_id && (
-                                <p className="text-red-500 text-xs mt-1">{String(errors.transaction_id.message)}</p>
-                            )}
+                            {errors.transaction_id && <p className="text-red-500 text-xs mt-1">{String(errors.transaction_id.message)}</p>}
                         </div>
 
                         {/* Status */}
                         <div>
                             <label className={labelStyles}>Status</label>
-                            <select
-                                disabled={true}
-                                {...register("status")}
-                                className={`${inputStyles} ${disabledStyles}`}
-                            >
+                            <select disabled {...register("status")} className={`${inputStyles} ${disabledStyles}`}>
                                 <option value="Pending">Pending</option>
                                 <option value="Completed">Completed</option>
                                 <option value="Rejected">Rejected</option>

@@ -2,19 +2,19 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/libs/axios";
 
+// ✅ Updated Plot interface to match actual API response fields
 export interface Plot {
     id: number;
-    plotNumber: number;
-    sqYard: string;
-    sqFeet?: string;
-    city: string;
-    remarks: string;
-    facing?: string;
-    status?: string;
+    plotNumber: string;
+    plotSize: string;
+    price: string;
+    onlinePrice: string;
+    creditPoint: number;
+    city: string | null;
+    facing: string | null;
+    status: string;
     projectId: number;
-    projectTitle?: string;
-    landId?: number | null;
-    landType?: string | null;
+    projectTitle: string;
 }
 
 interface PlotState {
@@ -37,7 +37,8 @@ const initialState: PlotState = {
     uploadLoading: false,
 };
 
-// Fetch all plots
+// ✅ Fetch all plots — fixed to correctly map API response
+// API returns: { success: true, pagination: { page, limit, total, totalPages }, data: [...] }
 export const fetchPlots = createAsyncThunk(
     "plots/fetchPlots",
     async (
@@ -72,7 +73,13 @@ export const fetchPlots = createAsyncThunk(
                 },
             });
 
-            return res.data?.data;
+            // ✅ Normalize response so slice gets correct shape
+            // res.data = { success: true, pagination: { total, totalPages, ... }, data: [...] }
+            return {
+                plots: res.data?.data || [],
+                total: res.data?.pagination?.total || 0,
+                totalPages: res.data?.pagination?.totalPages || 0,
+            };
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.message || err.message);
         }
@@ -127,13 +134,11 @@ export const getPlotById = createAsyncThunk(
             const res = await axiosInstance.get(`/plots/getPlot/${id}`);
 
             if (!res.data || !res.data.data) {
-                // agar response me data hi nahi to 404 ki tarah treat kro
                 return rejectWithValue("Plot not found");
             }
 
             return res.data.data;
         } catch (err: any) {
-            // 404 aaya to bhi reject karke handle karenge
             return rejectWithValue(
                 err.response?.data?.message || err.message || "Plot not found"
             );
@@ -191,13 +196,14 @@ const plotSlice = createSlice({
             })
             .addCase(fetchPlots.fulfilled, (state, action) => {
                 state.loading = false;
+                // ✅ Now correctly mapped: { plots: [...], total: 39, totalPages: 4 }
                 state.plots = action.payload.plots || [];
                 state.total = action.payload.total || 0;
                 state.totalPages = action.payload.totalPages || 0;
             })
             .addCase(fetchPlots.rejected, (state, action) => {
                 state.loading = false;
-                state.plots = []; // ❌ clear plots on error
+                state.plots = [];
                 state.error = action.payload as string;
             })
 
@@ -231,7 +237,7 @@ const plotSlice = createSlice({
             .addCase(getPlotById.pending, (state) => {
                 state.loading = true;
                 state.error = null;
-                state.currentPlot = null; // ✅ always clear before fetch
+                state.currentPlot = null;
             })
             .addCase(
                 getPlotById.fulfilled,
@@ -244,7 +250,7 @@ const plotSlice = createSlice({
             .addCase(getPlotById.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.currentPlot = null; // ✅ clear on error
+                state.currentPlot = null;
             })
 
             // updatePlot

@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import BookingModal from './BookingModal';
 import BookingTable from '../Common/BookingTable';
+import { API_BASE_URL } from '../../../libs/api';
 
 interface BookingData {
     id: number;
@@ -206,7 +207,7 @@ const BookingComponent: React.FC = () => {
     const [selectedCreatedBy, setSelectedCreatedBy] = useState("");
     const [selectedActivity, setSelectedActivity] = useState('');
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 
     useEffect(() => {
         const tabFromUrl = searchParams.get('tab');
@@ -259,7 +260,7 @@ const BookingComponent: React.FC = () => {
             queryParams.append('page', currentPage.toString());
             queryParams.append('limit', pageSize.toString());
 
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/bookings/getAllBookings?${queryParams.toString()}`;
+            const apiUrl = `${API_BASE_URL}/bookings/getAllBookings?${queryParams.toString()}`;
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -483,7 +484,7 @@ const BookingComponent: React.FC = () => {
                 }
 
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/bookings/deleteBooking/${id}`,
+                    `${API_BASE_URL}/bookings/deleteBooking/${id}`,
                     {
                         method: 'DELETE',
                         headers: buildHeaders(true),

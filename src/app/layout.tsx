@@ -48,6 +48,7 @@ import "./globals.css";
 
 import LayoutClient from "./LayoutClient";
 import { NotificationProvider } from "./components/NotificationProvider";
+import ScrollToTop from "../app/components/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -93,6 +94,9 @@ export default function RootLayout({
         <NotificationProvider>
           <LayoutClient>{children}</LayoutClient>
         </NotificationProvider>
+
+        {/* Scroll to top button */}
+        <ScrollToTop />
       </body>
     </html>
   );
