@@ -41,7 +41,7 @@ interface PaginationInfo {
 
 const OnlineCollectionPage: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const role = useSelector((state: RootState) => state.auth.role);
+    const role = useSelector((state: RootState) => state?.auth?.role);
 
     const isAdmin = role === 'Admin';
     const isAccountant = role === 'Accountant';
