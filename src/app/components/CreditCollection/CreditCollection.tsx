@@ -120,7 +120,6 @@ const CreditCollectionPage: React.FC = () => {
         }
     }, []);
 
-    // Create new credit collection
     const createCreditCollection = async (formData: any) => {
         const token = getAuthToken();
         if (!token) {
@@ -132,7 +131,7 @@ const CreditCollectionPage: React.FC = () => {
             const payload = {
                 projectId: Number(formData.projectId),
                 plotId: Number(formData.plotId),
-                userId: Number(formData.userId),     // employeeId goes as userId
+                userId: Number(formData.userId),   
                 amount: Number(formData.amount),
             };
 
@@ -300,7 +299,7 @@ const CreditCollectionPage: React.FC = () => {
 
                 const date = new Date(row.createdAt);
 
-                // ⏱️ 5 hours 30 minutes minus
+              
                 date.setHours(date.getHours() - 5);
                 date.setMinutes(date.getMinutes() - 30);
 

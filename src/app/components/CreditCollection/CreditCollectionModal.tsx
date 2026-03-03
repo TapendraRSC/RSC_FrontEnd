@@ -46,7 +46,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Dropdown options (id + name)
+
     const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
     const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
     const [plotOptions, setPlotOptions] = useState<PlotOption[]>([]);
@@ -228,7 +228,7 @@ const CreditCollectionModal: React.FC<CreditCollectionModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             if (currentData) {
-                // Edit mode
+
                 reset({
                     projectId: currentData.projectId || '',
                     plotId: currentData.plotId || '',

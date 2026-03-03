@@ -183,7 +183,7 @@ const OnlineCollectionPage: React.FC = () => {
             let response;
 
             if (currentRecord) {
-                // Edit — only amount & transactionId
+              
                 const payload = {
                     amount: Number(formData.amount),
                     transactionId: formData.transaction_id,

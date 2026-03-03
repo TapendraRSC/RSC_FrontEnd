@@ -7,7 +7,7 @@ import { addPlot, deletePlot, fetchPlots, updatePlot, uploadPlotData } from "../
 import PlotModal from "../PlotModal";
 import CustomTable from "../../components/Common/CustomTable";
 import DeleteConfirmationModal from "../../components/Common/DeleteConfirmationModal";
-import UploadPreviewModal from "../../components/Common/UploadPreviewModal";
+import PlotUploadPreviewModal from "../../components/Common/PlotUploadPreviewModal";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
@@ -142,17 +142,29 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             maxWidth: 200,
             showTooltip: true,
             sortable: true,
-            render: (row: any) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'Available'
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                    : row.status === 'Sold'
-                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                    }`}>
-                    {row.status}
-                </span>
-            )
-        },
+            render: (row: any) => {
+                const status = row.status?.toLowerCase();
+
+                const statusClasses =
+                    status === "available"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        : status === "sold"
+                            ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                            : status === "hold"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                : status === "company reserved"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+
+                return (
+                    <span
+                        className={`whitespace-nowrap inline-block px-2 py-1 rounded-full text-xs font-medium ${statusClasses}`}
+                    >
+                        {row.status}
+                    </span>
+                );
+            },
+        }
     ];
 
     const { permissions: rolePermissions } = useSelector(
@@ -233,7 +245,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
     };
 
     const handleUploadClick = () => {
-        fileInputRef.current?.click();
+        setIsUploadPreviewOpen(true);
     };
 
     const processCSV = (file: File): Promise<any[]> => {
@@ -289,37 +301,10 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
         });
     };
 
-    const handleFileSelect = async (event: any) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        const fileExtension = file.name.split('.').pop()?.toLowerCase();
-        if (!['csv', 'xlsx', 'xls'].includes(fileExtension || '')) {
-            toast.error('Please upload a CSV or Excel file');
-            return;
-        }
-        try {
-            let parsedData: any[] = [];
-            if (fileExtension === 'csv') {
-                parsedData = await processCSV(file);
-            } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-                parsedData = await processExcel(file);
-            }
-            if (parsedData.length === 0) {
-                toast.error('No data found in the file');
-                return;
-            }
-            setPreviewData(parsedData);
-            setSelectedFile(file);
-            setFileName(file.name);
-            setIsUploadPreviewOpen(true);
-        } catch (error) {
-            console.error('File parsing error:', error);
-            toast.error(error instanceof Error ? error.message : 'Failed to process file');
-        } finally {
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
+    // ✅ CHANGED: Ab ye modal ke andar se call hoga
+    const handleFileSelect = (file: File) => {
+        setSelectedFile(file);
+        setFileName(file.name);
     };
 
     const handleConfirmUpload = async () => {
@@ -538,14 +523,6 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                 </div>
             </div>
 
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileSelect}
-                className="hidden"
-            />
-
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
 
                 {/* Mobile Grid View */}
@@ -677,25 +654,25 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             </div>
 
             {/* Modals */}
-          <PlotModal
-    isOpen={isModalOpen}
-    onClose={() => setIsModalOpen(false)}
-    onSavePlot={handleSavePlot}
-    isLoading={loading}
-    currentPlot={selectedPlot}
-    projectTitle={plots[0]?.projectTitle}  // ✅ yeh add karo
-/>
+            <PlotModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSavePlot={handleSavePlot}
+                isLoading={loading}
+                currentPlot={selectedPlot}
+                projectTitle={plots[0]?.projectTitle}
+            />
 
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onDelete={confirmDelete}
                 title="Confirm Deletion"
-                message={`Are you sure you want to delete plot number "${plotToDelete?.plotNumber}"?`}
+                message={`Are you sure you want to delete plot number "${plotToDelete?.plotNumber}"? If this plot is marked as Hold, Sold, or Booked, the related booking details will also be permanently deleted.`}
                 Icon={Trash2}
             />
 
-            <UploadPreviewModal
+            <PlotUploadPreviewModal
                 isOpen={isUploadPreviewOpen}
                 onClose={handleClosePreview}
                 onConfirmUpload={handleConfirmUpload}
@@ -704,6 +681,7 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
                 isLoading={uploadLoading}
                 totalRows={previewData.length}
                 onFileSelect={handleFileSelect}
+                projectTitle={plots[0]?.projectTitle}
             />
 
             <ExportModal
