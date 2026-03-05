@@ -1346,6 +1346,27 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
     }));
   }, [plots]);
 
+
+  // const plotOptions = useMemo(() => {
+  //   if (!plots || !Array.isArray(plots) || plots.length === 0) {
+  //     return [];
+  //   }
+
+  //   const sortedPlots = [...plots].sort((a: any, b: any) => {
+  //     return Number(a.plotNumber) - Number(b.plotNumber);
+  //   });
+
+  //   return sortedPlots.map((p: any) => ({
+  //     label: `Plot ${p.plotNumber} - ${p.plotSize} Sq.Yd (${p.status || "Available"})`,
+  //     value: p.id,
+  //     disabled:
+  //       p.status?.toLowerCase() === "booked" ||
+  //       p.status?.toLowerCase() === "hold" ||
+  //       p.status?.toLowerCase() === "sold" ||
+  //       p.status?.toLowerCase() === "company reserved",
+  //   }));
+  // }, [plots]);
+
   const availablePlotsCount = useMemo(() => {
     if (!plots || !Array.isArray(plots)) return 0;
     return plots.filter(
@@ -1676,6 +1697,7 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
                 Phone <span className="text-red-500">*</span>
               </label>
               <input
+
                 type="tel"
                 {...register("phone", {
                   required: "Phone number is required",
@@ -1684,7 +1706,9 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
                 className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700"
                 placeholder="9876543210"
                 maxLength={13}
-                disabled={leadDetailsLoading}
+                // disabled={leadDetailsLoading}
+                disabled={true}
+
               />
               {errors.phone && <p className="text-red-500 text-xs mt-0.5">{errors.phone.message}</p>}
             </div>
@@ -1845,21 +1869,37 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
 
             {/* Gender */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Gender <span className="text-red-500">*</span>
+              </label>
+
               <Controller
                 name="gender"
                 control={control}
+                rules={{
+                  validate: (value) =>
+                    value && value.trim() !== "" || "Gender is required",
+                }}
                 render={({ field }) => (
                   <CommonDropdown
                     options={genderOptions}
-                    selected={genderOptions.find((opt) => opt.value === field.value) || null}
+                    selected={
+                      genderOptions.find((opt) => opt.value === field.value) || null
+                    }
                     onChange={(val: any) => field.onChange(val?.value || "")}
                     placeholder="Select Gender"
                     allowClear
                   />
                 )}
               />
+
+              {errors.gender && (
+                <p className="text-red-500 text-xs mt-0.5">
+                  {errors.gender.message}
+                </p>
+              )}
             </div>
+
 
             {/* Transaction ID */}
             <div className="space-y-1.5">

@@ -81,6 +81,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
     const [validationError, setValidationError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [errorFileUrl, setErrorFileUrl] = useState<string>("");
 
     const BASE_URL = getBaseUrl();
 
@@ -352,6 +353,11 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
             } else {
                 const results = result?.results || result?.data?.results;
 
+                // ✅ ERROR FILE URL SET KARO
+                if (result?.errorFileUrl) {
+                    setErrorFileUrl(result.errorFileUrl);
+                }
+
                 if (results?.successful > 0 && results?.failed > 0) {
                     toast.warning(`Partial success: ${results.successful} uploaded, ${results.failed} failed`);
                     onUploadSuccess?.();
@@ -412,8 +418,9 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
     };
 
     const handleDownloadFailedLeads = () => {
-        if (failedLeadsFileUrl) {
-            window.open(failedLeadsFileUrl, '_blank');
+        const url = errorFileUrl || failedLeadsFileUrl;
+        if (url) {
+            window.open(url, '_blank');
         }
     };
 
@@ -424,6 +431,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
         setIsValidHeaders(false);
         setValidationError("");
         setSelectedFile(null);
+        setErrorFileUrl("");
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -687,7 +695,7 @@ const UploadCollection: React.FC<UploadCollectionProps> = ({
                         <X className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
                 </div>
-                {failedLeadsFileUrl && (
+                {(failedLeadsFileUrl || errorFileUrl) && (
                     <div className="px-4 py-3 sm:px-6 sm:py-4 bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-700">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex items-center gap-2 sm:gap-3">

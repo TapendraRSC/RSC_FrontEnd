@@ -257,8 +257,11 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ data, onClose }) => {
                                     <tr>
                                         <td style={{ padding: "8px", border: "1px solid #333", backgroundColor: "#f9f9f9", fontWeight: "bold" }}>Booking Date</td>
                                         <td style={{ padding: "8px", border: "1px solid #333" }}>{data.bookingDate}</td>
-                                        {/* <td style={{ padding: "8px", border: "1px solid #333", backgroundColor: "#f9f9f9", fontWeight: "bold" }}>Payment Condition :</td>
-                                        <td style={{ padding: "8px", border: "1px solid #333" }}>{data.paymentCondition}</td> */}
+                                        <td style={{ padding: "8px", border: "1px solid #333", backgroundColor: "#f9f9f9", fontWeight: "bold", whiteSpace: "nowrap" }}>Payment Condition :</td>
+                                        <td style={{ padding: "8px", border: "1px solid #333" }}>
+                                            {/* {data.paymentCondition} */}
+                                            45 Days
+                                        </td>
                                     </tr>
 
                                     {/* <tr>
