@@ -1938,7 +1938,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
     const { list: allPermissions } = useSelector((state: RootState) => state.permissions);
     const role = useSelector((state: RootState) => state.auth.role);
 
-    const isAdmin = role === 'Admin' || role === "accountant";
+    const isAdmin = role === 'Admin' || role === "Accountant";
 
     useEffect(() => {
         if (projectsFetchedRef.current) return;
