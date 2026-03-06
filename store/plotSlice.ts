@@ -49,6 +49,7 @@ export const fetchPlots = createAsyncThunk(
             search?: string;
             sortBy?: string;
             sortOrder?: string;
+            status?: string;
         },
         { rejectWithValue }
     ) => {
@@ -60,6 +61,7 @@ export const fetchPlots = createAsyncThunk(
                 search,
                 sortBy,
                 sortOrder,
+                status,
             } = params || {};
 
             const res = await axiosInstance.get(`/plots/getAllPlots`, {
@@ -70,6 +72,7 @@ export const fetchPlots = createAsyncThunk(
                     search: search || undefined,
                     sortBy,
                     sortOrder,
+                    status: status || undefined,
                 },
             });
 

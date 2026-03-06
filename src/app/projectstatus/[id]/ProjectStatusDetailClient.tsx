@@ -15,6 +15,30 @@ import { fetchPermissions } from "../../../../store/permissionSlice";
 import { fetchRolePermissionsSidebar } from "../../../../store/sidebarPermissionSlice";
 import ExportModal from "../../components/Common/ExportModal";
 
+const STATUS_TABS = [
+    { label: "All", value: "all" },
+    { label: "Available", value: "available" },
+    { label: "Hold", value: "hold" },
+    { label: "Sold", value: "sold" },
+    { label: "Company Reserved", value: "company reserved" },
+];
+
+const STATUS_ACTIVE_CLASS: Record<string, string> = {
+    all: "bg-gray-800 text-white dark:bg-gray-100 dark:text-gray-900",
+    available: "bg-green-500 text-white",
+    hold: "bg-yellow-500 text-white",
+    sold: "bg-red-500 text-white",
+    "company reserved": "bg-blue-500 text-white",
+};
+
+const STATUS_INACTIVE_CLASS: Record<string, string> = {
+    all: "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600",
+    available: "bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400",
+    hold: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400",
+    sold: "bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400",
+    "company reserved": "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400",
+};
+
 export default function ProjectStatusDetailClient({ params }: { params: any }) {
     const { id } = params;
 
@@ -43,7 +67,8 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
     const [fileName, setFileName] = useState("");
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-    // ✅ Fixed: projectId: id  (was: projectId: params)
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+
     useEffect(() => {
         if (!id) return;
         dispatch(fetchPlots({
@@ -52,9 +77,10 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             limit: pageSize,
             search: searchValue,
             sortBy: sortConfig?.key,
-            sortOrder: sortConfig?.direction
+            sortOrder: sortConfig?.direction,
+            status: statusFilter !== "all" ? statusFilter : undefined,
         }));
-    }, [id, currentPage, pageSize, searchValue, sortConfig, dispatch]);
+    }, [id, currentPage, pageSize, searchValue, sortConfig, statusFilter, dispatch]);
 
     // ✅ Columns match API response fields exactly:
     // plotNumber, plotSize, price, onlinePrice, creditPoint, city, facing, status, projectTitle
@@ -214,7 +240,12 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
         if (plotToDelete) {
             const result = await dispatch(deletePlot(plotToDelete.id));
             if (deletePlot.fulfilled.match(result)) {
-                dispatch(fetchPlots({ projectId: id, page: currentPage, limit: pageSize }));
+                dispatch(fetchPlots({
+                    projectId: id,
+                    page: currentPage,
+                    limit: pageSize,
+                    status: statusFilter !== "all" ? statusFilter : undefined,
+                }));
             }
         }
         setIsDeleteModalOpen(false);
@@ -240,7 +271,12 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
         }
         if (updatePlot.fulfilled.match(result) || addPlot.fulfilled.match(result)) {
             setIsModalOpen(false);
-            dispatch(fetchPlots({ projectId: id, page: currentPage, limit: pageSize }));
+            dispatch(fetchPlots({
+                projectId: id,
+                page: currentPage,
+                limit: pageSize,
+                status: statusFilter !== "all" ? statusFilter : undefined,
+            }));
         }
     };
 
@@ -301,7 +337,6 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
         });
     };
 
-    // ✅ CHANGED: Ab ye modal ke andar se call hoga
     const handleFileSelect = (file: File) => {
         setSelectedFile(file);
         setFileName(file.name);
@@ -317,7 +352,12 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             if (uploadPlotData.fulfilled.match(result)) {
                 toast.success("File uploaded successfully!");
                 setIsUploadPreviewOpen(false);
-                dispatch(fetchPlots({ projectId: id, page: currentPage, limit: pageSize }));
+                dispatch(fetchPlots({
+                    projectId: id,
+                    page: currentPage,
+                    limit: pageSize,
+                    status: statusFilter !== "all" ? statusFilter : undefined,
+                }));
                 setSelectedFile(null);
                 setPreviewData([]);
                 setFileName("");
@@ -524,6 +564,29 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
             </div>
 
             <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+
+                {/* ✅ Status Filter Tabs — visible on both mobile & desktop */}
+                <div className="flex gap-2 flex-wrap mb-4">
+                    {STATUS_TABS.map((tab) => {
+                        const isActive = statusFilter === tab.value;
+                        return (
+                            <button
+                                key={tab.value}
+                                onClick={() => {
+                                    setStatusFilter(tab.value);
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                                    ${isActive
+                                        ? STATUS_ACTIVE_CLASS[tab.value]
+                                        : STATUS_INACTIVE_CLASS[tab.value]
+                                    }`}
+                            >
+                                {tab.label}
+                            </button>
+                        );
+                    })}
+                </div>
 
                 {/* Mobile Grid View */}
                 <div className={`lg:hidden ${viewMode === 'grid' ? 'block' : 'hidden'}`}>
