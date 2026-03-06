@@ -1938,7 +1938,9 @@ const BookingTable: React.FC<BookingTableProps> = ({
     const { list: allPermissions } = useSelector((state: RootState) => state.permissions);
     const role = useSelector((state: RootState) => state.auth.role);
 
-    const isAdmin = role === 'Admin' || role === "Accountant";
+    const isAdmin =
+        role?.toLowerCase() === 'admin' ||
+        role?.toLowerCase() === 'accountant';
 
     useEffect(() => {
         if (projectsFetchedRef.current) return;
@@ -2113,8 +2115,8 @@ const BookingTable: React.FC<BookingTableProps> = ({
     });
 
     const handleBookingAction = async (id: number, action: 'approve' | 'reject') => {
-        if (role !== 'Admin') {
-            toast.error("Only Admin can perform this action");
+        if (role?.toLowerCase() !== 'admin' && role?.toLowerCase() !== 'accountant') {
+            toast.error("Only Admin or Accountant can perform this action");
             return;
         }
 
@@ -2509,7 +2511,9 @@ const BookingTable: React.FC<BookingTableProps> = ({
                         leads.map(booking => {
                             const formattedBooking = formatBookingData(booking);
                             const isHovered = hoveredId === booking.id;
-                            const isAdmin = role === 'Admin';
+                            const isCardAdmin =
+                                role?.toLowerCase() === 'admin' ||
+                                role?.toLowerCase() === 'accountant';
                             const isPending = booking.status?.toLowerCase() === 'pending';
                             const isConfirmed = booking.status?.toLowerCase() === 'confirmed';
                             const isRejected = booking.status?.toLowerCase() === 'rejected';
@@ -2562,7 +2566,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                 </h3>
                                             </div>
 
-                                            {isHovered && isAdmin && isPending && (
+                                            {isHovered && isCardAdmin && isPending && (
                                                 <div className="flex items-center gap-2 self-end sm:self-start animate-in fade-in duration-200">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleBookingAction(booking.id, 'approve'); }}
