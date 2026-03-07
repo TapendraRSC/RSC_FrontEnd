@@ -264,12 +264,12 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ data, onClose }) => {
                                         </td>
                                     </tr>
 
-                                    {/* <tr>
+                                    <tr>
                                         <td style={{ padding: "8px", border: "1px solid #333", backgroundColor: "#f9f9f9", fontWeight: "bold" }}>Address</td>
                                         <td style={{ padding: "8px", border: "1px solid #333" }} colSpan={3}>
                                             {data.address}
                                         </td>
-                                </tr> */}
+                                    </tr>
                                 </tbody>
                             </table>
 

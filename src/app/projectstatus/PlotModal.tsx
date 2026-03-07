@@ -2,7 +2,7 @@
 
 import { Controller, useForm } from "react-hook-form";
 import { X, Plus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import FormInput from "../components/Common/FormInput";
 import CommonDropdown from "../components/Common/CommonDropdown";
 
@@ -31,6 +31,14 @@ const facingOptions = [
     { id: 2, label: "South", value: "south" },
     { id: 3, label: "East", value: "east" },
     { id: 4, label: "West", value: "west" },
+];
+
+const STATUS_OPTIONS = [
+    { label: "Available", value: "available" },
+    { label: "Hold", value: "hold" },
+    { label: "Sold", value: "sold" },
+    { label: "Booked", value: "booked" },
+    { label: "Company Reserved", value: "company reserved" },
 ];
 
 const defaultValues: PlotFormData = {
@@ -63,15 +71,27 @@ export default function PlotModal({
 
     const isEditMode = !!currentPlot;
 
-    // ✅ Add mode = "Available", Edit mode = API value — both disabled
-    const displayStatus = isEditMode ? (currentPlot?.status || "—") : "Available";
+    const [status, setStatus] = useState<string>("available");
+
+    const isSold = status?.toLowerCase() === "sold";
+
     const displayProjectTitle = isEditMode ? currentPlot?.projectTitle : projectTitle || "—";
+
+    useEffect(() => {
+        if (isOpen) {
+            if (isEditMode && currentPlot?.status) {
+                setStatus(currentPlot.status.toLowerCase());
+            } else {
+                setStatus("available");
+            }
+        }
+    }, [isOpen, currentPlot, isEditMode]);
 
     useEffect(() => {
         if (currentPlot) {
             reset({
                 plotNumber: currentPlot.plotNumber || "",
-                facing: currentPlot.facing || undefined,
+                facing: currentPlot.facing?.toLowerCase() || undefined,
                 plotSize: currentPlot.plotSize || "",
                 price: currentPlot.price || "",
                 onlinePrice: currentPlot.onlinePrice || "",
@@ -87,6 +107,7 @@ export default function PlotModal({
         if (!isOpen) {
             reset(defaultValues);
             clearErrors();
+            setStatus("available");
         }
     }, [isOpen, reset, clearErrors]);
 
@@ -99,13 +120,14 @@ export default function PlotModal({
             onlinePrice: data.onlinePrice,
             creditPoint: Number(data.creditPoint),
             city: data.city || null,
-            status: displayStatus,
+            status: status,
         });
     };
 
     const handleClose = () => {
         reset(defaultValues);
         clearErrors();
+        setStatus("available");
         onClose();
     };
 
@@ -115,7 +137,7 @@ export default function PlotModal({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 
-                {/* Header */}
+
                 <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-t-xl">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                         {isEditMode ? "Edit Plot" : "Add New Plot"}
@@ -130,11 +152,9 @@ export default function PlotModal({
 
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6">
                     <div className="space-y-6">
-
-                        {/* Plot Number + City */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                            {/* Plot No — editable in add, disabled in edit */}
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     Plot Number {!isEditMode && <span className="text-red-500">*</span>}
@@ -165,33 +185,6 @@ export default function PlotModal({
                                 )}
                             </div>
 
-                            {/* City — editable in add, disabled in edit */}
-                            {/* {isEditMode ? (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                                        City
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={currentPlot?.city || "—"}
-                                        disabled
-                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm
-                                                   bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                                    />
-                                </div>
-                            ) : (
-                                <FormInput<PlotFormData>
-                                    name="city"
-                                    label="City"
-                                    register={register}
-                                    errors={errors}
-                                    clearErrors={clearErrors}
-                                    placeholder="Enter city"
-                                    className="dark:bg-gray-800 dark:text-gray-100"
-                                />
-                            )} */}
-
-
                             <FormInput<PlotFormData>
                                 name="city"
                                 label="City"
@@ -201,11 +194,9 @@ export default function PlotModal({
                                 placeholder="Enter city"
                                 className="dark:bg-gray-800 dark:text-gray-100"
                             />
-
-
                         </div>
 
-                        {/* Plot Size + Price */}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormInput<PlotFormData>
                                 name="plotSize"
@@ -233,7 +224,7 @@ export default function PlotModal({
                             />
                         </div>
 
-                        {/* Online Price + Credit Point */}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormInput<PlotFormData>
                                 name="onlinePrice"
@@ -260,10 +251,10 @@ export default function PlotModal({
                             />
                         </div>
 
-                        {/* Facing + Status */}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                            {/* Facing — always editable */}
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     Facing
@@ -284,23 +275,46 @@ export default function PlotModal({
                                 />
                             </div>
 
-                            {/* Status — always disabled */}
-                            {/* Add = "Available", Edit = API value */}
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     Status
                                 </label>
-                                <input
-                                    type="text"
-                                    value={displayStatus}
-                                    disabled
-                                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm
-                                               bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                                />
+
+                                {isSold ? (
+
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value="Sold"
+                                            disabled
+                                            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm
+                                                       bg-gray-100 dark:bg-gray-800 text-red-500 dark:text-red-400 cursor-not-allowed font-medium"
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
+                                            🔒 Locked
+                                        </span>
+                                    </div>
+                                ) : (
+
+                                    <select
+                                        value={status}
+                                        onChange={(e) => setStatus(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
+                                                   bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200
+                                                   focus:ring-2 focus:ring-orange-500 focus:border-transparent cursor-pointer"
+                                    >
+                                        {STATUS_OPTIONS.map((item) => (
+                                            <option key={item.value} value={item.value}>
+                                                {item.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
                             </div>
                         </div>
 
-                        {/* Project — always disabled */}
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                 Project
@@ -316,7 +330,7 @@ export default function PlotModal({
 
                     </div>
 
-                    {/* Buttons */}
+
                     <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
                         <button
                             type="button"

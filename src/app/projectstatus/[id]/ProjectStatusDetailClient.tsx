@@ -20,6 +20,7 @@ const STATUS_TABS = [
     { label: "Available", value: "available" },
     { label: "Hold", value: "hold" },
     { label: "Sold", value: "sold" },
+    { label: "Booked", value: "booked" },
     { label: "Company Reserved", value: "company reserved" },
 ];
 
@@ -28,6 +29,7 @@ const STATUS_ACTIVE_CLASS: Record<string, string> = {
     available: "bg-green-500 text-white",
     hold: "bg-yellow-500 text-white",
     sold: "bg-red-500 text-white",
+    booked: "bg-purple-500 text-white",
     "company reserved": "bg-blue-500 text-white",
 };
 
@@ -36,6 +38,7 @@ const STATUS_INACTIVE_CLASS: Record<string, string> = {
     available: "bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400",
     hold: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400",
     sold: "bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400",
+    booked: "bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-300",
     "company reserved": "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400",
 };
 
@@ -173,14 +176,16 @@ export default function ProjectStatusDetailClient({ params }: { params: any }) {
 
                 const statusClasses =
                     status === "available"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
                         : status === "sold"
-                            ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                            ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300"
                             : status === "hold"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300"
                                 : status === "company reserved"
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+                                    ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                                    : status === "booked"
+                                        ? "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300"
+                                        : "bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300";
 
                 return (
                     <span
