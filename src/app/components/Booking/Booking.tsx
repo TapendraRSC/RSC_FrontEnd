@@ -255,7 +255,12 @@ const BookingComponent: React.FC = () => {
     const handleRefetch = useCallback(() => { fetchBookingsData(); }, [fetchBookingsData]);
 
     const handleActivityChange = (activityStatus: string) => { setSelectedActivity(activityStatus); setCurrentPage(1); };
-    const handleSearch = (term: string) => { setSearchTerm(term); setCurrentPage(1); };
+    // const handleSearch = (term: string) => { setSearchTerm(term); setCurrentPage(1); };
+    const handleSearch = (term: string) => {
+        const cleanedTerm = term.replace(/\s+/g, " ").trim();
+        setSearchTerm(cleanedTerm);
+        setCurrentPage(1);
+    };
     const handleDateChange = (newFromDate: string, newToDate: string) => { setFromDate(newFromDate); setToDate(newToDate); setCurrentPage(1); };
     const handleProjectChange = (projectId: string) => { setSelectedProject(projectId); setCurrentPage(1); };
     const handleAssignedToChange = (assignedTo: string) => { setSelectedAssignedTo(assignedTo); setCurrentPage(1); };

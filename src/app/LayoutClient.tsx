@@ -3,9 +3,8 @@
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, createContext, useContext } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ThemeProvider } from "next-themes";
 import { useDispatch, useSelector } from "react-redux";
 
 import Sidebar, { SidebarProvider, useSidebar } from "./components/Layouts/Sidebar";
@@ -14,7 +13,63 @@ import ReduxProvider from "./ReduxProvider";
 import { AppDispatch, RootState } from "../../store/store";
 import { fetchRolePermissionsSidebar } from "../../store/sidebarPermissionSlice";
 
-// URL to pageName mapping - MUST MATCH EXACTLY with backend pageName
+/* ═══════════════════════════════════════════════════
+   Custom Theme Provider — replaces next-themes
+   ═══════════════════════════════════════════════════ */
+const ThemeContext = createContext<{
+    theme: string;
+    setTheme: (theme: string) => void;
+}>({
+    theme: 'dark',
+    setTheme: () => { },
+});
+
+export const useTheme = () => useContext(ThemeContext);
+
+function CustomThemeProvider({ children }: { children: React.ReactNode }) {
+    const [theme, setThemeState] = useState<string>('dark');
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        const stored = localStorage.getItem('theme') || 'dark';
+        setThemeState(stored);
+        if (stored === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+        }
+    }, []);
+
+    const setTheme = (newTheme: string) => {
+        setThemeState(newTheme);
+        localStorage.setItem('theme', newTheme);
+        if (newTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+        }
+    };
+
+    if (!mounted) {
+        return (
+            <ThemeContext.Provider value={{ theme: 'dark', setTheme }}>
+                {children}
+            </ThemeContext.Provider>
+        );
+    }
+
+    return (
+        <ThemeContext.Provider value={{ theme, setTheme }}>
+            {children}
+        </ThemeContext.Provider>
+    );
+}
+
 const routeToPageNameMap: { [key: string]: string } = {
     '/': 'Dashboard',
     '/users': 'User Management',
@@ -38,7 +93,6 @@ const routeToPageNameMap: { [key: string]: string } = {
     '/paymentplatforms': 'Payment Platforms',
 };
 
-// All available routes in PRIORITY order for redirect check
 const availableRoutes = [
     { href: '/', pageName: 'Dashboard' },
     { href: '/users', pageName: 'User Management' },
@@ -62,7 +116,6 @@ const availableRoutes = [
     { href: '/paymentplatforms', pageName: 'Payment Platforms' },
 ];
 
-// Role-based default routes mapping
 const roleDefaultRoutes: { [key: string]: string } = {
     'admin': '/',
     'bulk land role': '/bulkland',
@@ -75,7 +128,7 @@ const publicRoutes = ['/login', '/register', '/forgot-password', '/support'];
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
     return (
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <CustomThemeProvider>
             <ReduxProvider>
                 <LayoutWrapper>{children}</LayoutWrapper>
                 <ToastContainer
@@ -85,7 +138,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                     theme="dark"
                 />
             </ReduxProvider>
-        </ThemeProvider>
+        </CustomThemeProvider>
     );
 }
 
@@ -147,11 +200,9 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
         return roleDefaultRoutes[normalizedRole] || null;
     };
 
-    // LOGIC UPDATED: Checks one by one based on your priority list
     const getFirstAvailableRoute = (permissions: any[]): string | null => {
         if (!permissions || permissions.length === 0) return null;
 
-        // 1. Check Role Default first
         const userRole = getUserRole();
         const roleDefault = getRoleDefaultRoute(userRole);
         if (roleDefault) {
@@ -161,11 +212,8 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
             }
         }
 
-        // 2. Fallback: Loop through availableRoutes in the specific order you requested
-        // This will check '/', then '/users', then '/roles', and so on...
         for (const route of availableRoutes) {
             if (hasViewPermission(route.pageName, permissions)) {
-                console.log(`[Auth] Redirecting to first allowed priority route: ${route.href}`);
                 return route.href;
             }
         }
@@ -222,7 +270,6 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
         if (rolePermissions?.permissions) {
             const pageName = routeToPageNameMap[pathname];
 
-            // If it's a route we don't track permissions for, let them in
             if (!pageName) {
                 setPermissionChecked(true);
                 setIsUnauthorized(false);
@@ -258,44 +305,18 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
     if (!mounted) return null;
 
-    // if (isCheckingAuth || isRedirecting || (!permissionChecked && !isAuthRoute)) {
-    //     return (
-    //         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
-    //             <div className="flex flex-col items-center gap-4">
-    //                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
-    //                 <p className="text-gray-600 dark:text-gray-400">
-    //                     {isRedirecting ? 'Redirecting...' : 'Verifying Permissions...'}
-    //                 </p>
-    //             </div>
-    //         </div>
-    //     );
-    // }
-
     if (isCheckingAuth || isRedirecting || (!permissionChecked && !isAuthRoute)) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-black dark:via-gray-900 dark:to-black">
-                <div className="flex flex-col items-center gap-6">
-
-                    {/* Loader */}
-                    <div className="relative">
-                        <div className="h-16 w-16 rounded-full border-4 border-orange-500/30"></div>
-                        <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
-                    </div>
-
-                    {/* Text */}
-                    <div className="text-center">
-                        <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                            {isRedirecting ? 'Redirecting you safely' : 'Verifying your access'}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Please wait a moment...
-                        </p>
-                    </div>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                        {isRedirecting ? 'Redirecting...' : 'Verifying Permissions...'}
+                    </p>
                 </div>
             </div>
         );
     }
-
 
     if (isUnauthorized) return <NotFoundPage />;
     if (isAuthRoute) return <main className="flex-1">{children}</main>;
@@ -315,7 +336,7 @@ function NotFoundPage() {
     return (
         <div className="relative flex min-h-screen items-center justify-center bg-gray-900">
             <div className="text-center">
-                <p className="mt-5 text-base text-white">You Don't Have Access To This Page.</p>
+                <p className="mt-5 text-base text-white">You Don&apos;t Have Access To This Page.</p>
                 <button
                     onClick={() => router.back()}
                     className="mt-7 px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold"
@@ -328,8 +349,15 @@ function NotFoundPage() {
 }
 
 function MainContent({ children }: { children: React.ReactNode }) {
+    const { collapsed } = useSidebar();
+
     return (
-        <main className="lg:ml-[260px]">
+        <main
+            className={`
+        transition-all duration-300 ease-out
+        ${collapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'}
+      `}
+        >
             <Header />
             <div className="p-4 lg:p-6">{children}</div>
         </main>
