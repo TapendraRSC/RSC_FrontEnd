@@ -82,6 +82,7 @@ interface Booking {
     payment_platform_id: number | string;
     paymentPlatformName?: string;
     cpName?: string;
+    bankName?: string;
     remark?: string;
     createdBy: string;
     assignedUserName?: string;
@@ -533,6 +534,7 @@ const getBookingColumns = () => {
         { label: 'Transaction ID', accessor: 'payment_reference', sortable: true, minWidth: 120 },
         { label: 'Transaction Platform', accessor: 'paymentPlatformName', sortable: true, minWidth: 120 },
         { label: 'CP Name', accessor: 'cpName', sortable: true, minWidth: 120 },
+        { label: 'Bank Name', accessor: 'bankName', sortable: true, minWidth: 120 },
         { label: 'Remarks', accessor: 'remark', sortable: true, minWidth: 120 },
         { label: 'Lead Id', accessor: 'leadId', sortable: true, minWidth: 120 },
         { label: 'Project', accessor: 'projectName', sortable: true, minWidth: 180 },
@@ -716,7 +718,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                     {
                         paymentBy: booking.paymentPlatformName || 'NEFT/IMPS/RTGS/CHEQUE',
                         transactionDate: formatDateForReceipt(booking.createdAt),
-                        bank: 'None',
+                        bank: booking.bankName || 'None',
                         transactionNo: booking.payment_reference || 'N/A',
                         branch: '-',
                         amount: `${formatCurrency(booking.bookingAmount)}`
@@ -807,6 +809,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
         formattedPlotSize: booking.plotSize ? `${booking.plotSize} Sq.Yd` : 'N/A',
         formattedGender: booking.gender || 'N/A',
         cpName: booking.cpName || 'N/A',
+        bankName: booking.bankName || 'N/A',
         remark: booking.remark || 'N/A',
     });
 
@@ -1161,7 +1164,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                 return <td key={`booking-${booking.id}-${accessor}`} className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">{value || 'N/A'}</td>;
                                             })}
                                             <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium flex space-x-1">
-                                                {booking.status?.toLowerCase() === 'rejected' || booking.status?.toLowerCase() === 'confirmed' ? null : (
+                                                {/* {booking.status?.toLowerCase() === 'rejected' || booking.status?.toLowerCase() === 'confirmed' ? null : (
                                                     <>
                                                         {hasEditPermission && onEditLead && (
                                                             <button onClick={() => onEditLead(booking)} className="p-1.5 rounded-full text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors" title="Edit">
@@ -1169,7 +1172,22 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                             </button>
                                                         )}
                                                     </>
-                                                )}
+                                                )} */}
+                                                {booking.status?.toLowerCase() !== 'rejected' &&
+                                                    booking.status?.toLowerCase() !== 'confirmed' &&
+                                                    !booking.approvedByName && (
+                                                        <>
+                                                            {hasEditPermission && onEditLead && (
+                                                                <button
+                                                                    onClick={() => onEditLead(booking)}
+                                                                    className="p-1.5 rounded-full text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    )}
                                                 {isAdmin && booking.status?.toLowerCase() === 'pending' && (
                                                     <div className="flex items-center gap-2 animate-in fade-in duration-200">
                                                         <button
@@ -1186,7 +1204,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                         </button>
                                                     </div>
                                                 )}
-                                                {booking.status?.toLowerCase() === "confirmed" && (
+                                                {/* {booking.status?.toLowerCase() === "confirmed" && (
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => handleDownloadPaymentSlip(booking)}
@@ -1201,7 +1219,26 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                             Welcome Letter
                                                         </button>
                                                     </div>
-                                                )}
+                                                )} */}
+                                                {['confirmed', 'move_to_client', 'become_customer'].includes(
+                                                    booking.status?.toLowerCase()
+                                                ) && (
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => handleDownloadPaymentSlip(booking)}
+                                                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-green-100 text-green-700 hover:bg-green-200 transition"
+                                                            >
+                                                                Payment Slip
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => handleDownloadWelcomeLetter(booking)}
+                                                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                                                            >
+                                                                Welcome Letter
+                                                            </button>
+                                                        </div>
+                                                    )}
                                             </td>
                                         </tr>
                                     );
@@ -1238,6 +1275,14 @@ const BookingTable: React.FC<BookingTableProps> = ({
                             const isPending = booking.status?.toLowerCase() === 'pending';
                             const isConfirmed = booking.status?.toLowerCase() === 'confirmed';
                             const isRejected = booking.status?.toLowerCase() === 'rejected';
+                            const status = booking.status?.toLowerCase();
+
+
+
+                            const canDownload =
+                                status === "confirmed" ||
+                                status === "move_to_client" ||
+                                status === "become_customer";
                             const hasAadharFront = !!booking.aadharCardFrontImage;
                             const hasAadharBack = !!booking.aadharCardBackImage;
                             const hasPanCard = !!booking.panCardNumber && booking.panCardNumber.startsWith('http') && booking.panCardNumber.length > 20;
@@ -1303,7 +1348,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                 </div>
                                             )}
 
-                                            {!isPending && booking.approvedByName && booking.bookingDate && (
+                                            {/* {!isPending && booking.approvedByName && booking.bookingDate && (
                                                 <div className="flex items-center gap-3 opacity-75 text-sm">
                                                     <div className="flex items-center gap-1">
                                                         <User className={`h-4 w-4 ${booking.status?.toLowerCase() === "confirmed" ? "text-green-500" : "text-red-500"}`} />
@@ -1322,6 +1367,49 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                         })}
                                                     </span>
                                                 </div>
+                                            )} */}
+                                            {!isPending && booking.approvedByName && booking.bookingDate && (
+                                                <div className="flex items-center gap-3 opacity-75 text-sm">
+                                                    <div className="flex items-center gap-1">
+                                                        <User
+                                                            className={`h-4 w-4 ${['confirmed', 'move_to_client', 'become_customer'].includes(
+                                                                booking.status?.toLowerCase()
+                                                            )
+                                                                ? "text-green-500"
+                                                                : "text-red-500"
+                                                                }`}
+                                                        />
+
+                                                        <span
+                                                            className={`font-medium ${['confirmed', 'move_to_client', 'become_customer'].includes(
+                                                                booking.status?.toLowerCase()
+                                                            )
+                                                                ? "text-green-700 dark:text-green-300"
+                                                                : "text-red-700 dark:text-red-300"
+                                                                }`}
+                                                        >
+                                                            {['confirmed', 'move_to_client', 'become_customer'].includes(
+                                                                booking.status?.toLowerCase()
+                                                            )
+                                                                ? `Approved By ${booking.approvedByName}`
+                                                                : booking.status?.toLowerCase() === "rejected"
+                                                                    ? `Rejected By ${booking.approvedByName}`
+                                                                    : ""}
+                                                        </span>
+                                                    </div>
+
+                                                    <span className="text-gray-500 dark:text-gray-400">
+                                                        •{" "}
+                                                        {new Date(booking.bookingDate).toLocaleString("en-IN", {
+                                                            day: "2-digit",
+                                                            month: "short",
+                                                            year: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                            hour12: true,
+                                                        })}
+                                                    </span>
+                                                </div>
                                             )}
                                         </div>
 
@@ -1335,6 +1423,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                 <span className="font-semibold text-indigo-600 dark:text-indigo-400">CP:</span>
                                                 {booking.cpName || 'N/A'}
                                             </div>
+
                                             <div className="flex items-center gap-2">
                                                 <span className="font-semibold text-indigo-600 dark:text-indigo-400">Lead:</span>
                                                 {booking.leadId || 'N/A'}
@@ -1345,6 +1434,12 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                     Generated By: {booking.createdByName}
                                                 </span>
                                             </div>
+                                            {booking.bankName && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">Bank Name:</span>
+                                                    {booking.bankName || '-'}
+                                                </div>
+                                            )}
                                         </div>
 
 
@@ -1443,7 +1538,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
 
                                         <div className={`overflow-hidden transition-all duration-300 ${isHovered ? 'max-h-24 opacity-100 pt-4 border-t border-gray-200 dark:border-gray-700' : 'max-h-0 opacity-0'}`}>
                                             <div className="flex flex-wrap gap-2">
-                                                {!isConfirmed && !isRejected && (
+                                                {/* {!isConfirmed && !isRejected && (
                                                     <>
                                                         {hasEditPermission && onEditLead && (
                                                             <button
@@ -1463,6 +1558,37 @@ const BookingTable: React.FC<BookingTableProps> = ({
                                                         >
                                                             <Download className="h-4 w-4" /> Download Payment Slip
                                                         </button>
+                                                        <button
+                                                            onClick={() => handleDownloadWelcomeLetter(booking)}
+                                                            className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-all hover:scale-105 active:scale-95"
+                                                        >
+                                                            <Download className="h-4 w-4" /> Download Welcome Letter
+                                                        </button>
+                                                    </>
+                                                )} */}
+
+                                                {!isRejected && !canDownload && (
+                                                    <>
+                                                        {hasEditPermission && onEditLead && (
+                                                            <button
+                                                                onClick={() => onEditLead(booking)}
+                                                                className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+                                                            >
+                                                                <Edit className="h-4 w-4" /> Edit
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                )}
+
+                                                {canDownload && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleDownloadPaymentSlip(booking)}
+                                                            className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold bg-green-500 text-white hover:bg-green-600 transition-all hover:scale-105 active:scale-95"
+                                                        >
+                                                            <Download className="h-4 w-4" /> Download Payment Slip
+                                                        </button>
+
                                                         <button
                                                             onClick={() => handleDownloadWelcomeLetter(booking)}
                                                             className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-all hover:scale-105 active:scale-95"

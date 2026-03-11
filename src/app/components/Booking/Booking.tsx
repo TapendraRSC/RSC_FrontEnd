@@ -38,6 +38,7 @@ interface BookingData {
     payment_reference: string;
     payment_platform_id: number | string;
     cpName: string;
+    bankName: string;
     remark: string;
     approvedByName?: string;
     approvedAt?: string;
@@ -285,6 +286,7 @@ const BookingComponent: React.FC = () => {
                 paymentPlatformName: booking.paymentPlatformName || 'N/A',
 
                 cpName: booking.cpName || '',
+                bankName: booking.bankName || '',
                 remark: booking.remark || '',
 
                 projectId: booking.projectId || null,
@@ -373,6 +375,7 @@ const BookingComponent: React.FC = () => {
             payment_reference: booking.payment_reference || '',
             payment_platform_id: booking.payment_platform_id || booking.paymentPlatformId || '',
             cpName: booking.cpName || '',
+            bankName: booking.bankName || '',
             remark: booking.remark || '',
             projectTitle: booking.projectTitle || booking.projectName || '',
             plotNumber: booking.plotNumber || '',

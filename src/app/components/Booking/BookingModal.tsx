@@ -38,6 +38,7 @@ interface LeadFormValues {
   payment_reference: string;
   payment_platform_id: number | string;
   cpName: string;
+  bankName: string;
   remark: string;
   status: string;
   address: string;
@@ -142,7 +143,7 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
       projectId: null, plotId: null, plotSize: "", price: "",
       onlinePrice: "", creditPoint: "", bookingAmount: "",
       payment_reference: "", payment_platform_id: "",
-      cpName: "", remark: "", status: "pending",
+      cpName: "", bankName: "", remark: "", status: "pending",
       address: "", aadharFront: null, aadharBack: null, panFront: null,
     },
   });
@@ -151,6 +152,7 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
   const selectedProjectId = watch("projectId");
   const selectedPlotId = watch("plotId");
   const cpNameValue = watch("cpName");
+  const bankNameValue = watch("bankName");
 
   const fetchLeads = useCallback(async (searchQuery: string = "", page: number = 1, append: boolean = false) => {
     setLeadsLoading(true);
@@ -318,6 +320,7 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
         payment_reference: initialData.payment_reference || initialData.paymentReference || "",
         payment_platform_id: paymentPlatformId,
         cpName: initialData.cpName || initialData.cp_name || "",
+        bankName: initialData.bankName || initialData.bank_name || "",
         remark: initialData.remark || "",
         address: initialData.address || "",
         aadharFront: null, aadharBack: null, panFront: null,
@@ -336,7 +339,7 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
         projectId: null, plotId: null, plotSize: "", price: "",
         onlinePrice: "", creditPoint: "", bookingAmount: "",
         status: "pending", payment_reference: "", payment_platform_id: "",
-        cpName: "", remark: "", address: "",
+        cpName: "", bankName: "", remark: "", address: "",
         aadharFront: null, aadharBack: null, panFront: null,
       });
 
@@ -366,6 +369,7 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
     formData.append("phone", data.phone.trim());
     formData.append("gender", data.gender || "");
     formData.append("cpName", data.cpName || "");
+    formData.append("bankName", data.bankName || "");
     formData.append("remark", data.remark || "");
     formData.append("payment_reference", data.payment_reference || "");
     formData.append("status", data.status);
@@ -607,6 +611,14 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
             )}
 
 
+
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bank Name</label>
+              <input type="text" {...register("bankName", { minLength: { value: 2, message: "Bank Name must be at least 2 characters" }, maxLength: { value: 50, message: "Bank Name cannot exceed 50 characters" } })} className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500" placeholder="ICICI Bank" />
+              {errors.bankName && <p className="text-red-500 text-xs mt-0.5">{errors.bankName.message}</p>}
+            </div>
+
+
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">CP Name</label>
               <input type="text" {...register("cpName", { minLength: { value: 2, message: "CP Name must be at least 2 characters" }, maxLength: { value: 50, message: "CP Name cannot exceed 50 characters" } })} className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500" placeholder="Mitesh Patel" />
@@ -620,6 +632,9 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
                 {errors.remark && <p className="text-red-500 text-xs mt-0.5">{errors.remark.message}</p>}
               </div>
             )}
+
+
+
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
