@@ -28,7 +28,8 @@ import {
     Globe,
     CreditCard,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    UserRound
 } from 'lucide-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import 'react-perfect-scrollbar/dist/css/styles.css';
@@ -109,6 +110,9 @@ const iconMap: Record<string, React.ReactNode> = {
     'Bulk Land': <Layers className="w-5 h-5" />,
     'Online Collection': <Globe className="w-5 h-5" />,
     'Credit Collection': <CreditCard className="w-5 h-5" />,
+    'Clients': <UserRound className="w-5 h-5" />,
+    // 'Installments': <Wallet className="w-5 h-5" />,
+
 };
 
 
@@ -294,6 +298,15 @@ const Sidebar = () => {
         collection: { pageName: 'Collection', title: 'Collection', href: '/collection', type: 'single', icon: iconMap['Collection'] },
         onlinecollection: { pageName: 'Online Collection', title: 'Online Collection', href: '/onlinecollection', type: 'single', icon: iconMap['Online Collection'] },
         creditcollection: { pageName: 'Credit Collection', title: 'Credit Collection', href: '/creditcollection', type: 'single', icon: iconMap['Credit Collection'] },
+
+        clients: { pageName: 'Clients', title: 'Clients', href: '/clients', type: 'single', icon: iconMap['Clients'] },
+        installments: { pageName: 'Installments', title: 'Installments', href: '/installments', type: 'single', icon: iconMap['Installments'] },
+
+
+        'Clients': <CreditCard className="w-5 h-5" />,
+        // 'Installments': <CreditCard className="w-5 h-5" />,
+
+
         support: { pageName: 'Support', title: 'Support', href: '/support', type: 'single', alwaysShow: true, icon: iconMap['Support'] },
     };
 
@@ -475,6 +488,11 @@ const Sidebar = () => {
                         {filteredMenuItems.collection && <CollapsedIconLink item={filteredMenuItems.collection} isActive={isActiveLink('/collection')} />}
                         {filteredMenuItems.creditcollection && <CollapsedIconLink item={filteredMenuItems.creditcollection} isActive={isActiveLink('/creditcollection')} />}
                         {filteredMenuItems.onlinecollection && <CollapsedIconLink item={filteredMenuItems.onlinecollection} isActive={isActiveLink('/onlinecollection')} />}
+
+                        {filteredMenuItems.clients && <CollapsedIconLink item={filteredMenuItems.clients} isActive={isActiveLink('/clients')} />}
+                        {/* {filteredMenuItems.installments && <CollapsedIconLink item={filteredMenuItems.installments} isActive={isActiveLink('/installments')} />} */}
+
+
                         {filteredMenuItems.support && <CollapsedIconLink item={filteredMenuItems.support} isActive={isActiveLink('/support')} />}
                     </div>
                 </div>
@@ -521,6 +539,8 @@ const Sidebar = () => {
                                 {filteredMenuItems.collection && renderMenuItem('collection', filteredMenuItems.collection)}
                                 {filteredMenuItems.creditcollection && renderMenuItem('creditcollection', filteredMenuItems.creditcollection)}
                                 {filteredMenuItems.onlinecollection && renderMenuItem('onlinecollection', filteredMenuItems.onlinecollection)}
+                                {filteredMenuItems.clients && renderMenuItem('clients', filteredMenuItems.clients)}
+                                {/* {filteredMenuItems.installments && renderMenuItem('installments', filteredMenuItems.installments)} */}
                                 {filteredMenuItems.support && (
                                     <li className="menu nav-item border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
                                         <Link href={filteredMenuItems.support.href}

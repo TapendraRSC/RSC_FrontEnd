@@ -883,7 +883,9 @@ const CollectionTable: React.FC<CollectionTableProps> = ({
                 onMouseLeave={() => setHoveredId(null)}
                 className="relative rounded-2xl p-[1.5px] premium-border"
               >
-                <div className="relative overflow-hidden rounded-2xl bg-[#0f172a] border border-transparent transition-all duration-300 hover:shadow-xl">
+                {/* <div className="relative overflow-hidden rounded-2xl bg-[#0f172a] border border-transparent transition-all duration-300 hover:shadow-xl"> */}
+
+                <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-transparent transition-all duration-300 hover:shadow-xl">
 
                   <div className="p-3 sm:p-5 space-y-3 sm:space-y-4">
                     {/* Header */}

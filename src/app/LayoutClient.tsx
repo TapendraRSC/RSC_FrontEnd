@@ -91,6 +91,8 @@ const routeToPageNameMap: { [key: string]: string } = {
     '/onlinecollection': 'Online Collection',
     '/bulkland': 'Bulk Land',
     '/paymentplatforms': 'Payment Platforms',
+    '/clients': 'Clients',
+    // '/installments': 'Installments',
 };
 
 const availableRoutes = [
@@ -114,6 +116,8 @@ const availableRoutes = [
     { href: '/onlinecollection', pageName: 'Online Collection' },
     { href: '/bulkland', pageName: 'Bulk Land' },
     { href: '/paymentplatforms', pageName: 'Payment Platforms' },
+    { href: '/clients', pageName: 'Clients' },
+    // { href: '/installments', pageName: 'Installments' },
 ];
 
 const roleDefaultRoutes: { [key: string]: string } = {
