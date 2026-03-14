@@ -554,9 +554,9 @@ const BookingModal: React.FC<ComprehensiveLeadModalProps> = ({
 
             {initialData ? (
               <>
-                <EditDocViewer label="PAN Card Front" url={panUrl} borderColor="border-green-400 dark:border-green-600" bgColor="bg-green-50 dark:bg-green-900/20" />
                 <EditDocViewer label="Aadhar Card Front" url={aadharFrontUrl} borderColor="border-blue-400 dark:border-blue-600" bgColor="bg-blue-50 dark:bg-blue-900/20" />
                 <EditDocViewer label="Aadhar Card Back" url={aadharBackUrl} borderColor="border-orange-400 dark:border-orange-600" bgColor="bg-orange-50 dark:bg-orange-900/20" />
+                <EditDocViewer label="PAN Card Front" url={panUrl} borderColor="border-green-400 dark:border-green-600" bgColor="bg-green-50 dark:bg-green-900/20" />
               </>
             ) : (
               <>
