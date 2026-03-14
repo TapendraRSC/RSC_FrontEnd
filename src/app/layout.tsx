@@ -21,14 +21,23 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
+// export const metadata: Metadata = {
+//   title: "RSC Group",
+//   description: "Next.js PWA Application",
+//   manifest: "/manifest.json",
+//   icons: {
+//     icon: "/icons/icon-192x192.png",
+//     apple: "/icons/icon-192x192.png",
+//   },
+// };
+
 export const metadata: Metadata = {
   title: "RSC Group",
   description: "Next.js PWA Application",
-  manifest: "/manifest.json",
-  icons: {
-    icon: "/icons/icon-192x192.png",
-    apple: "/icons/icon-192x192.png",
-  },
+  // icons: {
+  //   icon: "/icons/icon-192x192.png",
+  //   apple: "/icons/icon-192x192.png",
+  // },
 };
 
 export default function RootLayout({
